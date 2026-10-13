@@ -80,9 +80,9 @@
 3. Der Validator bricht nicht beim ersten Fehler ab, er sammelt alle.
 
 **Abnahme**
-- [ ] Je Regel ein Test mit erwarteter ID, Symbol und Position.
-- [ ] Mehrere Fehler in einer Datei werden alle gemeldet, sortiert nach Position, dann ID.
-- [ ] Gültiges Beispiel erzeugt keine Diagnosen.
+- [x] Je Regel ein Test mit erwarteter ID, Symbol und Position.
+- [x] Mehrere Fehler in einer Datei werden alle gemeldet, sortiert nach Position, dann ID.
+- [x] Gültiges Beispiel erzeugt keine Diagnosen.
 
 ## M0.7 Abschluss
 

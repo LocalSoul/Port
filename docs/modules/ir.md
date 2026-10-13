@@ -17,7 +17,7 @@ public final class IrPrinter {
 public final class IrValidator {
     List<Diagnostic> validate(IrFile file);  // IR001-IR005, ab M10b auch IR006-IR010
 }
-public record Diagnostic(String id, Severity severity, String symbol, String message, String location, String hint) {}
+public record Diagnostic(String id, Severity severity, String symbol, String message, SourceSpan location, String hint) {}
 ```
 - Knoten sind sealed Interfaces und Records (`ClassDecl`, `MethodDecl`, `IfStmt`, `StaticCallExpr`, ...), benannt nach dem IR-Schlüsselwort.
 - Typ- und Member-Atome haben eigene Wertklassen (`TypeRef`, `MemberRef`) mit Parser für die Untersyntax (`Dictionary<string,i32[]>`, `Ns.Typ::name#i32,string`).
@@ -58,12 +58,28 @@ public record Diagnostic(String id, Severity severity, String symbol, String mes
 - **Zeilenregel:**
   1. Eine Liste steht in einer Zeile, wenn nichts in ihr einen Umbruch erzwingt und ihre einzeilige Form ab ihrer Startspalte höchstens **100 Zeichen** erreicht. Schließende Klammern umgebender Listen zählen nicht mit.
   2. Einen Umbruch erzwingen: nicht-leere `block`, Typen mit Mitgliedern, Enums mit Werten.
-  3. Sonst: erste Zeile `(kopf`, dann der Reihe nach Elemente in derselben Zeile, solange sie einzeilig passen und keinen Umbruch erzwingen. Bei Typen dürfen nur die Typattribute in die erste Zeile, Mitglieder nie. Bei `block` und `switch` stehen Statements bzw. Zweige immer auf eigenen Zeilen.
+  3. Sonst: erste Zeile `(kopf`, dann der Reihe nach Elemente in derselben Zeile, solange sie einzeilig passen und keinen Umbruch erzwingen. Bei Typen dürfen nur die Typattribute in die erste Zeile, Mitglieder nie. Bricht `block` oder `switch` um, stehen Statements bzw. Zweige immer auf eigenen Zeilen.
   4. Jedes weitere Element steht auf eigener Zeile, 2 Leerzeichen tiefer als die Zeile der öffnenden Klammer. Die schließende Klammer folgt direkt dem letzten Element.
 - Datei: Kopf, dann je eine Leerzeile vor jedem Typ, genau ein abschließendes `\n`. Kommentare aus der Eingabe gehen verloren.
 - Strings: Kurzformen für `\\ \" \n \r \t`. Andere Steuerzeichen und einzelne Surrogate werden als `\uXXXX` geschrieben, alles andere bleibt unverändert (UTF-8).
 - Literale und Bezeichner sind Atome und können keine Attribute tragen. Ein solcher Knoten mit Attributen führt zu `IllegalArgumentException`.
 - Golden Files: `testdata/golden/ir/<fixture>.ir` für jede Fixture in `testdata/ir/`. Aktualisieren nur bewusst mit `./mvnw -pl ir test -Dgolden.update=true`.
+
+## Validator (M0.6, Paket `io.github.localsoul.port.ir.validate`)
+- Einstieg: `new IrValidator()` oder `new IrValidator(typeCatalog)`, dann `validate(file)`. Das liefert eine unveränderliche, sortierte `List<Diagnostic>`. `IrValidator.syntaxError(e)` wandelt einen Reader-Fehler in IR001 um.
+- `Diagnostic(id, severity, symbol, message, location, hint)`: Felder wie im JSON-Vertrag. Abweichend von der Skizze ist `location` ein `SourceSpan` (`toString()` = `datei:zeile:spalte`). `symbol` ist die ID des umgebenden Typs oder Mitglieds, bei IR001 `null`. `hint` ist optional.
+- Sortierung `Diagnostic.ORDER`: Datei, Zeile, Spalte (numerisch, Zeile 9 vor 10), dann ID, dann Meldung.
+- **IR002:** Typen der Datei und generische Typparameter (Typ und Methode) gelten als aufgelöst. Externe Typen: mit `TypeCatalog` ein Fehler, wenn unbekannt; ohne Katalog **einmal pro Typname** `info` „nicht geprüft". Member-Referenzen auf Typen der Datei müssen dort deklariert sein:
+  - ohne `#`: Feld, Property, Event oder Enum-Wert gleichen Namens,
+  - `.ctor`/`.cctor`: Konstruktor mit passendem `static` und gleichen Parametertypen,
+  - Methode: gleiche Parametertypen; bei generischen Methoden nur Name, Anzahl der Typparameter und Anzahl der Parameter.
+  
+  Geprüft werden auch Typen in Typargumenten, Arrays und Member-Signaturen. Attributtypen (`:attrs`) zählen als Typreferenz.
+- **IR003:** `unknown` irgendwo in einem Typ (auch verschachtelt), `error`.
+- **IR004:** doppelte Typnamen und doppelte Mitglieds-IDs je Typ (Felder, Properties und Events teilen `Typ::name`). Gemeldet wird jedes weitere Vorkommen mit Verweis auf das erste. Parameter mit `:ref`/`:out`/`:in` ergeben andere IDs (`i32&`).
+- **IR005:** Zyklus über `:base` und `:implements` zwischen Typen der Datei. Jeder Typ auf dem Zyklus wird gemeldet, mit Pfad (`A -> B -> C -> A`).
+- Positionen: Typreferenzen haben keine eigene Position und melden die Position des umgebenden Knotens (Feld, Local, Ausdruck).
+- Nicht geprüft: lokale Variablen und Parameter (`IdentExpr`), Sprungmarken, `switch` ohne Durchfallen, Members geerbter externer Typen.
 
 ## Verhalten
 - Der native Dialekt (Spec Abschnitt 12) wird erst in M10b implementiert. Bis dahin lehnt der Reader seine Knoten mit klarer Meldung ab.
