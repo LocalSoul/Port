@@ -11,7 +11,10 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Eingaben der Generator-Tests: IR-Golden-Files aus M2 und das Mapping des Unity-Adapters. */
+/**
+ * Eingaben der Generator-Tests: IR-Golden-Files aus M2 und die Mappings des Unity-Adapters und von
+ * {@code runtime-system}.
+ */
 final class GoldenFixtures {
 
   static final Path ROOT = Path.of("..").toAbsolutePath().normalize();
@@ -19,6 +22,7 @@ final class GoldenFixtures {
   static final Path JAVA_GOLDEN = ROOT.resolve("testdata/golden/java");
   static final Path UNITY_MAPPING =
       ROOT.resolve("engines/unity/adapter-unity/src/main/resources/mapping.tsv");
+  static final Path RUNTIME_MAPPING = ROOT.resolve("runtime-system/src/main/resources/mapping.tsv");
   static final String PACKAGE = "gen.fixtures";
 
   private GoldenFixtures() {}
@@ -42,6 +46,7 @@ final class GoldenFixtures {
   }
 
   static GeneratorConfig config() throws IOException, MappingException {
-    return new GeneratorConfig(PACKAGE, Mapping.load(UNITY_MAPPING), java.util.Set.of());
+    Mapping mapping = Mapping.load(UNITY_MAPPING).merge(Mapping.load(RUNTIME_MAPPING));
+    return new GeneratorConfig(PACKAGE, mapping, java.util.Set.of());
   }
 }

@@ -136,7 +136,7 @@ final class TypeContext {
     if (type.typeArguments().isEmpty() && typeParameters.contains(name)) {
       return name;
     }
-    String base = className(name);
+    String base = className(name, type.typeArguments().size());
     if (type.typeArguments().isEmpty()) {
       return base;
     }
@@ -150,8 +150,11 @@ final class TypeContext {
     return out.append('>').toString();
   }
 
-  /** Klassenname eines IR-Typs (ohne Typargumente), mit Import. */
-  String className(String irName) {
+  /**
+   * Klassenname eines IR-Typs mit {@code arity} Typargumenten (ohne die Argumente selbst), mit
+   * Import.
+   */
+  String className(String irName, int arity) {
     if (ownTypes.containsKey(irName)) {
       if (!(ownTypes.get(irName) instanceof ClassDecl)) {
         throw new TodoException(
@@ -160,7 +163,7 @@ final class TypeContext {
       String javaPackage = JavaNames.packageOf(config.basePackage(), irName);
       return reference(javaPackage, JavaNames.simpleName(irName));
     }
-    String mapped = config.mapping().javaType(irName);
+    String mapped = config.mapping().javaType(irName, arity);
     if (mapped == null) {
       throw new TodoException("externer Typ " + irName + " ohne Mapping");
     }

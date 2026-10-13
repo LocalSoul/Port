@@ -28,7 +28,7 @@
 3. `try`/`catch`/`finally`, `throw`, Delegate-Aufrufe, String-Operatoren, `foreach` über `Iterable`.
 
 **Abnahme**
-- [ ] Golden Files aktualisiert, keine BCL-Todos mehr für die Fixtures (außer Lambdas und Unsigned), google-java-format-konform.
+- [x] Golden Files aktualisiert, keine BCL-Todos mehr für die Fixtures (außer Lambdas und Unsigned), google-java-format-konform.
 - [ ] `catch` von `System.Exception`/`NullReferenceException` fängt auch Java-NPE (Test).
 
 ## M3a.3 End-to-End

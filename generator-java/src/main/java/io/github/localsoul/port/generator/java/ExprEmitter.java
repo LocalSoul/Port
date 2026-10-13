@@ -184,7 +184,7 @@ final class ExprEmitter {
   }
 
   private JExpr staticField(MemberRef ref) {
-    String owner = types.className(ref.declaringType());
+    String owner = owner(ref);
     if (types.isOwnType(ref.declaringType())) {
       return primary(owner + "." + JavaNames.ident(ref.name()));
     }
@@ -202,7 +202,7 @@ final class ExprEmitter {
   }
 
   private JExpr staticProperty(MemberRef ref) {
-    String owner = types.className(ref.declaringType());
+    String owner = owner(ref);
     return primary(owner + "." + getterName(ref, MappingForm.STATIC_GETTER) + "()");
   }
 
@@ -219,20 +219,37 @@ final class ExprEmitter {
     return external(ref, form).javaSymbol();
   }
 
+  /** Klasse, die ein Member deklariert (Stelligkeit aus den Typargumenten der Referenz). */
+  private String owner(MemberRef ref) {
+    return types.className(ref.declaringType(), ref.declaringTypeArguments().size());
+  }
+
   private JExpr call(CallExpr call) {
     MemberRef ref = call.method();
-    JExpr receiver = target(call.target());
-    String name;
     if (types.isOwnType(ref.declaringType())) {
-      name = JavaNames.member(ref.name());
-    } else {
-      name = external(ref, MappingForm.METHOD).javaSymbol();
+      JExpr receiver = target(call.target());
+      String name = JavaNames.member(ref.name());
+      return member(receiver, new Doc.Call("." + name, argumentDocs(call.arguments())));
     }
+    MappingEntry entry = types.mapping().entry(ref.symbolId());
+    if (entry != null && entry.form() == MappingForm.HELPER) {
+      return helperCall(ref, entry, call);
+    }
+    JExpr receiver = target(call.target());
+    String name = external(ref, MappingForm.METHOD).javaSymbol();
     return member(receiver, new Doc.Call("." + name, argumentDocs(call.arguments())));
   }
 
+  /** Form {@code helper}: {@code Typ.name(ziel, args)}. */
+  private JExpr helperCall(MemberRef ref, MappingEntry entry, CallExpr call) {
+    List<Doc> args = new java.util.ArrayList<>();
+    args.add(emit(call.target()).doc());
+    args.addAll(argumentDocs(call.arguments()));
+    return new JExpr(new Doc.Call(owner(ref) + "." + entry.javaSymbol(), args), PRIMARY);
+  }
+
   private JExpr staticCall(MemberRef ref, List<Expr> args) {
-    String owner = types.className(ref.declaringType());
+    String owner = owner(ref);
     String name;
     if (types.isOwnType(ref.declaringType())) {
       name = JavaNames.member(ref.name());
@@ -256,7 +273,7 @@ final class ExprEmitter {
     if (!types.isOwnType(ref.declaringType())) {
       external(ref, MappingForm.CONSTRUCTOR);
     }
-    String type = types.className(ref.declaringType());
+    String type = owner(ref);
     String typeArguments = ref.declaringTypeArguments().isEmpty() ? "" : "<>";
     Doc call = new Doc.Call("new " + type + typeArguments, argumentDocs(construct.arguments()));
     return new JExpr(call, PRIMARY);

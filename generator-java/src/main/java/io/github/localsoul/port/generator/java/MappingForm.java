@@ -16,6 +16,11 @@ public enum MappingForm {
   CONSTRUCTOR("constructor"),
   /** Operator als statische Methode: {@code Typ.name(a, b)}. */
   OPERATOR("operator"),
+  /**
+   * Instanzmethode als statische Hilfe mit dem Empfänger als erstem Argument: {@code Typ.name(ziel,
+   * args)} (z. B. {@code Strings.substring(s, 1)}).
+   */
+  HELPER("helper"),
   /** Lifecycle-Nachricht: gleich signierte Methoden in Unterklassen werden {@code @Override}. */
   MESSAGE("message");
 

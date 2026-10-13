@@ -19,7 +19,15 @@ class JavaGeneratorTest {
           + "Ext.Base::Tick#\ttick\tmessage\n"
           + "Ext.Vec\tx.ext.Vec\ttype\n"
           + "Ext.Vec::op_Multiply#Ext.Vec,f32\tmul\toperator\n"
-          + "Ext.Vec::.ctor#f32\tVec\tconstructor\n";
+          + "Ext.Vec::.ctor#f32\tVec\tconstructor\n"
+          + "Ext.Vec::Describe#i32\tdescribe\thelper\n"
+          + "Ext.Fn/1\tx.ext.Fn0\ttype\n"
+          + "Ext.Fn/2\tx.ext.Fn1\ttype\n"
+          + "Ext.Fn::Invoke#T\tinvoke\tmethod\n"
+          + "System.Exception\tx.sys.SystemException\ttype\n"
+          + "System.InvalidOperationException\tx.sys.InvalidOperationException\ttype\n"
+          + "System.InvalidOperationException::.ctor#string\tInvalidOperationException\tconstructor\n"
+          + "System.NullReferenceException\tx.sys.NullReferenceException\ttype\n";
 
   private static GenerationResult generate(String body, Set<String> manual) throws Exception {
     GeneratorConfig config = new GeneratorConfig("p", Mapping.parse(MAPPING), manual);
@@ -184,6 +192,74 @@ class JavaGeneratorTest {
                     + " (local x u8 1u8))))"),
             "p/GBase.java");
     assertTrue(!text.contains("import"), text);
+  }
+
+  @Test
+  void typeRowsWithArityPickTheMatchingClass() throws Exception {
+    String text =
+        file(
+            generate(
+                "(class F (field a Ext.Fn<i32>) (field b Ext.Fn<i32,string>)"
+                    + " (method M string ((v i32)) (block (return (call (field this F::b)"
+                    + " Ext.Fn<i32,string>::Invoke#T v)))))"),
+            "p/FBase.java");
+    assertTrue(text.contains("Fn0<Integer> a;"), text);
+    assertTrue(text.contains("Fn1<Integer, String> b;"), text);
+    assertTrue(text.contains("return this.b.invoke(v);"), text);
+  }
+
+  @Test
+  void helperFormPassesReceiverAsFirstArgument() throws Exception {
+    String text =
+        file(
+            generate(
+                "(class H (method M string ((v Ext.Vec)) (block (return (call v"
+                    + " Ext.Vec::Describe#i32 2i32)))))"),
+            "p/HBase.java");
+    assertTrue(text.contains("return Vec.describe(v, 2);"), text);
+  }
+
+  @Test
+  void tryCatchFinallyTranslatesJavaExceptionsToDotNet() throws Exception {
+    String text =
+        methodBody(
+            "(try (block (if c (block (throw (new System.InvalidOperationException::.ctor#string"
+                + " \"x\")))))"
+                + " (catch n System.NullReferenceException (block (return)))"
+                + " (catch ex System.InvalidOperationException (block (throw ex)))"
+                + " (catch e System.Exception (block (expr (set a 1i32))))"
+                + " (finally (block (expr (set b 2i32)))))");
+    String expected =
+        """
+            try {
+              if (c) {
+                throw new InvalidOperationException("x");
+              }
+            } catch (NullReferenceException | NullPointerException n$) {
+              NullReferenceException n = NullReferenceException.fromJava(n$);
+              return;
+            } catch (InvalidOperationException ex) {
+              throw ex;
+            } catch (SystemException | NullPointerException | ArrayIndexOutOfBoundsException e$) {
+              SystemException e = SystemException.fromJava(e$);
+              a = 1;
+            } finally {
+              b = 2;
+            }
+        """;
+    assertTrue(text.contains(expected), text);
+    assertEquals(text, new com.google.googlejavaformat.java.Formatter().formatSource(text));
+  }
+
+  @Test
+  void longMultiCatchIsWrappedLikeGoogleJavaFormat() throws Exception {
+    String deep = "(try (block (return)) (catch e System.Exception (block (return))))";
+    for (int i = 0; i < 6; i++) {
+      deep = "(if c (block " + deep + "))";
+    }
+    String text = methodBody(deep);
+    assertTrue(text.contains("| ArrayIndexOutOfBoundsException e$) {"), text);
+    assertEquals(text, new com.google.googlejavaformat.java.Formatter().formatSource(text));
   }
 
   @Test

@@ -12,7 +12,9 @@ import java.util.TreeMap;
 /**
  * Abbildung von IR-Symbolen auf Java ({@code mapping.tsv} eines Adapters oder von {@code
  * runtime-system}). Format: je Zeile IR-Symbol, Java-Symbol, Form, getrennt durch Tabulatoren;
- * Zeilen mit {@code #} und Leerzeilen werden übersprungen.
+ * Zeilen mit {@code #} und Leerzeilen werden übersprungen. Typzeilen dürfen eine generische
+ * Stelligkeit tragen ({@code System.Func/2}), weil {@code Func<T>} und {@code Func<T1, T2>} in der
+ * IR gleich heißen.
  */
 public final class Mapping {
 
@@ -113,7 +115,29 @@ public final class Mapping {
    * @return voll qualifizierter Java-Name oder {@code null}
    */
   public String javaType(String irType) {
-    MappingEntry entry = entries.get(irType);
+    return javaType(irType, 0);
+  }
+
+  /**
+   * Liefert den Java-Klassennamen eines IR-Typs mit {@code arity} Typargumenten: zuerst die Zeile
+   * {@code Name/arity}, sonst die Zeile {@code Name}.
+   *
+   * @param irType qualifizierter IR-Typname ohne Typargumente
+   * @param arity Anzahl der Typargumente
+   * @return voll qualifizierter Java-Name oder {@code null}
+   */
+  public String javaType(String irType, int arity) {
+    if (arity > 0) {
+      String withArity = typeSymbol(irType + "/" + arity);
+      if (withArity != null) {
+        return withArity;
+      }
+    }
+    return typeSymbol(irType);
+  }
+
+  private String typeSymbol(String key) {
+    MappingEntry entry = entries.get(key);
     if (entry == null || entry.form() != MappingForm.TYPE) {
       return null;
     }

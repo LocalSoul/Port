@@ -82,6 +82,23 @@ class StringsMathTest {
   }
 
   @Test
+  void javaExceptionsTranslateToDotNetTypes() {
+    SystemException fromNpe = SystemException.fromJava(new NullPointerException());
+    assertTrue(fromNpe instanceof NullReferenceException);
+    assertEquals("Object reference not set to an instance of an object.", fromNpe.message());
+    assertTrue(
+        SystemException.fromJava(new ArrayIndexOutOfBoundsException())
+            instanceof IndexOutOfRangeException);
+    assertEquals(
+        "Index was outside the bounds of the array.",
+        IndexOutOfRangeException.fromJava(new ArrayIndexOutOfBoundsException()).message());
+    InvalidOperationException own = new InvalidOperationException("x");
+    assertTrue(SystemException.fromJava(own) == own);
+    assertThrows(
+        ArithmeticException.class, () -> SystemException.fromJava(new ArithmeticException()));
+  }
+
+  @Test
   void objectHelpersFollowDotNet() {
     assertTrue(SystemObject.equals(0.0f, -0.0f));
     assertTrue(SystemObject.equals(Float.NaN, Float.NaN));

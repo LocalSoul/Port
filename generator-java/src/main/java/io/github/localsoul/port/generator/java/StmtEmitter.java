@@ -3,6 +3,7 @@ package io.github.localsoul.port.generator.java;
 import io.github.localsoul.port.ir.ast.BlockStmt;
 import io.github.localsoul.port.ir.ast.BreakStmt;
 import io.github.localsoul.port.ir.ast.CallExpr;
+import io.github.localsoul.port.ir.ast.CatchClause;
 import io.github.localsoul.port.ir.ast.ContinueStmt;
 import io.github.localsoul.port.ir.ast.DoWhileStmt;
 import io.github.localsoul.port.ir.ast.Expr;
@@ -28,8 +29,12 @@ import io.github.localsoul.port.ir.ast.Stmt;
 import io.github.localsoul.port.ir.ast.SwitchCase;
 import io.github.localsoul.port.ir.ast.SwitchStmt;
 import io.github.localsoul.port.ir.ast.ThisExpr;
+import io.github.localsoul.port.ir.ast.ThrowStmt;
+import io.github.localsoul.port.ir.ast.TryStmt;
 import io.github.localsoul.port.ir.ast.WhileStmt;
 import io.github.localsoul.port.ir.atom.MemberRef;
+import io.github.localsoul.port.ir.atom.NamedType;
+import io.github.localsoul.port.ir.atom.TypeRef;
 import java.util.List;
 
 /**
@@ -58,7 +63,7 @@ final class StmtEmitter {
     }
   }
 
-  /** Reine Verteilertabelle über die in M3 unterstützten Statements. */
+  /** Reine Verteilertabelle über die unterstützten Statements. */
   void emit(Stmt stmt, JavaWriter out) {
     switch (stmt) {
       case BlockStmt b -> block(b, out);
@@ -73,6 +78,8 @@ final class StmtEmitter {
       case ReturnStmt r -> returnStmt(r, out);
       case BreakStmt b -> out.line("break;");
       case ContinueStmt c -> out.line("continue;");
+      case ThrowStmt t -> statement("throw ", expressions.emit(t.exception()).doc(), out);
+      case TryStmt t -> tryStmt(t, out);
       case LockStmt l ->
           braced("synchronized (" + expressions.text(l.lockObject()) + ")", l.body(), out);
       case RawNode r -> throw new ManualException("raw " + r.language().spelling());
@@ -197,6 +204,79 @@ final class StmtEmitter {
     braced(header, stmt.body(), out);
   }
 
+  private void tryStmt(TryStmt stmt, JavaWriter out) {
+    out.open("try");
+    body(stmt.body(), out);
+    for (CatchClause clause : stmt.catches()) {
+      catchClause(clause, out);
+    }
+    if (stmt.finallyClause() != null) {
+      out.close("} finally {");
+      out.push();
+      body(stmt.finallyClause().body(), out);
+    }
+    out.close("}");
+  }
+
+  /**
+   * {@code catch}. Fängt die IR {@code System.Exception}, {@code System.NullReferenceException}
+   * oder {@code System.IndexOutOfRangeException}, fängt Java zusätzlich {@code
+   * NullPointerException} bzw. {@code ArrayIndexOutOfBoundsException} und übersetzt sie mit {@code
+   * Typ.fromJava} in den .NET-Typ (ADR-019): <code>
+   * catch (SystemException | NullPointerException e$) { SystemException e = SystemException.fromJava(e$); }
+   * </code>
+   */
+  private void catchClause(CatchClause clause, JavaWriter out) {
+    String type = types.javaType(clause.type());
+    String name = JavaNames.ident(clause.variable());
+    List<String> javaExceptions = javaExceptionsCaughtAs(clause.type());
+    if (javaExceptions.isEmpty()) {
+      out.close("} catch (" + type + " " + name + ") {");
+      out.push();
+    } else {
+      catchHeader(type, javaExceptions, name + "$", out);
+      out.line(type + " " + name + " = " + type + ".fromJava(" + name + "$);");
+    }
+    body(clause.body(), out);
+  }
+
+  /** Mehrfach-catch, bei Überlänge an {@code |} umbrochen wie google-java-format. */
+  private static void catchHeader(
+      String type, List<String> javaExceptions, String name, JavaWriter out) {
+    StringBuilder flat = new StringBuilder("} catch (").append(type);
+    for (String javaException : javaExceptions) {
+      flat.append(" | ").append(javaException);
+    }
+    flat.append(" ").append(name).append(") {");
+    if (out.indent() - 2 + flat.length() <= LineBreaker.WIDTH) {
+      out.close(flat.toString());
+      out.push();
+      return;
+    }
+    out.close("} catch (" + type);
+    out.push();
+    out.push();
+    for (int i = 0; i < javaExceptions.size(); i++) {
+      boolean last = i == javaExceptions.size() - 1;
+      out.line("| " + javaExceptions.get(i) + (last ? " " + name + ") {" : ""));
+    }
+    out.pop();
+  }
+
+  /** Java-Exceptions, die als der .NET-Typ {@code type} gefangen werden. */
+  private static List<String> javaExceptionsCaughtAs(TypeRef type) {
+    if (!(type instanceof NamedType named) || !named.typeArguments().isEmpty()) {
+      return List.of();
+    }
+    return switch (named.qualifiedName()) {
+      case "System.Exception", "System.SystemException" ->
+          List.of("NullPointerException", "ArrayIndexOutOfBoundsException");
+      case "System.NullReferenceException" -> List.of("NullPointerException");
+      case "System.IndexOutOfRangeException" -> List.of("ArrayIndexOutOfBoundsException");
+      default -> List.of();
+    };
+  }
+
   /** {@code switch} ohne Durchfallen: jeder Zweig endet laut IR mit break/return/throw/continue. */
   private void switchStmt(SwitchStmt stmt, JavaWriter out) {
     out.open("switch (" + expressions.text(stmt.value()) + ")");
@@ -251,7 +331,7 @@ final class StmtEmitter {
       receiver = expressions.text(prop.target());
     } else {
       ref = ((StaticPropExpr) target).property();
-      receiver = types.className(ref.declaringType());
+      receiver = types.className(ref.declaringType(), ref.declaringTypeArguments().size());
     }
     if (!types.isOwnType(ref.declaringType())) {
       throw new TodoException("Setter von " + ref.symbolId() + " ohne Mapping");

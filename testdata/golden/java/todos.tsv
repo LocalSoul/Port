@@ -1,14 +1,5 @@
-ControlFlow::Score#string	externer Typ System.String ohne Mapping
 Counter::Update#	externes Symbol UnityEngine.Input::GetKey#string ohne Mapping (static-method/operator)
-Edges::Angle#i32,i32	externer Typ System.MathF ohne Mapping
-Edges::Produce#	externes Symbol System.Func::Invoke# ohne Mapping (method)
-Edges::producer	Member nicht erzeugt: externer Typ System.Func ohne Mapping
+Edges::producer	Initialisierer entfällt: raw cs
 Holder::Level:set	externer Typ UnityEngine.Mathf ohne Mapping
-Inventory::Count#	externes Symbol System.Func::Invoke# ohne Mapping (method)
-Inventory::Fill#i32	externes Symbol System.Collections.Generic.List::Clear# ohne Mapping (method)
-Inventory::SetCounter#System.Func<i32>	Member nicht erzeugt: externer Typ System.Func ohne Mapping
-Inventory::Total#	externes Symbol System.Collections.Generic.List::Count ohne Mapping (getter)
-Inventory::counter	Member nicht erzeugt: externer Typ System.Func ohne Mapping
-Inventory::items	Member nicht erzeugt: externer Typ System.Collections.Generic.List ohne Mapping
 UnsafeBits	Klasse braucht Handarbeit: manual/UnsafeBits.java extends UnsafeBitsBase
 UnsafeBits::First#i32[]	Handarbeit in manual/: raw cs
