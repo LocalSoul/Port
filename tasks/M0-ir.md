@@ -18,9 +18,9 @@
 5. `./mvnw -q verify` läuft grün (mit einem Platzhaltertest).
 
 **Abnahme**
-- [ ] `./mvnw -q verify` ist grün auf einem frischen Checkout.
-- [ ] `./mvnw -q spotless:check` ist grün.
-- [ ] `.gitignore` schließt `input/`, `gen/`, `.port/` aus.
+- [x] `./mvnw -q verify` ist grün auf einem frischen Checkout.
+- [x] `./mvnw -q spotless:check` ist grün.
+- [x] `.gitignore` schließt `input/`, `gen/`, `.port/` aus.
 
 ## M0.2 Lexer und S-Expression-Reader
 
