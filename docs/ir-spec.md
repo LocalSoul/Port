@@ -24,16 +24,17 @@ qname      := ident { "." ident }
 keyword    := ":" ident { "-" ident }           ; z. B. :base  :loc  :init
 string     := '"' { zeichen | escape } '"'      ; Escapes: \\ \" \n \r \t \uXXXX
 number     := ["-"] ziffern ["." ziffern] [exp] suffix
+nat        := ziffern                                ; ohne Suffix, nur in :version, (char ...) und :size (ADR-024)
 suffix     := "i8"|"u8"|"i16"|"u16"|"i32"|"u32"|"i64"|"u64"|"f32"|"f64"
 bool       := "true" | "false"
 null       := "null"
-literal    := number | hexnum | string | bool | null | "(" "char" number ")"
+literal    := number | hexnum | string | bool | null | "(" "char" nat ")"
 hexnum     := "0x" hexziffern suffix                 ; nur Ganzzahl-Suffixe, z. B. 0x7FFE0000u64
 opsym      := "+" | "-" | "*" | "/" | "%" | "&" | "|" | "^" | "<<" | ">>"
             | "==" | "!=" | "<" | "<=" | ">" | ">=" | "&&" | "||"
 ```
 
-Zahlen tragen **immer** ein Typsuffix (`5.0f32`, `0i32`, `7u64`). `char`-Literale stehen als `(char 97)` (UTF-16-Code-Unit als Zahl ohne Suffix). Strings sind UTF-16-Text, `null` ist untypisiert.
+Zahlen tragen **immer** ein Typsuffix (`5.0f32`, `0i32`, `7u64`). Einzige Ausnahme ist `nat` an genau drei Stellen: `:version`, `(char ...)` und `:size` (ADR-024). `char`-Literale stehen als `(char 97)` (UTF-16-Code-Unit als `nat`). Strings sind UTF-16-Text, `null` ist untypisiert.
 
 ## 3. Typen (Atome ohne Leerzeichen)
 
@@ -68,7 +69,7 @@ Diese Referenz ist zugleich die **stabile Symbol-ID** für Index, Lint und `manu
 
 ```
 file    := header { decl }
-header  := "(" "ir" ":version" number ":assembly" string [":sha256" string] ")"
+header  := "(" "ir" ":version" nat ":assembly" string [":sha256" string] ")"
 
 decl    := class | struct | interface | enum
 class   := "(" "class"     qname typeattrs { member } ")"
@@ -226,7 +227,7 @@ Native Funktionen sind normale `method`-Deklarationen mit einem `cfg`-Rumpf und 
 
 ```
 method  := ... (body | ":abstract")          ; body darf ein cfg sein
-nativeinfo := ":native" "(" ":arch" ident ":abi" ident [":addr" hexnum] [":size" number]
+nativeinfo := ":native" "(" ":arch" ident ":abi" ident [":addr" hexnum] [":size" nat]
                           [":status" ident] [":module" string] ")"
 ```
 

@@ -23,7 +23,7 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 - Die SLF4J-Warnung „No SLF4J providers were found“ beim Build stammt von Werkzeugen im Build und ist harmlos.
 
 - Spec-Auslegung in M0.2, bitte bestätigen (Details in `docs/modules/ir.md`):
-  - Die Spec verwendet Ganzzahlen ohne Suffix in `(char 97)`, `:version 1` und `:size 24`, obwohl `header` laut Grammatik `number` (mit Suffix) verlangt. Der Lexer liefert solche Zahlen als `SBareInteger`, M0.4 lässt sie nur an diesen Stellen zu. Eventuell die Grammatik in `docs/ir-spec.md` anpassen (braucht ADR und Freigabe).
+  - Ganzzahlen ohne Suffix: entschieden in ADR-024 (`nat` nur in `:version`, `(char ...)`, `:size`), Spec angepasst.
   - Die Spec definiert `exp` nicht. Umgesetzt als `e`/`E`, optional `+`/`-`, Ziffern.
   - Ganzzahl-Suffix an Zahl mit Punkt oder Exponent (`5.0i32`) und `-0x...` werden abgelehnt (Grammatik erlaubt das erste formal).
 - Spec-Auslegung in M0.3: `&` nur als letztes Suffix, `??` verboten (C# erlaubt beides nicht).

@@ -33,6 +33,7 @@ Format pro Eintrag: Kontext, Optionen, Empfehlung/Entscheidung, Folgen.
 | 021 | Technik der Launcher-Oberfläche | OPEN | M12a |
 | 022 | Engine-Recomp aus Binärdateien, funktionale Gleichheit | PROPOSED | M11a |
 | 023 | Nativer Code: Disassemblieren und Heben, wann immer möglich | ACCEPTED (Richtung), Umsetzung PROPOSED | M10b |
+| 024 | Ganzzahlen ohne Typsuffix (`nat`) in der IR | ACCEPTED | M0 |
 
 ---
 
@@ -227,3 +228,11 @@ IL2CPP-Spiele sind vorerst nicht im Scope (kaum sauber dekompilierbar).
 7. **Lint:** neue Regelgruppe `NT` (z. B. NT001 unaufgelöster indirekter Sprung, NT002 Zeigerarithmetik ohne Typ, NT003 Inline-Assembler/SIMD ohne Entsprechung).
 **IR-Erweiterung:** vom Nutzer freigegeben, als Abschnitt 12 in `docs/ir-spec.md` ausgearbeitet (Version 1, ein `cfg`-Dialekt mit Speicher- und Aufrufknoten, Regeln IR006–IR010).
 **Folgen:** Neues Modul `frontend-native`, neue Pipeline-Eingabeart `native`, Erweiterung der IR-Spezifikation (erledigt, Implementierung in M10b), Meilenstein M10b, ADR-003 wird für IL2CPP abgelöst. Konformitäts- und Differenztests werden Pflicht für gehobenen Code.
+
+## ADR-024: Ganzzahlen ohne Typsuffix (`nat`) in der IR
+**Status:** ACCEPTED (vom Nutzer freigegeben, 2026-10-13)
+**Kontext:** `docs/ir-spec.md` verlangt für jede Zahl ein Typsuffix (`number`). Die Spec selbst schreibt aber an drei Stellen Zahlen ohne Suffix: `(ir :version 1 ...)`, `(char 97)` und `:size 24` in `:native`. Die Grammatik (`header`, `literal`, `nativeinfo`) nennt dort `number` und widerspricht damit den Beispielen.
+**Optionen:** (a) Beispiele ändern (`:version 1i32`, `(char 97u16)`), (b) eigene Lexik `nat` (nicht-negative Ganzzahl ohne Suffix), die nur an genau diesen drei Stellen erlaubt ist.
+**Entscheidung:** (b). Die drei Werte sind Metadaten bzw. Code-Units mit festem Typ, ein Suffix trägt keine Information.
+**Umsetzung:** Spec Abschnitt 2 bekommt `nat := ziffern`. `header` nutzt `":version" nat`, `literal` nutzt `"(" "char" nat ")"`, `nativeinfo` nutzt `[":size" nat]`. Der Lexer liefert `nat` als eigenes Token (`SBareInteger`), die AST-Ebene lehnt es überall sonst mit „Zahl ohne Typsuffix" ab. Zahlen mit Vorzeichen, Punkt oder Exponent brauchen immer ein Suffix.
+**Folgen:** Keine Versionsänderung (Spec Abschnitt 11: noch keine Version veröffentlicht, die Beispiele waren schon so geschrieben). Printer gibt `nat` ohne Suffix aus.
