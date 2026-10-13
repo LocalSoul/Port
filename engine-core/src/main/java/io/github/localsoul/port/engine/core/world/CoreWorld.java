@@ -1,7 +1,9 @@
 package io.github.localsoul.port.engine.core.world;
 
 import io.github.localsoul.port.engine.api.component.Children;
+import io.github.localsoul.port.engine.api.component.InputState;
 import io.github.localsoul.port.engine.api.component.Parent;
+import io.github.localsoul.port.engine.api.component.Renderable;
 import io.github.localsoul.port.engine.api.component.Transform;
 import io.github.localsoul.port.engine.api.component.WorldTransform;
 import io.github.localsoul.port.engine.api.math.Mat4;
@@ -47,6 +49,8 @@ public final class CoreWorld implements World {
     registerComponent(WorldTransform.class);
     registerComponent(Parent.class);
     registerComponent(Children.class);
+    registerComponent(Renderable.class);
+    registerComponent(InputState.class);
   }
 
   // --- Phasensteuerung (nur Core) ---

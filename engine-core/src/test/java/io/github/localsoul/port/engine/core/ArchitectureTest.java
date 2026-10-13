@@ -2,6 +2,7 @@ package io.github.localsoul.port.engine.core;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
@@ -50,6 +51,38 @@ class ArchitectureTest {
         .accessField(System.class, "out")
         .orShould()
         .accessField(System.class, "err")
+        .check(productionClasses);
+  }
+
+  @Test
+  void coreDoesNotDependOnAdaptersFrontendsOrIr() {
+    noClasses()
+        .should()
+        .dependOnClassesThat()
+        .resideInAnyPackage("..adapter..", "..frontend..", "io.github.localsoul.port.ir..")
+        .check(productionClasses);
+  }
+
+  @Test
+  void subsystemImplementationsDoNotDependOnEachOther() {
+    slices()
+        .matching("io.github.localsoul.port.engine.core.subsystems.(*)..")
+        .should()
+        .notDependOnEachOther()
+        .check(productionClasses);
+  }
+
+  @Test
+  void subsystemImplementationsUseOnlyTheEngineApi() {
+    classes()
+        .that()
+        .resideInAPackage("io.github.localsoul.port.engine.core.subsystems..")
+        .should()
+        .onlyDependOnClassesThat()
+        .resideInAnyPackage(
+            "io.github.localsoul.port.engine.core.subsystems..",
+            "io.github.localsoul.port.engine.api..",
+            "java..")
         .check(productionClasses);
   }
 }

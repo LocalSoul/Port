@@ -1,9 +1,11 @@
 package io.github.localsoul.port.engine.core.schedule;
 
+import io.github.localsoul.port.engine.api.input.Input;
 import io.github.localsoul.port.engine.api.schedule.FrameContext;
 import io.github.localsoul.port.engine.api.schedule.Phase;
 import io.github.localsoul.port.engine.api.schedule.PhaseCallback;
 import io.github.localsoul.port.engine.api.schedule.Time;
+import io.github.localsoul.port.engine.api.subsystem.EventBus;
 import io.github.localsoul.port.engine.api.world.World;
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -172,6 +174,16 @@ public final class Scheduler {
     @Override
     public World world() {
       throw new IllegalStateException("Scheduler ohne Welt: keine Kontextfabrik gesetzt");
+    }
+
+    @Override
+    public Input input() {
+      throw new IllegalStateException("Scheduler ohne Input: keine Kontextfabrik gesetzt");
+    }
+
+    @Override
+    public EventBus events() {
+      throw new IllegalStateException("Scheduler ohne Event-Bus: keine Kontextfabrik gesetzt");
     }
   }
 }

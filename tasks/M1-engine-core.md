@@ -82,9 +82,9 @@
 4. `NullRenderer` hinter `Renderer`-Interface.
 
 **Abnahme**
-- [ ] Mini-Szene (eine Entity mit einer Komponente, die per Update die Position ändert) läuft 100 Frames und endet im erwarteten Zustand.
-- [ ] Zwei Läufe mit gleichem Skript ergeben bytegleiche Zustandsdumps (Dump-Format deterministisch).
-- [ ] Skriptierte Eingabe wird in der richtigen Phase sichtbar (Test).
+- [x] Mini-Szene (eine Entity mit einer Komponente, die per Update die Position ändert) läuft 100 Frames und endet im erwarteten Zustand.
+- [x] Zwei Läufe mit gleichem Skript ergeben bytegleiche Zustandsdumps (Dump-Format deterministisch).
+- [x] Skriptierte Eingabe wird in der richtigen Phase sichtbar (Test).
 
 ## M1.5a Subsystem-Vertrag und Event-Bus (ADR-015)
 
@@ -98,11 +98,11 @@
 5. Regel: Kein Subsystem importiert ein anderes. Kommunikation nur über Welt-Komponenten und Events.
 
 **Abnahme**
-- [ ] ArchUnit-Test: Subsystem-Implementierungen importieren sich nicht gegenseitig.
-- [ ] Start mit zwei Subsystemen, die dieselbe Komponente schreiben, schlägt mit klarer Fehlermeldung fehl (Test).
-- [ ] Start mit nicht erfülltem `requires` schlägt mit klarer Fehlermeldung fehl (Test).
-- [ ] Ereignisse eines Subsystems sind im nächsten Phasenschritt für Konsumenten sichtbar, Reihenfolge deterministisch (Test über 1000 Frames).
-- [ ] Mini-Szene aus M1.5 läuft unverändert über die neue Subsystem-Struktur.
+- [x] ArchUnit-Test: Subsystem-Implementierungen importieren sich nicht gegenseitig.
+- [x] Start mit zwei Subsystemen, die dieselbe Komponente schreiben, schlägt mit klarer Fehlermeldung fehl (Test).
+- [x] Start mit nicht erfülltem `requires` schlägt mit klarer Fehlermeldung fehl (Test).
+- [x] Ereignisse eines Subsystems sind im nächsten Phasenschritt für Konsumenten sichtbar, Reihenfolge deterministisch (Test über 1000 Frames).
+- [x] Mini-Szene aus M1.5 läuft unverändert über die neue Subsystem-Struktur.
 
 ## M1.6 Abschluss
 
