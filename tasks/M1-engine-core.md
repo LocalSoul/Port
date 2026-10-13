@@ -44,10 +44,10 @@
 4. `Time`-Werte (Delta, Fixed-Delta, Frame-Nummer) abrufbar.
 
 **Abnahme**
-- [ ] Reihenfolge innerhalb einer Phase ist wie registriert (Test).
-- [ ] Reihenfolge der Phasen pro Frame: `EARLY` → `FIXED`* → `UPDATE` → `LATE` (Test).
-- [ ] Bei Frame-Delta = 2,5 × Fixed-Delta werden zwei `FIXED`-Aufrufe ausgeführt und der Rest bleibt im Akkumulator (Test).
-- [ ] Gleiche Eingabe ergibt gleiche Aufrufabfolge (Determinismus-Test über 1000 Frames).
+- [x] Reihenfolge innerhalb einer Phase ist wie registriert (Test).
+- [x] Reihenfolge der Phasen pro Frame: `EARLY` → `FIXED`* → `UPDATE` → `LATE` (Test).
+- [x] Bei Frame-Delta = 2,5 × Fixed-Delta werden zwei `FIXED`-Aufrufe ausgeführt und der Rest bleibt im Akkumulator (Test).
+- [x] Gleiche Eingabe ergibt gleiche Aufrufabfolge (Determinismus-Test über 1000 Frames).
 
 ## M1.4 Welt, Entities, Transform
 
