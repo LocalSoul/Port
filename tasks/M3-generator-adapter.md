@@ -22,10 +22,10 @@
 5. `mapping.tsv` und `adapter-metadata.json` (Format in `docs/modules/adapter-unity.md`).
 
 **Abnahme**
-- [ ] Lifecycle-Reihenfolge gegen eine dokumentierte Referenzabfolge getestet.
-- [ ] Ein Test belegt: `Translate(new Vector3(1,0,0))` im Unity-Koordinatensystem ergibt die erwartete Position im Core-Koordinatensystem.
-- [ ] Konsistenztest: jedes `full`/`stub`-Symbol in den Metadaten hat einen Mapping-Eintrag und umgekehrt.
-- [ ] ArchUnit: `adapter-unity` importiert nichts aus `engine-core` im `main`-Scope.
+- [x] Lifecycle-Reihenfolge gegen eine dokumentierte Referenzabfolge getestet.
+- [x] Ein Test belegt: `Translate(new Vector3(1,0,0))` im Unity-Koordinatensystem ergibt die erwartete Position im Core-Koordinatensystem.
+- [x] Konsistenztest: jedes `full`/`stub`-Symbol in den Metadaten hat einen Mapping-Eintrag und umgekehrt.
+- [x] ArchUnit: `adapter-unity` importiert nichts aus `engine-core` im `main`-Scope.
 
 ## M3.2 Generator, Grundumfang
 
