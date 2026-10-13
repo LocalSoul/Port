@@ -1,0 +1,15 @@
+<Project>
+  <!-- Gemeinsame Einstellungen für das Frontend (docs/conventions.md). -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>12.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Deterministic>true</Deterministic>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <PathMap>$(MSBuildThisFileDirectory)=/frontend-unity/dotnet/</PathMap>
+  </PropertyGroup>
+</Project>

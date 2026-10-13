@@ -5,7 +5,8 @@
     <LangVersion>9.0</LangVersion>
     <Nullable>disable</Nullable>
     <Deterministic>true</Deterministic>
-    <DebugType>none</DebugType>
+    <!-- Eingebettete Portable PDB: liefert dem Frontend die echten Namen lokaler Variablen. -->
+    <DebugType>embedded</DebugType>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <PathMap>$(MSBuildThisFileDirectory)=/testdata/</PathMap>

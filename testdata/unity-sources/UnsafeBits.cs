@@ -1,4 +1,5 @@
-// Nicht übersetzbares Konstrukt (unsafe) neben normalem Code (M2.3).
+// Nicht übersetzbares Konstrukt (unsafe/fixed) neben normalem Code (M2.3). Der fixed-Block bleibt im
+// Release-Build erhalten (Pinning), ein einfaches *(&x) würde der Compiler wegoptimieren.
 public class UnsafeBits
 {
     public int Plain(int a)
@@ -6,14 +7,16 @@ public class UnsafeBits
         return a + 1;
     }
 
-    public int Peek(int value)
+    public int First(int[] values)
     {
-        int result;
+        int result = 0;
         unsafe
         {
-            int* p = &value;
-            result = *p;
+            fixed (int* p = values)
+            {
+                result = p[0];
+            }
         }
-        return result;
+        return result + Plain(result);
     }
 }

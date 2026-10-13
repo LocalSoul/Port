@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- port-frontend-unity: Unity-Mono-Assembly → IR (docs/modules/frontend-unity.md, ADR-005). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>port-frontend-unity</AssemblyName>
+    <RootNamespace>PortFrontendUnity</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="ICSharpCode.Decompiler" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="PortFrontendUnity.Tests" />
+  </ItemGroup>
+</Project>
