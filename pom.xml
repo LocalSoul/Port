@@ -14,6 +14,8 @@
 
   <modules>
     <module>ir</module>
+    <module>engine-api</module>
+    <module>engine-core</module>
   </modules>
 
   <properties>

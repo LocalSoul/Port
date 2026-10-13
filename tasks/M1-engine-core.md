@@ -31,9 +31,9 @@
 3. Operationen: Addition, Skalierung, Skalarprodukt, Kreuzprodukt, Länge, Normalisierung, Quaternion-Multiplikation, Rotation eines Vektors, Matrix-Komposition aus Position/Rotation/Skalierung.
 
 **Abnahme**
-- [ ] Tests für alle Operationen inklusive Randfälle (Nullvektor, Einheitsquaternion, Gleitkommatoleranz mit definiertem Epsilon).
-- [ ] Kreuzprodukt von X und Y ergibt +Z (rechts-händig).
-- [ ] Alle Typen dokumentieren Einheiten und Konvention im Javadoc.
+- [x] Tests für alle Operationen inklusive Randfälle (Nullvektor, Einheitsquaternion, Gleitkommatoleranz mit definiertem Epsilon).
+- [x] Kreuzprodukt von X und Y ergibt +Z (rechts-händig).
+- [x] Alle Typen dokumentieren Einheiten und Konvention im Javadoc.
 
 ## M1.3 Scheduler
 
