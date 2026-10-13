@@ -4,8 +4,8 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 
 ## Aktueller Stand
 
-- Phase: **M3a abgeschlossen** auf Branch `task/M3a-runtime-system` (alle Abnahmekriterien in `tasks/M3a-runtime-system.md` erfüllt; `scripts/build-dotnet.sh` und `./mvnw -q verify` grün). Übersetzter Spielcode nutzt jetzt `List`, `Dictionary`, Strings, Math, Exceptions und `Func`/`Action` mit .NET-Semantik. Merge nach `main` steht aus (Nutzer entscheidet).
-- M0 bis M3 und ADR-025 sind auf `main` (lokal, kein Remote).
+- Phase: **M3a abgeschlossen** und nach `main` gemergt (alle Abnahmekriterien in `tasks/M3a-runtime-system.md` erfüllt; `scripts/build-dotnet.sh` und `./mvnw -q verify` grün). Übersetzter Spielcode nutzt jetzt `List`, `Dictionary`, Strings, Math, Exceptions und `Func`/`Action` mit .NET-Semantik.
+- M0 bis M3a, ADR-019 und ADR-025 sind auf `main` (lokal, kein Remote).
 - Nächste Aufgabe laut Roadmap: M4 (CLI), danach M4a (Launcher).
 - Letzte Session: 2026-10-13, M0.2 bis M3a.4, ADR-019, ADR-024, ADR-025
 
@@ -173,5 +173,5 @@ Alle erscheinen als `raw` + `:manual` bzw. als gemeldeter, übersprungener Typ, 
 
 - Vor dem Start die Checkliste in `docs/setup.md` prüfen.
 - Layout und Projektarten: `docs/projects.md` lesen (Spiele in `games/`, Engines in `engines/`, ADR-020 PROPOSED).
-- Branch `task/M3a-runtime-system` nach `main` mergen (Nutzer entscheidet), dann M4 (CLI) planen. Vor dem Generator-/Golden-Test `scripts/build-dotnet.sh` laufen lassen.
+- M4 (CLI) mit dem Nutzer planen. Vor dem Generator-/Golden-Test `scripts/build-dotnet.sh` laufen lassen.
 - Offene Nutzerfrage aus M3a: Ressourcenpfad der Mappings für M4.
