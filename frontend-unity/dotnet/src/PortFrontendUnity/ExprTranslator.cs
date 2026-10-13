@@ -68,7 +68,8 @@ internal sealed class ExprTranslator
         {
             return Literals.Constant(constant.ConstantValue, constant.Type);
         }
-        throw new UnsupportedConstructException("Literal ohne Typinformation");
+        // Teil eines konstant gefalteten Ausdrucks ohne eigene Annotation: Typ aus dem .NET-Wert.
+        return Literals.FromClrValue(expression.Value);
     }
 
     private Sx Identifier(IdentifierExpression expression)
@@ -241,15 +242,36 @@ internal sealed class ExprTranslator
 
     private static void CheckPrimitiveOperands(Expression? left, Expression? right)
     {
-        IType leftType = left.Rr().Type;
-        IType rightType = right.Rr().Type;
-        bool leftOk = TypeNames.IsNumericOrBool(leftType) || leftType.Kind == TypeKind.Null;
-        bool rightOk = TypeNames.IsNumericOrBool(rightType) || rightType.Kind == TypeKind.Null;
-        if (!leftOk || !rightOk)
+        if (!IsPrimitiveValued(left) || !IsPrimitiveValued(right))
         {
             throw new UnsupportedConstructException(
-                "Operator auf Nicht-Primitiv (" + leftType.FullName + ", " + rightType.FullName + ")");
+                "Operator auf Nicht-Primitiv (" + left.Rr().Type.FullName + ", " + right.Rr().Type.FullName + ")");
         }
+    }
+
+    /// <summary>
+    /// Prüft, ob ein Ausdruck einen primitiven Wert liefert. Verschachtelte Rechenausdrücke tragen nicht
+    /// immer eine Semantik-Annotation; dann entscheiden die Operanden.
+    /// </summary>
+    private static bool IsPrimitiveValued(Expression? expression)
+    {
+        ResolveResult rr = expression.Rr();
+        if (rr.Type.Kind == TypeKind.Null)
+        {
+            return true;
+        }
+        if (rr.Type.Kind != TypeKind.Unknown)
+        {
+            return TypeNames.IsNumericOrBool(rr.Type);
+        }
+        return expression switch
+        {
+            ParenthesizedExpression p => IsPrimitiveValued(p.Expression),
+            BinaryOperatorExpression b => IsPrimitiveValued(b.Left) && IsPrimitiveValued(b.Right),
+            UnaryOperatorExpression u => IsPrimitiveValued(u.Expression),
+            PrimitiveExpression p => Literals.IsPrimitiveClrValue(p.Value),
+            _ => false,
+        };
     }
 
     private Sx Unary(UnaryOperatorExpression expression)

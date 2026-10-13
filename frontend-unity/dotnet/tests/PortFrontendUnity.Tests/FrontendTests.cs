@@ -26,8 +26,8 @@ public class FrontendTests
         var result = Run("--assembly", Fixtures.Assembly(), "--out", outDir, "--no-sha256");
         Assert.Equal(0, result.Exit);
         string[] files = Directory.GetFiles(outDir).Select(Path.GetFileName).OrderBy(n => n, StringComparer.Ordinal).ToArray()!;
-        Assert.Equal(new[] { "ControlFlow.ir", "Counter.ir", "Holder.ir", "Mover.ir", "UnsafeBits.ir" }, files);
-        Assert.Contains("5 Typen", result.Error);
+        Assert.Equal(new[] { "ControlFlow.ir", "Counter.ir", "Edges.ir", "Holder.ir", "Mover.ir", "UnsafeBits.ir" }, files);
+        Assert.Contains("6 Typen", result.Error);
     }
 
     [Fact]
@@ -54,6 +54,18 @@ public class FrontendTests
         Assert.Contains("(method Plain i32 ((a i32)) :mods (public) (block (return (+ a 1i32))))", text);
         Assert.Contains("1 raw-Stellen", result.Error);
         Assert.Contains("raw: UnsafeBits::First: fixed-Block (unsafe, Zeiger)", result.Error);
+    }
+
+    [Fact]
+    public void FoldedConstantsAndUntranslatableInitializers()
+    {
+        string outDir = Fixtures.TempDir();
+        var result = Run("--assembly", Fixtures.Assembly(), "--out", outDir, "--classes", "Edges", "--no-sha256");
+        Assert.Equal(0, result.Exit);
+        string text = File.ReadAllText(Path.Combine(outDir, "Edges.ir"));
+        Assert.Contains("(sfield System.MathF::PI) 2.0f32", text);
+        Assert.Contains("(raw cs \"() => 1\")", text);
+        Assert.Contains("raw: Edges::producer:", result.Error);
     }
 
     [Fact]

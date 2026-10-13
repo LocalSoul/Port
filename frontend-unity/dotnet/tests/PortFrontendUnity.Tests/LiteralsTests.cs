@@ -51,6 +51,18 @@ public class LiteralsTests
         Assert.Equal("\"emoji \uD83D\uDE00\"", S.Str(pair).Text);
     }
 
+    [Fact]
+    public void TypesLiteralsWithoutAnnotationFromClrValue()
+    {
+        Assert.Equal("2.0f32", S.Render(Literals.FromClrValue(2f)));
+        Assert.Equal("7i32", S.Render(Literals.FromClrValue(7)));
+        Assert.Equal("7u64", S.Render(Literals.FromClrValue(7UL)));
+        Assert.Equal("(char 65)", S.Render(Literals.FromClrValue('A')));
+        Assert.Equal("null", S.Render(Literals.FromClrValue(null)));
+        Assert.True(Literals.IsPrimitiveClrValue(1.5));
+        Assert.False(Literals.IsPrimitiveClrValue("text"));
+    }
+
     [Theory]
     [InlineData("1", "1.0")]
     [InlineData("1E+10", "1e10")]

@@ -35,6 +35,36 @@ internal static class Literals
         }
     }
 
+    /// <summary>Literal aus einem .NET-Wert, wenn keine Typinformation vorliegt.</summary>
+    public static Sx FromClrValue(object? value)
+    {
+        return value switch
+        {
+            null => S.A("null"),
+            bool b => S.A(b ? "true" : "false"),
+            char c => S.L(S.A("char"), S.A(((int)c).ToString(CultureInfo.InvariantCulture))),
+            string s => S.Str(s),
+            sbyte => Integer(value, "i8"),
+            byte => Integer(value, "u8"),
+            short => Integer(value, "i16"),
+            ushort => Integer(value, "u16"),
+            int => Integer(value, "i32"),
+            uint => Integer(value, "u32"),
+            long => Integer(value, "i64"),
+            ulong => Integer(value, "u64"),
+            float f => Float(f),
+            double d => Double(d),
+            _ => throw new UnsupportedConstructException("Literal vom Typ " + value.GetType().Name),
+        };
+    }
+
+    /// <summary>Prüft, ob ein .NET-Wert ein IR-Primitiv (Zahl, bool, char) ist.</summary>
+    public static bool IsPrimitiveClrValue(object? value)
+    {
+        return value is bool or char or sbyte or byte or short or ushort or int or uint or long or ulong
+            or float or double;
+    }
+
     private static SAtom Integer(object value, string suffix)
     {
         string digits = Convert.ToString(value, CultureInfo.InvariantCulture)!;

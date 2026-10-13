@@ -44,7 +44,7 @@ class UnityFrontendIntegrationTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"ControlFlow", "Counter", "Holder", "Mover", "UnsafeBits"})
+  @ValueSource(strings = {"ControlFlow", "Counter", "Edges", "Holder", "Mover", "UnsafeBits"})
   void matchesGoldenFile(String type) throws IOException {
     String printed = all.canonicalTexts().get(type);
     Path golden = RepoPaths.GOLDEN_DIR.resolve(type + ".ir");
@@ -60,9 +60,9 @@ class UnityFrontendIntegrationTest {
   @Test
   void translatesExactlyTheFixtureTypes() {
     assertEquals(
-        List.of("ControlFlow", "Counter", "Holder", "Mover", "UnsafeBits"),
+        List.of("ControlFlow", "Counter", "Edges", "Holder", "Mover", "UnsafeBits"),
         new ArrayList<>(all.canonicalTexts().keySet()));
-    assertTrue(all.summary().contains("5 Typen"), all.summary());
+    assertTrue(all.summary().contains("6 Typen"), all.summary());
   }
 
   @Test
@@ -115,6 +115,6 @@ class UnityFrontendIntegrationTest {
         text.contains(
             "  (method Plain i32 ((a i32)) :mods (public)\n    (block\n      (return (+ a 1i32)))))"),
         text);
-    assertTrue(all.summary().contains("1 raw-Stellen"), all.summary());
+    assertTrue(all.summary().contains("raw: UnsafeBits::First: fixed-Block"), all.summary());
   }
 }

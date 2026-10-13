@@ -107,7 +107,7 @@ internal sealed class DeclTranslator
             report.SkippedType(typeName + "." + nested.Name, "verschachtelter Typ (Spec-Lücke)");
             return new List<Sx>();
         }
-        string symbol = typeName + "::" + declaration.Name;
+        string symbol = typeName + "::" + SymbolName(declaration);
         var context = new MemberContext(symbol, report);
         try
         {
@@ -119,6 +119,22 @@ internal sealed class DeclTranslator
         {
             context.Raw(e.Reason);
             return new List<Sx> { Placeholder(declaration, context) };
+        }
+    }
+
+    /// <summary>Name für Meldungen; Feld- und Event-Deklarationen tragen ihn an den Variablen.</summary>
+    private static string SymbolName(EntityDeclaration declaration)
+    {
+        switch (declaration)
+        {
+            case FieldDeclaration field:
+                return string.Join(",", field.Variables.Select(v => v.Name));
+            case EventDeclaration @event:
+                return string.Join(",", @event.Variables.Select(v => v.Name));
+            case ConstructorDeclaration constructor:
+                return constructor.HasModifier(ICSharpCode.Decompiler.CSharp.Syntax.Modifiers.Static) ? ".cctor" : ".ctor";
+            default:
+                return declaration.Name;
         }
     }
 
@@ -177,7 +193,21 @@ internal sealed class DeclTranslator
         {
             return null;
         }
-        return new StmtTranslator(context).Expressions.Translate(variable.Initializer);
+        return InitializerOrRaw(variable.Initializer, context);
+    }
+
+    /// <summary>Initialisierer; nicht übersetzbar wird er zu <c>(raw cs "...")</c> als Ausdruck.</summary>
+    private static Sx InitializerOrRaw(Expression initializer, MemberContext context)
+    {
+        try
+        {
+            return new StmtTranslator(context).Expressions.Translate(initializer);
+        }
+        catch (UnsupportedConstructException e)
+        {
+            context.Raw(e.Reason);
+            return S.L(S.A("raw"), S.A("cs"), S.Str(CSharpText.Of(initializer)));
+        }
     }
 
     private List<Sx> Property(ITypeDefinition type, PropertyDeclaration declaration, MemberContext context)
@@ -213,7 +243,7 @@ internal sealed class DeclTranslator
         if (declaration.Initializer != null)
         {
             fieldItems.Add(S.A(":init"));
-            fieldItems.Add(new StmtTranslator(context).Expressions.Translate(declaration.Initializer));
+            fieldItems.Add(InitializerOrRaw(declaration.Initializer, context));
         }
         Sx getter = S.L(S.A("return"), access);
         Sx? setter = property.CanSet ? S.L(S.A("block"), S.L(S.A("expr"), S.L(S.A("set"), access, S.A("value")))) : null;

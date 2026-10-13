@@ -1,0 +1,14 @@
+(ir :version 1 :assembly "Assembly-CSharp")
+
+(class Edges :mods (public)
+  (field producer System.Func<i32> :mods (private) :init (raw cs "() => 1")
+    :manual "Ausdruck LambdaExpression")
+  (method Angle f32 ((i i32) (count i32)) :mods (public)
+    (block
+      (return
+        (+ (/ (sfield System.MathF::PI) 2.0f32)
+          (/ (* (conv f32 i) (sfield System.MathF::PI)) (conv f32 count))))))
+  (method Produce i32 () :mods (public)
+    (block
+      (raw cs "return producer();"))
+    :manual "Member eines generischen Typs System.Func (Spec-Lücke vor M3a)"))
