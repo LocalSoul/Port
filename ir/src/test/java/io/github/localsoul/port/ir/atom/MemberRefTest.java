@@ -33,7 +33,12 @@ class MemberRefTest {
         "Typ::Name<i32>#string",
         "Typ::Map<K,V>#Dictionary<K,V[]>,i32&",
         "UnityEngine.Vector3::op_Multiply#UnityEngine.Vector3,f32",
-        "Native.libmath::clamp_add#u32,u32"
+        "Native.libmath::clamp_add#u32,u32",
+        "System.Collections.Generic.List<UnityEngine.Transform>::Add#T",
+        "System.Collections.Generic.Dictionary<string,System.Collections.Generic.List<i32>>::TryGetValue#TKey,TValue&",
+        "System.Func<i32>::Invoke#",
+        "Box<T>::value",
+        "Box<i32[]>::Map<string>#T"
       })
   void parsesAndPrintsIdentically(String text) throws IrSyntaxException {
     MemberRef ref = parse(text);
@@ -87,7 +92,11 @@ class MemberRefTest {
         "Foo::Bar<>#         | 10 | leere Typargumentliste",
         "Foo::Bar#i32 x      | 13 | unerwartetes ' x'",
         "Foo::Bar##          | 10 | Typname erwartet",
-        "Foo::Bar.Baz        | 9  | unerwartetes '.Baz'"
+        "Foo::Bar.Baz        | 9  | unerwartetes '.Baz'",
+        "List<>::Add#T       | 6  | leere Typargumentliste",
+        "List<i32::Add#T     | 9  | ',' oder '>' erwartet",
+        "List<i32>Add        | 10 | '::' erwartet",
+        "List<i32>[]::Add    | 10 | '::' erwartet"
       })
   void rejectsMalformedReferencesWithPositionAndReason(String text, int column, String reason) {
     IrSyntaxException e = assertThrows(IrSyntaxException.class, () -> parse(text));
@@ -96,9 +105,31 @@ class MemberRefTest {
   }
 
   @Test
+  void splitsGenericDeclaringType() throws IrSyntaxException {
+    MemberRef ref = parse("System.Collections.Generic.List<UnityEngine.Transform>::Add#T");
+    assertEquals("System.Collections.Generic.List", ref.declaringType());
+    assertEquals(
+        List.of(new NamedType("UnityEngine.Transform", List.of())), ref.declaringTypeArguments());
+    assertEquals("Add", ref.name());
+    assertEquals(List.of(new NamedType("T", List.of())), ref.parameterTypes());
+  }
+
+  @Test
+  void symbolIdDropsDeclaringTypeArguments() throws IrSyntaxException {
+    assertEquals(
+        "System.Collections.Generic.List::Add#T",
+        parse("System.Collections.Generic.List<UnityEngine.Transform>::Add#T").symbolId());
+    assertEquals(
+        parse("System.Collections.Generic.List<i32>::Add#T").symbolId(),
+        parse("System.Collections.Generic.List<string>::Add#T").symbolId());
+    assertEquals("Typ::Name<i32>#string", parse("Typ::Name<i32>#string").symbolId());
+    assertEquals("Mover::speed", parse("Mover::speed").symbolId());
+  }
+
+  @Test
   void rejectsParameterTypesWithoutParameterList() {
     List<TypeRef> params = List.of(new PrimitiveType(Primitive.I32));
     assertThrows(
-        IllegalArgumentException.class, () -> new MemberRef("Foo", "x", List.of(), false, params));
+        IllegalArgumentException.class, () -> MemberRef.of("Foo", "x", List.of(), false, params));
   }
 }

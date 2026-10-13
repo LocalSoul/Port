@@ -175,6 +175,44 @@ class IrValidatorTest {
     assertEquals(List.of(), validate(body));
   }
 
+  @Test
+  void resolvesMembersOfGenericTypeInstancesInFile() throws IrSyntaxException {
+    String body =
+        "(class Box :generics (T) (field value T) (method Put void ((v T)) (return))"
+            + " (method Get T () (return (field this Box<T>::value))))\n"
+            + "(class User (method Use void ((b Box<i32>))"
+            + " (block (expr (call b Box<i32>::Put#T 1i32)) (expr (field b Box<i32>::value)))))";
+    assertEquals(List.of(), validate(body));
+  }
+
+  @Test
+  void reportsMissingMemberOfGenericTypeInstance() throws IrSyntaxException {
+    String body =
+        "(class Box :generics (T) (method Put void ((v T)) (return)))\n"
+            + "(class User (method Use void ((b Box<i32>)) (expr (call b Box<i32>::Put#i32 1i32))))";
+    Diagnostic d = single(validate(body));
+    assertEquals("IR002", d.id());
+    assertTrue(d.message().contains("Box<i32>::Put#i32"), d.message());
+  }
+
+  @Test
+  void doesNotReportOpenParameterTypesOfExternalGenericMembers() throws IrSyntaxException {
+    String body =
+        "(class A (method M void ((xs System.Collections.Generic.List<i32>))"
+            + " (expr (call xs System.Collections.Generic.List<i32>::Add#T 1i32))))";
+    List<Diagnostic> diagnostics =
+        validate(body, Set.of("System.Collections.Generic.List")::contains);
+    assertEquals(List.of(), diagnostics);
+  }
+
+  @Test
+  void checksTypeArgumentsOfDeclaringType() throws IrSyntaxException {
+    String body =
+        "(class A (method M void () (expr (scall System.Collections.Generic.List<Gone>::Clear#))))";
+    Diagnostic d = single(validate(body, Set.of("System.Collections.Generic.List")::contains));
+    assertTrue(d.message().contains("'Gone'"), d.message());
+  }
+
   // --- IR003 ---
 
   @Test

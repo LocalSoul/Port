@@ -42,6 +42,15 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
     - `Mover.ir` entspricht dem Spec-Beispiel bis auf `:sha256` und `:mods (public)` an der Klasse. Die Modifier stehen in der Assembly, das Spec-Beispiel lässt sie weg.
   - `AGENTS.md` ist schreibgeschützt. Vorschlag für den Abschnitt „Wichtige Befehle": `scripts/build-dotnet.sh   # Fixtures (reproduzierbar), Frontend bauen und testen; vor ./mvnw verify für die Integrationstests`.
 
+## ADR-025 Generische Member-Referenzen (in Arbeit, Branch `task/ADR-025-generic-member-refs`)
+
+- Erledigt: ADR-025 (ACCEPTED), Spec Abschnitt 4, `ir` (`MemberRef.declaringTypeArguments`, `symbolId()`, Parser, Validator inkl. offener Parametertypen), Tests grün.
+- Offen:
+  - Unity-Frontend `MemberRefs.cs`: Typargumente des deklarierenden Typs ausgeben, offene Parametertypen aus `MemberDefinition`.
+  - Delegate-Aufruf: Ziel ist der Delegate-Wert, nicht `this` (`CallTarget`).
+  - Fixture mit eigenem generischen Typ und `List<T>`, Golden Files neu (`Edges` ändert sich), StarCollector-Lauf wiederholen.
+  - Doku `docs/modules/ir.md` und `frontend-unity.md`, Lückenliste in PROGRESS, Merge.
+
 ## StarCollector-Probelauf (M2.6, 2026-10-13)
 
 - Mit den lokalen Unity-DLLs: 1 Typ (`StarCollectorGame`), 41 Mitglieder, Exit 0, gültige IR, keine Strukturfehler. 6 `raw`-Stellen, alle wegen `List<T>` (Feld `stars` mit Initialisierer, `ResetGame`, `UpdateSpawning`, `SpawnStar`, `UpdateStars`, `CheckCollect`). Validator: 36 × IR002 `info` (externe Unity-/System-Typen ohne Katalog), sonst nichts.

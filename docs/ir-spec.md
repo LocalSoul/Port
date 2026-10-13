@@ -55,15 +55,17 @@ Generische Typparameter stehen als Name (`T`), Deklaration über `:generics`.
 
 ```
 name  := ident | ".ctor" | ".cctor"
-mref  := qname "::" name [ "<" type {"," type} ">" ] [ "#" [ type {"," type} ] ]
+mref  := qname [ "<" type {"," type} ">" ] "::" name [ "<" type {"," type} ">" ] [ "#" [ type {"," type} ] ]
 ```
 
 - Feld/Property: `Namespace.Typ::name`
 - Methode: `Namespace.Typ::name#ParamTyp1,ParamTyp2` (Parameterliste leer: `#` alleine)
 - Konstruktor: `Namespace.Typ::.ctor#f32,f32,f32`, statischer: `::.cctor#`
 - Generische Methode: `Typ::Name<i32>#string`
+- Member einer generischen Typinstanz: `System.Collections.Generic.List<UnityEngine.Transform>::Add#T` (ADR-025). Die Typargumente vor `::` sind die der Instanz.
+- Hinter `#` stehen immer die Parametertypen der **Deklaration** (offen, mit Typparametern wie `T`), auch bei Membern generischer Typen und bei generischen Methoden.
 
-Diese Referenz ist zugleich die **stabile Symbol-ID** für Index, Lint und `manual/`-Overrides.
+Die Referenz ohne die Typargumente des deklarierenden Typs ist die **stabile Symbol-ID** für Index, Lint und `manual/`-Overrides (`System.Collections.Generic.List::Add#T`). Bei nicht-generischen Typen ist das die Referenz selbst.
 
 ## 5. Deklarationen
 

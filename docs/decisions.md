@@ -34,6 +34,7 @@ Format pro Eintrag: Kontext, Optionen, Empfehlung/Entscheidung, Folgen.
 | 022 | Engine-Recomp aus Binärdateien, funktionale Gleichheit | PROPOSED | M11a |
 | 023 | Nativer Code: Disassemblieren und Heben, wann immer möglich | ACCEPTED (Richtung), Umsetzung PROPOSED | M10b |
 | 024 | Ganzzahlen ohne Typsuffix (`nat`) in der IR | ACCEPTED | M0 |
+| 025 | Member-Referenzen auf generische Typinstanzen | ACCEPTED | M3a |
 
 ---
 
@@ -262,3 +263,15 @@ IL2CPP-Spiele sind vorerst nicht im Scope (kaum sauber dekompilierbar).
 **Entscheidung:** (b). Die drei Werte sind Metadaten bzw. Code-Units mit festem Typ, ein Suffix trägt keine Information.
 **Umsetzung:** Spec Abschnitt 2 bekommt `nat := ziffern`. `header` nutzt `":version" nat`, `literal` nutzt `"(" "char" nat ")"`, `nativeinfo` nutzt `[":size" nat]`. Der Lexer liefert `nat` als eigenes Token (`SBareInteger`), die AST-Ebene lehnt es überall sonst mit „Zahl ohne Typsuffix" ab. Zahlen mit Vorzeichen, Punkt oder Exponent brauchen immer ein Suffix.
 **Folgen:** Keine Versionsänderung (Spec Abschnitt 11: noch keine Version veröffentlicht, die Beispiele waren schon so geschrieben). Printer gibt `nat` ohne Suffix aus.
+
+## ADR-025: Member-Referenzen auf generische Typinstanzen
+**Status:** ACCEPTED (vom Nutzer entschieden, 2026-10-13)
+**Kontext:** `mref` erlaubt vor `::` nur einen `qname`. Aufrufe wie `List<Transform>.Add(x)` oder der Delegate-Aufruf `producer()` (`Func<int>::Invoke`) waren nicht ausdrückbar. Im Probelauf mit StarCollector (M2.6) war das die einzige blockierende Lücke.
+**Entscheidung:**
+1. **Grammatik:** `mref := qname [ "<" type {"," type} ">" ] "::" name [ "<" type {"," type} ">" ] [ "#" [ type {"," type} ] ]`. Die Typargumente vor `::` sind die der Instanz (z. B. `System.Collections.Generic.List<UnityEngine.Transform>::Add#T`). Sie dürfen Typparameter des umgebenden Typs oder der Methode enthalten.
+2. **Signatur offen:** Hinter `#` stehen immer die Parametertypen der Deklaration, also mit Typparametern (`#T`), nicht die eingesetzten Typen. So sind Überladungen auch dann eindeutig, wenn sie nach dem Einsetzen gleich aussehen (`M(T)` und `M(int)` mit `T = int`). Gleiche Regel wie bei generischen Methoden.
+3. **Symbol-ID:** Die stabile Symbol-ID einer Referenz ist die Referenz ohne die Typargumente des deklarierenden Typs (`System.Collections.Generic.List::Add#T`). Alle Instanzen zeigen auf dasselbe Symbol, passend zur Deklaration `(class List :generics (T) ...)`.
+**Optionen, die verworfen wurden:** eingesetzte Parametertypen (Überladungen können zusammenfallen); Stelligkeit im Namen (`List<1>`), weil sie von Typnamen in Deklarationen abweicht.
+**Folgen:**
+- Ein Typ `X` und ein Typ `X<T>` mit gleichnamigem Member gleicher Signatur hätten dieselbe Symbol-ID. In .NET selten; innerhalb einer Datei meldet IR004 bereits gleichnamige Typen.
+- Parser, Printer und Validator in `ir` (`MemberRef` mit Typargumenten am deklarierenden Typ, `symbolId()`), das Unity-Frontend (Member generischer Typen und Delegate-Aufrufe) und die Golden Files werden angepasst. Version bleibt 1 (abwärtskompatible Erweiterung, Spec Abschnitt 11).

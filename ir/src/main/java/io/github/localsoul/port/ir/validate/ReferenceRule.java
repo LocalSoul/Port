@@ -92,11 +92,16 @@ final class ReferenceRule {
   private void checkMember(MemberRef member, Reference reference) {
     String typeName = member.declaringType();
     checkTypeName(typeName, reference);
+    for (TypeRef argument : member.declaringTypeArguments()) {
+      checkType(argument, reference);
+    }
     for (TypeRef argument : member.genericArguments()) {
       checkType(argument, reference);
     }
+    boolean openSignature =
+        !member.declaringTypeArguments().isEmpty() || !member.genericArguments().isEmpty();
     for (TypeRef parameter : member.parameterTypes()) {
-      checkType(parameter, reference);
+      checkParameterType(parameter, openSignature, reference);
     }
     TypeDecl declared = declaredTypes.get(typeName);
     if (declared != null && !isDeclared(declared, member)) {
@@ -105,6 +110,23 @@ final class ReferenceRule {
           reference,
           "Member '" + member + "' ist in '" + typeName + "' nicht deklariert",
           null);
+    }
+  }
+
+  /**
+   * Parametertypen einer Referenz sind die der Deklaration (ADR-025). Bei generischen Typen oder
+   * Methoden enthalten sie deren Typparameter (z. B. {@code T}); einfache Namen ohne Punkt gelten
+   * dort als Typparameter und werden nicht aufgelöst.
+   */
+  private void checkParameterType(TypeRef parameter, boolean openSignature, Reference reference) {
+    for (NamedType named : NamedTypes.in(parameter)) {
+      boolean looksLikeTypeParameter = named.qualifiedName().indexOf('.') < 0;
+      if (openSignature
+          && looksLikeTypeParameter
+          && !declaredTypes.containsKey(named.qualifiedName())) {
+        continue;
+      }
+      checkTypeName(named.qualifiedName(), reference);
     }
   }
 

@@ -29,9 +29,16 @@ final class AtomParser {
     return type;
   }
 
-  /** {@code mref := qname "::" name [ "<" types ">" ] [ "#" [ types ] ]} bis zum Ende des Atoms. */
+  /**
+   * {@code mref := qname [ "<" types ">" ] "::" name [ "<" types ">" ] [ "#" [ types ] ]} bis zum
+   * Ende des Atoms (ADR-025).
+   */
   MemberRef parseWholeMember() throws IrSyntaxException {
     String declaringType = parseQualifiedName("Typname");
+    List<TypeRef> declaringTypeArguments = List.of();
+    if (peek('<')) {
+      declaringTypeArguments = parseTypeArguments();
+    }
     if (!text.startsWith("::", pos)) {
       throw error(pos, "'::' erwartet");
     }
@@ -49,7 +56,13 @@ final class AtomParser {
       parseParameterTypes(parameterTypes);
     }
     expectEnd("Member-Referenz");
-    return new MemberRef(declaringType, name, genericArguments, hasParameterList, parameterTypes);
+    return new MemberRef(
+        declaringType,
+        declaringTypeArguments,
+        name,
+        genericArguments,
+        hasParameterList,
+        parameterTypes);
   }
 
   /** {@code (prim | qname [ "<" type { "," type } ">" ]) { suffix }}. */
