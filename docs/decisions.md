@@ -28,7 +28,7 @@ Format pro Eintrag: Kontext, Optionen, Empfehlung/Entscheidung, Folgen.
 | 016 | ECS-Entwurf | ACCEPTED | – |
 | 017 | KI-Fix-Phase | PROPOSED | M7a |
 | 018 | Agent-first Tool-Design | PROPOSED | M6a |
-| 019 | BCL-Nachbau und Typabbildung | PROPOSED (Teilfrage Unsigned-Typen OPEN) | M3a |
+| 019 | BCL-Nachbau und Typabbildung | ACCEPTED (Teilfrage Unsigned-Typen OPEN) | M3a / Unsigned spätestens M10b |
 | 020 | Monorepo, Projektarten Game-Recomp und Engine-Recomp, Katalog | PROPOSED | M0 (Layout), M4a |
 | 021 | Technik der Launcher-Oberfläche | OPEN | M12a |
 | 022 | Engine-Recomp aus Binärdateien, funktionale Gleichheit | PROPOSED | M11a |
@@ -202,7 +202,7 @@ IL2CPP-Spiele sind vorerst nicht im Scope (kaum sauber dekompilierbar).
 **Folgen:** CLI-Vertrag wird erweitert, `port-cli` bekommt ein Paket `agent/`.
 
 ## ADR-019: BCL-Nachbau und Typabbildung
-**Status:** PROPOSED (Teilfrage Unsigned-Typen OPEN)
+**Status:** ACCEPTED (vom Nutzer entschieden, 2026-10-13); Teilfrage Unsigned-Typen bleibt OPEN
 **Kontext:** Spielcode nutzt neben der Engine-API auch das .NET-Basisbibliothek-Subset (`System.*`: Collections, Strings, Math, Exceptions). Der Generator braucht dafür eine Java-Entsprechung.
 **Entwurf:**
 1. Neues Modul `runtime-system` mit Java-Implementierungen des benötigten `System.*`-Ausschnitts. Es hängt von keinem anderen Projektmodul ab.
@@ -211,6 +211,11 @@ IL2CPP-Spiele sind vorerst nicht im Scope (kaum sauber dekompilierbar).
 4. Semantikunterschiede werden im Modul dokumentiert und getestet (Beispiele in `docs/type-mapping.md`).
 **Offene Teilfrage:** Abbildung der Unsigned-Typen (`u8`, `u16`, `u32`, `u64`): (a) nächstgrößerer signierter Typ, (b) gleicher Bitbreite mit Hilfsmethoden, (c) Wrapper-Typen. Bis zur Entscheidung erzeugt der Generator `todo` und der Lint meldet SM002.
 **Folgen:** Generierter Code importiert Adapter und `runtime-system`. ArchUnit-Regeln in `AGENTS.md` berücksichtigen das.
+**Detailentscheidungen (Nutzer, 2026-10-13, M3a):**
+- `Dictionary<K,V>` und `HashSet<T>` liefern exakt die .NET-Reihenfolge: Eintragsliste mit LIFO-Freiliste (nach `Remove` füllt das nächste `Add` die Lücke), unabhängig von Hashwerten.
+- Zahlen in Strings werden wie in Unity-Mono / .NET Framework formatiert: `float` mit 7, `double` mit 15 signifikanten Stellen („G“), invariant (`5f` → „5“, `1/3f` → „0.3333333“). Gegen einen Referenzwert aus einem echten Unity-Lauf zu bestätigen.
+- Exceptions als eigene Hierarchie mit .NET-Namen (`SystemException` erbt von `RuntimeException`); Java-eigene Fehler (NPE, Array-Index) werden im generierten `catch` als `NullReferenceException` bzw. `IndexOutOfRangeException` gefangen.
+- Unsigned-Typen bleiben `todo` (Lint SM002), Entscheidung spätestens vor M10b.
 
 ## ADR-020: Monorepo mit zwei Projektarten und Launcher-Profilen
 **Status:** PROPOSED
