@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Synthetische Spielklassen als Eingabe für das Unity-Frontend (M2.1). -->
+  <PropertyGroup>
+    <AssemblyName>Assembly-CSharp</AssemblyName>
+    <RootNamespace />
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../unity-stubs/UnityEngine.Stubs.csproj" />
+  </ItemGroup>
+</Project>

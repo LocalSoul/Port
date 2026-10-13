@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Nur Signaturen der Unity-API, die die Fixtures brauchen. Keine Implementierung. -->
+  <PropertyGroup>
+    <AssemblyName>UnityEngine</AssemblyName>
+    <RootNamespace>UnityEngine</RootNamespace>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,15 @@
+<Project>
+  <!-- Gemeinsame Einstellungen für die C#-Fixtures (docs/conventions.md): reproduzierbar, streng. -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <Deterministic>true</Deterministic>
+    <DebugType>none</DebugType>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <PathMap>$(MSBuildThisFileDirectory)=/testdata/</PathMap>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+</Project>

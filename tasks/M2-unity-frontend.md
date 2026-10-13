@@ -19,7 +19,7 @@
 3. Skript oder MSBuild-Ziel, das daraus eine Test-Assembly `Assembly-CSharp.dll` baut (nicht eingecheckt, wird erzeugt).
 
 **Abnahme**
-- [ ] `dotnet build testdata/...` erzeugt die Test-Assembly reproduzierbar.
+- [x] `dotnet build testdata/...` erzeugt die Test-Assembly reproduzierbar.
 
 ## M2.2 Dekompilierung in IR, Grundumfang
 
