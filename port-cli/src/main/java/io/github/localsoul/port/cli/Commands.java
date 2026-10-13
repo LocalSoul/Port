@@ -8,6 +8,6 @@ final class Commands {
   private Commands() {}
 
   static List<PortCommand> all() {
-    return List.of();
+    return List.of(new InitCommand());
   }
 }

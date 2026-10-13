@@ -6,6 +6,7 @@ import java.nio.file.Path;
 /**
  * Globale Einstellungen eines Aufrufs.
  *
+ * @param workingDir Arbeitsverzeichnis (Basis für relative Pfadargumente)
  * @param projectDir Projektordner ({@code -C}, sonst Arbeitsverzeichnis), absolut und normalisiert
  * @param strict {@code --strict}
  * @param verbose {@code -v}
@@ -14,6 +15,7 @@ import java.nio.file.Path;
  * @param log Fortschrittsausgabe (stderr)
  */
 public record CommandContext(
+    Path workingDir,
     Path projectDir,
     boolean strict,
     boolean verbose,

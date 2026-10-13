@@ -10,9 +10,6 @@ import io.github.localsoul.port.core.DiagnosticIds;
 import io.github.localsoul.port.core.ExitCode;
 import io.github.localsoul.port.core.PortException;
 import io.github.localsoul.port.json.JsonObject;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -60,25 +57,13 @@ class MainTest {
     }
   }
 
-  private record Run(int exitCode, String out, String err) {}
-
-  private static Run run(String... args) {
-    ByteArrayOutputStream out = new ByteArrayOutputStream();
-    ByteArrayOutputStream err = new ByteArrayOutputStream();
-    Main main = new Main(List.of(new EchoCommand()));
-    int exitCode =
-        main.run(
-            args,
-            new PrintStream(out, true, StandardCharsets.UTF_8),
-            new PrintStream(err, true, StandardCharsets.UTF_8),
-            WORK);
-    return new Run(
-        exitCode, out.toString(StandardCharsets.UTF_8), err.toString(StandardCharsets.UTF_8));
+  private static Cli.Run run(String... args) {
+    return Cli.run(List.of(new EchoCommand()), WORK, args);
   }
 
   @Test
   void jsonPrintsExactlyOneObjectAndNothingElse() throws Exception {
-    Run run = run("--json", "-v", "-C", "games/demo", "echo");
+    Cli.Run run = run("--json", "-v", "-C", "games/demo", "echo");
     assertEquals(0, run.exitCode());
     assertEquals("", run.err());
     Golden.assertMatches("main-echo.json", run.out().replace(WORK.toString(), "<work>"));
@@ -86,8 +71,8 @@ class MainTest {
 
   @Test
   void globalFlagsWorkAfterTheCommand() {
-    Run before = run("--json", "--strict", "echo");
-    Run after = run("echo", "--json", "--strict");
+    Cli.Run before = run("--json", "--strict", "echo");
+    Cli.Run after = run("echo", "--json", "--strict");
     assertEquals(before, after);
     assertTrue(after.out().contains("\"strict\": true"), after.out());
   }
@@ -95,33 +80,33 @@ class MainTest {
   @Test
   void strictTurnsOpenManualWorkIntoExit5() {
     assertEquals(0, run("--json", "echo", "manual").exitCode());
-    Run strict = run("--json", "--strict", "echo", "manual");
+    Cli.Run strict = run("--json", "--strict", "echo", "manual");
     assertEquals(5, strict.exitCode());
     assertTrue(strict.out().contains("\"ok\": false"), strict.out());
   }
 
   @Test
   void abortedCommandReportsItsExitCodeAndDiagnostic() {
-    Run run = run("--json", "echo", "fail");
+    Cli.Run run = run("--json", "echo", "fail");
     assertEquals(3, run.exitCode());
     assertTrue(run.out().contains("\"id\": \"PORT-INPUT\""), run.out());
   }
 
   @Test
   void invalidArgumentsGiveExit2InBothFormats() throws Exception {
-    Run unknown = run("--json", "gibtsnicht");
+    Cli.Run unknown = run("--json", "gibtsnicht");
     assertEquals(2, unknown.exitCode());
     Golden.assertMatches("main-unknown-command.json", unknown.out());
-    Run missing = run("--json");
+    Cli.Run missing = run("--json");
     assertEquals(2, missing.exitCode());
-    Run text = run("echo", "a", "b");
+    Cli.Run text = run("echo", "a", "b");
     assertEquals(2, text.exitCode());
     assertTrue(text.err().startsWith("error PORT-ARGS"), text.err());
   }
 
   @Test
   void helpGoesToStdoutWithExit0() {
-    Run run = run("--help");
+    Cli.Run run = run("--help");
     assertEquals(0, run.exitCode());
     assertTrue(run.out().contains("echo"), run.out());
     assertEquals(0, run("echo", "--help").exitCode());
@@ -129,11 +114,11 @@ class MainTest {
 
   @Test
   void textOutputSeparatesDataAndDiagnostics() {
-    Run run = run("echo", "manual");
+    Cli.Run run = run("echo", "manual");
     assertTrue(run.out().contains("strict: false"), run.out());
     assertTrue(run.out().contains("port echo: ok (Exit 0)"), run.out());
     assertTrue(run.err().contains("warn PORT-MANUAL ir/A.ir: Handarbeit offen"), run.err());
-    Run quiet = run("-q", "echo", "manual");
+    Cli.Run quiet = run("-q", "echo", "manual");
     assertEquals("", quiet.out());
     assertEquals("", quiet.err());
   }

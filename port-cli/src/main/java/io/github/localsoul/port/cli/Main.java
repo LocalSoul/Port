@@ -148,6 +148,7 @@ public final class Main {
     }
     Path projectDir = directory == null ? workingDir : workingDir.resolve(directory);
     return new CommandContext(
+        workingDir,
         projectDir.toAbsolutePath().normalize(),
         flag(root, sub, STRICT),
         flag(root, sub, VERBOSE),

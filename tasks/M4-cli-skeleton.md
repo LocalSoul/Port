@@ -34,8 +34,8 @@
 2. Manifest lesen und validieren (Ungültiges → Exit 2 mit Diagnose und Position).
 
 **Abnahme**
-- [ ] `init` auf leerem Ordner erzeugt die Struktur aus dem Vertrag, wiederholter Aufruf ändert nichts (Idempotenz) oder meldet klar „existiert".
-- [ ] Ungültige `port.toml` führt zu Exit 2 mit verständlicher Diagnose.
+- [x] `init` auf leerem Ordner erzeugt die Struktur aus dem Vertrag, wiederholter Aufruf ändert nichts (Idempotenz) oder meldet klar „existiert".
+- [x] Ungültige `port.toml` führt zu Exit 2 mit verständlicher Diagnose.
 
 ## M4.3 `extract`, `ir`
 

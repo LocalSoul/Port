@@ -1,0 +1,29 @@
+{
+  "schema": "port/1",
+  "command": "init",
+  "ok": true,
+  "exitCode": 0,
+  "data": {
+    "path": "demo",
+    "monorepo": false,
+    "created": [
+      ".gitignore",
+      "data/",
+      "input/",
+      "input/Assembly-CSharp.dll",
+      "ir/",
+      "manual/",
+      "port.toml"
+    ]
+  },
+  "diagnostics": [
+    {
+      "id": "PORT-GIT",
+      "severity": "info",
+      "symbol": null,
+      "message": "kein Git-Repo angelegt (außerhalb des Monorepos, Git-Init kommt mit den Git-Befehlen)",
+      "location": null,
+      "hint": null
+    }
+  ]
+}
