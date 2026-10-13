@@ -30,10 +30,10 @@
 3. Fehler: eigene `IrSyntaxException` mit Position (`datei:zeile:spalte`) und klarer Meldung.
 
 **Abnahme**
-- [ ] Zahl ohne Typsuffix wird mit Position abgelehnt (`5.0` ungültig, `5.0f32` gültig).
-- [ ] String-Escapes `\\ \" \n \r \t \uXXXX` funktionieren, ungültige Escapes werden abgelehnt.
-- [ ] Nicht geschlossene Klammer und nicht geschlossener String melden die Position der Öffnung.
-- [ ] Kommentare werden ignoriert, Positionen bleiben korrekt (Zeilen nach Kommentaren stimmen).
+- [x] Zahl ohne Typsuffix wird mit Position abgelehnt (`5.0` ungültig, `5.0f32` gültig).
+- [x] String-Escapes `\\ \" \n \r \t \uXXXX` funktionieren, ungültige Escapes werden abgelehnt.
+- [x] Nicht geschlossene Klammer und nicht geschlossener String melden die Position der Öffnung.
+- [x] Kommentare werden ignoriert, Positionen bleiben korrekt (Zeilen nach Kommentaren stimmen).
 
 ## M0.3 Typ- und Member-Atome
 

@@ -4,14 +4,15 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 
 ## Aktueller Stand
 
-- Phase: M0 (IR), M0.1 erledigt
-- Aktive Aufgabe: `tasks/M0-ir.md`, nächste Teilaufgabe M0.2 (Lexer und S-Expression-Reader), Branch `task/M0-skeleton`
-- Letzte Session: 2026-10-13, Setup und M0.1 (Repo-Skelett)
+- Phase: M0 (IR), M0.1 und M0.2 erledigt
+- Aktive Aufgabe: `tasks/M0-ir.md`, nächste Teilaufgabe M0.3 (Typ- und Member-Atome), Branch `task/M0-skeleton`
+- Letzte Session: 2026-10-13, M0.2 (Lexer und S-Expression-Reader)
 
 ## Erledigt
 
 - Setup: Git-Repo (`main`), Agent-Kit committet, `dev.example` → `io.github.localsoul`, `.gitignore` (inkl. `original/`). Ordner `original/` (Papers, Please) auf Wunsch des Nutzers gelöscht.
 - M0.1 Repo-Skelett: Parent-POM `io.github.localsoul:recomp-parent` (Java 25, UTF-8, alle Plugins gepinnt, `project.build.outputTimestamp` fest), Modul `ir`, Maven-Wrapper 3.3.4 (only-script, Maven 3.9.16), Spotless (google-java-format 1.36.1, `check` in `verify`), Enforcer (Java ≥ 25, Maven ≥ 3.9, gepinnte Plugins, Dependency-Konvergenz, Verbot von Lombok/JUnit 4/Logging-Bibliotheken; in `ir` zusätzlich keine Projektmodule), JUnit 5.14.4, ArchUnit 1.5.0 (Test-Scope), Platzhaltertest.
+- M0.2 Lexer und S-Expression-Reader (Paket `io.github.localsoul.port.ir.sexpr`): `IrLexer`, `SExprReader`, `SExpr`-Knoten mit `SourceSpan`, `IrException`/`IrSyntaxException`. 73 Tests. Folgt ADR-004 (handgeschriebener Reader, Status weiter `PROPOSED`). Platzhaltertest entfernt.
 
 ## Offene Punkte / Nebenfunde
 
@@ -19,6 +20,12 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 - Zielspiel wird ein selbst kompiliertes 2048 (Unity, möglichst Mono-Build, siehe ADR-003). Noch nicht vorhanden.
 - Statische Prüfung (Error Prone oder SpotBugs, `docs/conventions.md`) ist noch nicht im Build. Nicht Teil von M0.1; Wahl offen, vor M0-Abschluss klären.
 - Die SLF4J-Warnung „No SLF4J providers were found“ beim Build stammt von Werkzeugen im Build und ist harmlos.
+
+- Spec-Auslegung in M0.2, bitte bestätigen (Details in `docs/modules/ir.md`):
+  - Die Spec verwendet Ganzzahlen ohne Suffix in `(char 97)`, `:version 1` und `:size 24`, obwohl `header` laut Grammatik `number` (mit Suffix) verlangt. Der Lexer liefert solche Zahlen als `SBareInteger`, M0.4 lässt sie nur an diesen Stellen zu. Eventuell die Grammatik in `docs/ir-spec.md` anpassen (braucht ADR und Freigabe).
+  - Die Spec definiert `exp` nicht. Umgesetzt als `e`/`E`, optional `+`/`-`, Ziffern.
+  - Ganzzahl-Suffix an Zahl mit Punkt oder Exponent (`5.0i32`) und `-0x...` werden abgelehnt (Grammatik erlaubt das erste formal).
+- Wertebereich von Zahlen (`300u8`) wird in M0.2 nicht geprüft, vorgesehen für M0.4.
 
 ## Blockiert durch offene Entscheidung
 
