@@ -58,8 +58,18 @@
 - [x] Ungültige Ausgabe des Programms führt zu klarer Fehlermeldung mit Position.
 
 ## M2.5 Abschluss
-- [ ] `docs/modules/frontend-unity.md` entspricht dem Stand.
-- [ ] Bekannte Lücken (nicht unterstützte Konstrukte) stehen als Liste in `PROGRESS.md`.
+- [x] `docs/modules/frontend-unity.md` entspricht dem Stand.
+- [x] Bekannte Lücken (nicht unterstützte Konstrukte) stehen als Liste in `PROGRESS.md`.
+
+## M2.6 Probelauf mit eigenem Spiel (vom Nutzer ergänzt, 2026-10-13)
+
+**Schritte**
+1. Spiel-Assembly des eigenen Builds „StarCollector" unter `testdata/starcollector/` einchecken, den vollständigen Build (`testdata/Builds/`) ignorieren.
+2. Option `--references` für Unity-DLLs; Probelauf als Test mit Abdeckungsbericht, ohne Golden File.
+
+**Abnahme**
+- [x] Übersetzung läuft mit Exit 0, jede Ausgabedatei ist gültige IR, keine IR001/IR004/IR005.
+- [x] Bericht `frontend-unity/java/target/starcollector-report.txt`; Lücken in `PROGRESS.md`.
 
 ## Nicht-Ziele
 IL2CPP, Szenen/Prefabs, Optimierung des IR, Godot-Frontend.

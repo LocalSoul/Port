@@ -4,10 +4,10 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 
 ## Aktueller Stand
 
-- Phase: **M1 abgeschlossen** (alle Abnahmekriterien in `tasks/M1-engine-core.md` erfüllt, `./mvnw -q verify` grün)
-- M0 und M1 sind nach `main` gemergt (lokal, kein Remote). M2 läuft auf Branch `task/M2-unity-frontend`.
-- Aktive Aufgabe: `tasks/M2-unity-frontend.md`, Vorbereitung (Entscheidungen siehe unten)
-- Letzte Session: 2026-10-13, M0.2 bis M0.7, ADR-024, M1.1 bis M1.6
+- Phase: **M2 abgeschlossen** (alle Abnahmekriterien in `tasks/M2-unity-frontend.md` inklusive M2.6 erfüllt; `scripts/build-dotnet.sh` und `./mvnw -q verify` grün)
+- M0 und M1 sind nach `main` gemergt (lokal, kein Remote). M2 liegt auf Branch `task/M2-unity-frontend`, noch nicht gemergt.
+- Nächste Aufgabe laut `tasks/README.md`: `tasks/M3-generator-adapter.md`. Davor die Spec-Lücken unten klären.
+- Letzte Session: 2026-10-13, M0.2 bis M0.7, ADR-024, M1.1 bis M1.6, M2.1 bis M2.6
 
 ## Erledigt
 
@@ -29,6 +29,49 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
   - M1.5/M1.5a: gemeinsam umgesetzt. Input-API, `ScriptedInput`, `NullRenderer`, Subsystem-Vertrag, Event-Bus, Startprüfung.
   - M1.6: ArchUnit (nur API, kein `ir`/`adapter`/`frontend`, Subsysteme getrennt), Modul-Doku auf Stand, ADR-015 mit Stand nach M1 ergänzt.
   - ADR-007 (Koordinaten) ist weiter `PROPOSED`, umgesetzt wie vorgeschlagen.
+
+- M2 Unity-Frontend (Plan mit Nutzer abgestimmt):
+  - M2.1: Unity-Stubs, Fixtures, reproduzierbarer Build (`scripts/build-dotnet.sh`).
+  - M2.2/M2.3: .NET-Programm `port-frontend-unity` (Syntaxbaum von ICSharpCode.Decompiler 11.1, eine Datei je Typ, Auto-Properties mit `__auto_<Name>`, `raw`-Fallback mit `:manual`), 44 xUnit-Tests.
+  - M2.4: Java-Wrapper `frontend-unity` mit `FrontendException`, Golden Files unter `testdata/golden/ir/unity/`, Integrationstest (ohne gebautes Programm sichtbar übersprungen).
+  - M2.5: Doku `docs/modules/frontend-unity.md`, ADR-005 um Stand nach M2 ergänzt (Status bleibt `PROPOSED`).
+  - M2.6: Probelauf mit dem eigenen Spiel StarCollector (siehe unten).
+  - Abweichungen vom Plan:
+    - Fixtures mit eingebetteter PDB statt ohne Debug-Info, sonst erfindet der Dekompiler lokale Namen (`axis` statt `h` im Spec-Beispiel).
+    - xUnit-Tests lesen die gebaute Fixture-DLL über den Pfad statt per Projektverweis.
+    - `Mover.ir` entspricht dem Spec-Beispiel bis auf `:sha256` und `:mods (public)` an der Klasse. Die Modifier stehen in der Assembly, das Spec-Beispiel lässt sie weg.
+  - `AGENTS.md` ist schreibgeschützt. Vorschlag für den Abschnitt „Wichtige Befehle": `scripts/build-dotnet.sh   # Fixtures (reproduzierbar), Frontend bauen und testen; vor ./mvnw verify für die Integrationstests`.
+
+## StarCollector-Probelauf (M2.6, 2026-10-13)
+
+- Mit den lokalen Unity-DLLs: 1 Typ (`StarCollectorGame`), 41 Mitglieder, Exit 0, gültige IR, keine Strukturfehler. 6 `raw`-Stellen, alle wegen `List<T>` (Feld `stars` mit Initialisierer, `ResetGame`, `UpdateSpawning`, `SpawnStar`, `UpdateStars`, `CheckCollect`). Validator: 36 × IR002 `info` (externe Unity-/System-Typen ohne Katalog), sonst nichts.
+- Ohne Unity-DLLs (nur die eingecheckte Assembly): ebenfalls Exit 0 und gültige IR, Unity-Typen werden `unknown` (IR003), 7 `raw`-Stellen.
+- Der Lauf hat zwei echte Fehler gefunden, beide behoben und mit Fixture `Edges` abgedeckt:
+  - Verschachtelte Rechenausdrücke ohne Typannotation wurden als Nicht-Primitiv abgelehnt.
+  - Nicht übersetzbare Feld-Initialisierer erzeugten eine namenlose Platzhalter-Methode statt `(raw cs ...)` im `:init`.
+- Arbeitsliste für M3a: Generische Member-Referenzen (`List<T>::Add`, `Func<T>::Invoke`) sind die einzige Lücke, die das Spiel blockiert.
+
+## Bekannte Lücken des Unity-Frontends (Stand M2)
+
+Alle erscheinen als `raw` + `:manual` bzw. als gemeldeter, übersprungener Typ, nie still:
+
+- **Spec-Lücken (brauchen ADR):**
+  - Member generischer Typinstanzen (`List<T>::Add`), Delegates und Lambdas (`Func<T>`).
+  - Verschachtelte Typen.
+  - Attribute an Methoden (entfallen mit Hinweis).
+  - Abstrakte und Interface-Properties: Accessoren ohne Rumpf sind nicht darstellbar.
+  - Weitere C#-Modifier (`extern`, `new`, `volatile`, `async`, `unsafe`).
+- **Noch nicht umgesetzt:**
+  - Indexer und Indexer-Zugriffe außer Arrays.
+  - Operatoren auf Enums (Vergleich, Flags) und lifted Nullable-Operatoren.
+  - Objekt- und Collection-Initialisierer.
+  - `throw;` und `catch` mit `when`.
+  - `using` ohne Variablendeklaration, `goto case`.
+  - `this(...)`-Konstruktorverkettung.
+  - Methodengruppen als Delegate, Events mit eigenen Accessoren, `+=`/`-=` auf Events.
+  - Zusammengesetzte Zuweisung mit eigenen Operatoren (`v += w` bei `Vector3`).
+  - `decimal`, Zeiger und `fixed`/`unsafe`.
+  - Benannte Attributargumente sowie Enum- und Array-Attributargumente.
 
 ## Vorbereitung M2 (Stand 2026-10-13)
 

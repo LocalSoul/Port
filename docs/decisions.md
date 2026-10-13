@@ -68,6 +68,7 @@ IL2CPP-Spiele sind vorerst nicht im Scope (kaum sauber dekompilierbar).
 - Der .NET-Teil wird getrennt gebaut und getestet (`dotnet build/test frontend-unity/dotnet`). `./mvnw verify` bleibt ohne .NET lauffähig; der Java-Integrationstest nutzt das gebaute Programm, wenn vorhanden, sonst wird er sichtbar übersprungen.
 - C#-Tests mit xUnit.
 - Der Java-Wrapper wirft `FrontendException` (eigene Exception des Moduls mit Exit-Code laut CLI-Vertrag); `port-cli` übersetzt sie ab M4 in `PortException`.
+**Stand nach M2:** umgesetzt wie empfohlen (Details in `docs/modules/frontend-unity.md`). Die Grenze über IR-Textdateien hat sich bewährt: .NET- und Java-Teil sind getrennt testbar, der Java-Printer bleibt die einzige Quelle der kanonischen Form. Status bleibt `PROPOSED` bis zur Freigabe.
 
 ## ADR-006: Datenmodell des Engine-Cores
 **Status:** ACCEPTED (vom Nutzer entschieden, 2026-10-13): ECS nach ADR-016.
