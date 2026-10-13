@@ -12,7 +12,11 @@ public record NodeAttrs(String loc, String manual, String note) {
   /** Knoten ohne Attribute. */
   public static final NodeAttrs NONE = new NodeAttrs(null, null, null);
 
-  /** Liefert {@code true}, wenn kein Attribut gesetzt ist. */
+  /**
+   * Liefert {@code true}, wenn kein Attribut gesetzt ist.
+   *
+   * @return {@code true}, wenn kein Attribut gesetzt ist
+   */
   public boolean isEmpty() {
     return loc == null && manual == null && note == null;
   }

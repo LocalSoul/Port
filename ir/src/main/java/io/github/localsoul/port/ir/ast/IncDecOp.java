@@ -2,9 +2,13 @@ package io.github.localsoul.port.ir.ast;
 
 /** Inkrement und Dekrement (Spec Abschnitt 7). */
 public enum IncDecOp {
+  /** {@code pre-inc} */
   PRE_INC("pre-inc"),
+  /** {@code pre-dec} */
   PRE_DEC("pre-dec"),
+  /** {@code post-inc} */
   POST_INC("post-inc"),
+  /** {@code post-dec} */
   POST_DEC("post-dec");
 
   private final String spelling;
@@ -13,7 +17,11 @@ public enum IncDecOp {
     this.spelling = spelling;
   }
 
-  /** Liefert die Schreibweise im IR-Text. */
+  /**
+   * Liefert die Schreibweise im IR-Text.
+   *
+   * @return die Schreibweise im IR-Text
+   */
   public String spelling() {
     return spelling;
   }

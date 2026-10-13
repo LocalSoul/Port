@@ -9,7 +9,10 @@ public final class IrSyntaxException extends IrException {
 
   private static final long serialVersionUID = 1L;
 
+  /** Position des Fehlers. */
   private final SourceSpan span;
+
+  /** Ursache ohne Positionsangabe. */
   private final String reason;
 
   /**
@@ -25,12 +28,20 @@ public final class IrSyntaxException extends IrException {
     this.reason = reason;
   }
 
-  /** Liefert die Position des Fehlers. */
+  /**
+   * Liefert die Position des Fehlers.
+   *
+   * @return die Position des Fehlers
+   */
   public SourceSpan span() {
     return span;
   }
 
-  /** Liefert die Ursache ohne Positionsangabe. */
+  /**
+   * Liefert die Ursache ohne Positionsangabe.
+   *
+   * @return die Ursache ohne Positionsangabe
+   */
   public String reason() {
     return reason;
   }

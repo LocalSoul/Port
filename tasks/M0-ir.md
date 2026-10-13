@@ -87,10 +87,10 @@
 ## M0.7 Abschluss
 
 **Abnahme**
-- [ ] ArchUnit-Test: `ir` importiert nichts aus anderen Projektmodulen.
-- [ ] Javadoc für alle öffentlichen Typen.
-- [ ] `docs/modules/ir.md` entspricht dem Stand der Implementierung.
-- [ ] `PROGRESS.md` aktualisiert, ADR-004 Status im Bericht erwähnt.
+- [x] ArchUnit-Test: `ir` importiert nichts aus anderen Projektmodulen.
+- [x] Javadoc für alle öffentlichen Typen.
+- [x] `docs/modules/ir.md` entspricht dem Stand der Implementierung.
+- [x] `PROGRESS.md` aktualisiert, ADR-004 Status im Bericht erwähnt.
 
 ## Nicht-Ziele
 - Kein Index, keine Lint-Regeln außer IR001–IR005, keine Java-Generierung, kein Frontend.

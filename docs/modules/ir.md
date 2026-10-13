@@ -6,19 +6,38 @@ Datenmodell, Parser, Printer und Validator für die IR. Quelle der Wahrheit: `do
 ## Abhängigkeiten
 Keine zu anderen Projektmodulen. Nur JDK und Testbibliotheken.
 
-## Öffentliche API (Skizze)
+## Öffentliche API (Stand M0)
 ```java
+// io.github.localsoul.port.ir.reader
 public final class IrReader {
-    IrFile read(String text, String fileName) throws IrSyntaxException;
+    IrFile read(String text, String fileName) throws IrSyntaxException;   // IR001 als Exception
 }
+// io.github.localsoul.port.ir.printer
 public final class IrPrinter {
     String print(IrFile file);               // kanonisch, deterministisch
 }
+// io.github.localsoul.port.ir.validate
 public final class IrValidator {
-    List<Diagnostic> validate(IrFile file);  // IR001-IR005, ab M10b auch IR006-IR010
+    IrValidator();                           // ohne Typkatalog
+    IrValidator(TypeCatalog catalog);
+    List<Diagnostic> validate(IrFile file);  // IR002-IR005, ab M10b auch IR006-IR010
+    static Diagnostic syntaxError(IrSyntaxException e);   // IR001
 }
 public record Diagnostic(String id, Severity severity, String symbol, String message, SourceSpan location, String hint) {}
 ```
+
+Pakete und erlaubte Abhängigkeiten (per ArchUnit geprüft, `ArchitectureTest`):
+
+| Paket | Inhalt | darf nutzen |
+|---|---|---|
+| `ir` | `SourceSpan`, `IrException`, `IrSyntaxException`, `Identifiers` | JDK |
+| `ir.sexpr` | Lexer, S-Expression-Reader | `ir` |
+| `ir.atom` | `TypeRef`, `MemberRef` | `ir` |
+| `ir.ast` | AST-Records, `SymbolIds` | `ir`, `ir.atom`, `ir.sexpr` |
+| `ir.reader`, `ir.printer`, `ir.validate` | Reader, Printer, Validator | alle oben |
+
+Das ganze Modul nutzt nur das JDK, keine Reflection und schreibt nie auf `System.out`/`System.err`.
+
 - Knoten sind sealed Interfaces und Records (`ClassDecl`, `MethodDecl`, `IfStmt`, `StaticCallExpr`, ...), benannt nach dem IR-Schlüsselwort.
 - Typ- und Member-Atome haben eigene Wertklassen (`TypeRef`, `MemberRef`) mit Parser für die Untersyntax (`Dictionary<string,i32[]>`, `Ns.Typ::name#i32,string`).
 - Jeder Knoten trägt eine Quellposition (`SourceSpan`: Datei, Zeile, Spalte).

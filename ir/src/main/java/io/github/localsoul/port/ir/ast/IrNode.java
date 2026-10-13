@@ -17,9 +17,17 @@ public sealed interface IrNode
         EnumMember,
         IrHeader {
 
-  /** Liefert die Position der öffnenden Klammer bzw. des Atoms. */
+  /**
+   * Liefert die Position der öffnenden Klammer bzw. des Atoms.
+   *
+   * @return die Position der öffnenden Klammer bzw. des Atoms
+   */
   SourceSpan span();
 
-  /** Liefert die Attribute {@code :loc}, {@code :manual} und {@code :note}. */
+  /**
+   * Liefert die Attribute {@code :loc}, {@code :manual} und {@code :note}.
+   *
+   * @return die Attribute {@code :loc}, {@code :manual} und {@code :note}
+   */
   NodeAttrs attrs();
 }

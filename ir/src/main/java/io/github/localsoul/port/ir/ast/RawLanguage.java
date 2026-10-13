@@ -13,7 +13,11 @@ public enum RawLanguage {
     this.spelling = spelling;
   }
 
-  /** Liefert die Schreibweise im IR-Text. */
+  /**
+   * Liefert die Schreibweise im IR-Text.
+   *
+   * @return die Schreibweise im IR-Text
+   */
   public String spelling() {
     return spelling;
   }

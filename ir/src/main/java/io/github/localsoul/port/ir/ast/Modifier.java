@@ -2,16 +2,27 @@ package io.github.localsoul.port.ir.ast;
 
 /** Modifier (Spec Abschnitt 5). */
 public enum Modifier {
+  /** {@code public} */
   PUBLIC("public"),
+  /** {@code private} */
   PRIVATE("private"),
+  /** {@code protected} */
   PROTECTED("protected"),
+  /** {@code internal} */
   INTERNAL("internal"),
+  /** {@code static} */
   STATIC("static"),
+  /** {@code abstract} */
   ABSTRACT("abstract"),
+  /** {@code virtual} */
   VIRTUAL("virtual"),
+  /** {@code override} */
   OVERRIDE("override"),
+  /** {@code sealed} */
   SEALED("sealed"),
+  /** {@code readonly} */
   READONLY("readonly"),
+  /** {@code const} */
   CONST("const");
 
   private final String spelling;
@@ -20,7 +31,11 @@ public enum Modifier {
     this.spelling = spelling;
   }
 
-  /** Liefert die Schreibweise im IR-Text. */
+  /**
+   * Liefert die Schreibweise im IR-Text.
+   *
+   * @return die Schreibweise im IR-Text
+   */
   public String spelling() {
     return spelling;
   }
