@@ -7,6 +7,11 @@
 **Abhängigkeiten/Entscheidungen**
 - M0 bis M3 sind abgeschlossen.
 - Neue Hauptabhängigkeiten (picocli, TOML-Bibliothek) vorab im Plan nennen.
+- Vom Nutzer entschieden (2026-10-13):
+  - TOML: **tomlj** (nur Lesen, mit Fehlerpositionen); `port.toml` schreibt `init` als festen Text.
+  - JSON: **eigener kleiner Writer** (feste Schlüsselreihenfolge, keine Abhängigkeit).
+  - Git: **kein Git-Init in M4** (JGit bringt slf4j-api mit, das der Enforcer verbietet; Entscheidung mit ADR, wenn die Git-Befehle drankommen).
+  - Engine-Pfad bis M4a: `--adapter <pfad>` mit Monorepo-Konvention als Standard, gekapselt in `PlatformLocator` (wird in M4a durch Katalog/Profile ersetzt). Plattform außerhalb des Monorepos über `PORT_HOME`.
 
 ---
 
@@ -25,7 +30,7 @@
 ## M4.2 `init` und Manifest
 
 **Schritte**
-1. `port init <name> [--frontend unity] [--source <pfad>]`: erzeugt `port.toml` (mit `[project] kind = "game"`, `[game.requires]`), `.gitignore`, Ordner `input/`, `ir/`, `manual/`, `data/`. Außerhalb eines Git-Repos wird eines angelegt (JGit), innerhalb des Monorepos nicht. Das Zielverzeichnis ist `games/<name>/`, wenn der Befehl im Monorepo läuft (`--kind engine` kommt in M4a).
+1. `port init <name> [--frontend unity] [--source <pfad>]`: erzeugt `port.toml` (mit `[project] kind = "game"`, `[game.requires]`), `.gitignore`, Ordner `input/`, `ir/`, `manual/`, `data/`. ~~Außerhalb eines Git-Repos wird eines angelegt (JGit)~~ (verschoben, Nutzerentscheidung: `init` meldet nur `info`), innerhalb des Monorepos ohnehin nicht. Das Zielverzeichnis ist `games/<name>/`, wenn der Befehl im Monorepo läuft (`--kind engine` kommt in M4a).
 2. Manifest lesen und validieren (Ungültiges → Exit 2 mit Diagnose und Position).
 
 **Abnahme**
