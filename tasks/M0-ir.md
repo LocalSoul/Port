@@ -67,10 +67,10 @@
 2. Kurze Listen dürfen in einer Zeile stehen. Lege die Regel (Zeilenlänge/Knotenzahl) fest und dokumentiere sie als Kommentar im Printer und in `docs/modules/ir.md`.
 
 **Abnahme**
-- [ ] Idempotenz: `print(read(print(read(x)))) == print(read(x))` für alle Fixtures.
-- [ ] Strukturelle Gleichheit: `read(print(f))` ist gleich `f`.
-- [ ] Zwei Eingaben mit nur unterschiedlicher Mitgliederreihenfolge erzeugen identische Ausgabe.
-- [ ] Golden-File-Test für das Beispiel aus Spec Abschnitt 10.
+- [x] Idempotenz: `print(read(print(read(x)))) == print(read(x))` für alle Fixtures.
+- [x] Strukturelle Gleichheit: `read(print(f))` ist gleich `f`.
+- [x] Zwei Eingaben mit nur unterschiedlicher Mitgliederreihenfolge erzeugen identische Ausgabe.
+- [x] Golden-File-Test für das Beispiel aus Spec Abschnitt 10.
 
 ## M0.6 Validator
 

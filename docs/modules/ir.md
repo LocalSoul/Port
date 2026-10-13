@@ -51,6 +51,20 @@ public record Diagnostic(String id, Severity severity, String symbol, String mes
 - Fehlermeldungen unterscheiden „unbekannter Knotenname", „ist ein Statement/Ausdruck an dieser Stelle", „falsche Stelligkeit" (mit Kurzsyntax) und „X erwartet, gefunden Y".
 - Nicht im Reader geprüft (Validator oder später): `switch`-Zweige ohne Durchfallen, Symbolauflösung (IR002), doppelte IDs (IR004), Zyklen (IR005).
 
+## Printer (M0.5, Paket `io.github.localsoul.port.ir.printer`)
+- Einstieg: `new IrPrinter().print(file)`. Zweistufig: AST → Layout-Modell (`Doc`, dabei kanonisch sortiert) → Text (`Layout`).
+- **Reihenfolge:** Typen nach ID; Mitglieder nach Gruppe Felder → Properties → **Events** → Konstruktoren → Methoden, innerhalb der Gruppe nach stabiler ID (`SymbolIds`). Events nennt die Spec nicht, sie stehen nach den Properties. Enum-Werte nach Namen. Vergleich ordinal (`String.compareTo`). Alles andere (Parameter, Argumente, `:implements`, `:mods`, `:attrs`) bleibt in Eingabereihenfolge.
+- **Keywords:** Reihenfolge der Grammatik, danach `:loc`, `:manual`, `:note` als letzte Elemente des Knotens (auch hinter Mitgliedern oder Rumpf). Leere optionale Listen (`:mods ()`, `:implements ()`, `:generics ()`, `:attrs ()`) entfallen. `:base-call ()` bleibt, weil es sich von fehlendem `:base-call` unterscheidet.
+- **Zeilenregel:**
+  1. Eine Liste steht in einer Zeile, wenn nichts in ihr einen Umbruch erzwingt und ihre einzeilige Form ab ihrer Startspalte höchstens **100 Zeichen** erreicht. Schließende Klammern umgebender Listen zählen nicht mit.
+  2. Einen Umbruch erzwingen: nicht-leere `block`, Typen mit Mitgliedern, Enums mit Werten.
+  3. Sonst: erste Zeile `(kopf`, dann der Reihe nach Elemente in derselben Zeile, solange sie einzeilig passen und keinen Umbruch erzwingen. Bei Typen dürfen nur die Typattribute in die erste Zeile, Mitglieder nie. Bei `block` und `switch` stehen Statements bzw. Zweige immer auf eigenen Zeilen.
+  4. Jedes weitere Element steht auf eigener Zeile, 2 Leerzeichen tiefer als die Zeile der öffnenden Klammer. Die schließende Klammer folgt direkt dem letzten Element.
+- Datei: Kopf, dann je eine Leerzeile vor jedem Typ, genau ein abschließendes `\n`. Kommentare aus der Eingabe gehen verloren.
+- Strings: Kurzformen für `\\ \" \n \r \t`. Andere Steuerzeichen und einzelne Surrogate werden als `\uXXXX` geschrieben, alles andere bleibt unverändert (UTF-8).
+- Literale und Bezeichner sind Atome und können keine Attribute tragen. Ein solcher Knoten mit Attributen führt zu `IllegalArgumentException`.
+- Golden Files: `testdata/golden/ir/<fixture>.ir` für jede Fixture in `testdata/ir/`. Aktualisieren nur bewusst mit `./mvnw -pl ir test -Dgolden.update=true`.
+
 ## Verhalten
 - Der native Dialekt (Spec Abschnitt 12) wird erst in M10b implementiert. Bis dahin lehnt der Reader seine Knoten mit klarer Meldung ab.
 - Der Reader lehnt unbekannte **Knotennamen** ab und ignoriert unbekannte **Keywords** (Spec Abschnitt 11).
