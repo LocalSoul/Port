@@ -39,8 +39,8 @@
 - [x] StarCollector-Todo-Bericht ohne BCL-Lücken.
 
 ## M3a.4 Abschluss
-- [ ] Doku `runtime-system.md`, `type-mapping.md`, `generator-java.md` aktualisiert.
-- [ ] Lücken und offene Prüfung des Zahlformats gegen echtes Unity in `PROGRESS.md`.
+- [x] Doku `runtime-system.md`, `type-mapping.md`, `generator-java.md` aktualisiert.
+- [x] Lücken und offene Prüfung des Zahlformats gegen echtes Unity in `PROGRESS.md`.
 
 ## Nicht-Ziele
 Unsigned-Typen, Lambdas/Closures, LINQ, `System.IO`, Threading, Reflection, Kulturabhängige Formatierung.

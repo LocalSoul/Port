@@ -4,10 +4,10 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 
 ## Aktueller Stand
 
-- Phase: **M3 abgeschlossen** (alle Abnahmekriterien in `tasks/M3-generator-adapter.md` erfüllt; `scripts/build-dotnet.sh` und `./mvnw -q verify` grün). Erstmals läuft die ganze Kette: C#-Assembly → IR → Java → kompiliert → bewegt eine Transform in der Engine.
+- Phase: **M3a abgeschlossen** auf Branch `task/M3a-runtime-system` (alle Abnahmekriterien in `tasks/M3a-runtime-system.md` erfüllt; `scripts/build-dotnet.sh` und `./mvnw -q verify` grün). Übersetzter Spielcode nutzt jetzt `List`, `Dictionary`, Strings, Math, Exceptions und `Func`/`Action` mit .NET-Semantik. Merge nach `main` steht aus (Nutzer entscheidet).
 - M0 bis M3 und ADR-025 sind auf `main` (lokal, kein Remote).
-- Nächste Aufgabe laut Roadmap: M3a (`runtime-system`, BCL-Nachbau und Typabbildung, ADR-019), danach M4 (CLI) und M4a (Launcher).
-- Letzte Session: 2026-10-13, M0.2 bis M3.4, ADR-024, ADR-025
+- Nächste Aufgabe laut Roadmap: M4 (CLI), danach M4a (Launcher).
+- Letzte Session: 2026-10-13, M0.2 bis M3a.4, ADR-019, ADR-024, ADR-025
 
 ## Erledigt
 
@@ -99,13 +99,32 @@ Alle erscheinen als `raw` + `:manual` bzw. als gemeldeter, übersprungener Typ, 
 ## M3: Lücken und Beobachtungen
 
 - **Generator-Todos** (Liste: `testdata/golden/java/todos.tsv`):
-  - BCL-Symbole ohne Mapping (`System.String`-Vergleich, `MathF`, `List<T>`, `Func<T>`) → M3a mit `runtime-system`.
+  - BCL-Symbole ohne Mapping: mit M3a erledigt.
   - Unity-API außerhalb des Minimalumfangs (`Input.GetKey`, `Mathf`, `Debug.Log`) → bedarfsgesteuert im Adapter.
   - Unsigned (ADR-019), Nullable, `ref`/`out`, mehrdimensionale Arrays, Events, Lambdas, Coroutines (ADR-008), eigene structs (ADR-009), Interfaces und Enums.
-- **Formatierung:** `LineBreaker` deckt Ketten, Aufrufe, Javadoc und leere Rümpfe ab. Umbrüche an binären Operatoren und in langen Block-Köpfen (`if`, `for`) sind nicht umgesetzt; solcher Code wäre korrekt, aber nicht google-java-format-konform. Alternative für später: die Spiel-Projekte formatieren `gen/` per Spotless.
+- **Formatierung:** `LineBreaker` deckt Ketten, Aufrufe, Zuweisungen, Mehrfach-`catch`, Javadoc und leere Rümpfe ab. Umbrüche an binären Operatoren und in langen Block-Köpfen (`if`, `for`) sind nicht umgesetzt; solcher Code wäre korrekt, aber nicht google-java-format-konform. Alternative für später: die Spiel-Projekte formatieren `gen/` per Spotless.
 - **Semantikunterschied:** In C# laufen Feldinitialisierer vor dem Basiskonstruktor, in Java danach (Kandidat für eine Lint-Regel).
 - **Mapping:** Einträge brauchen Symbol-IDs mit Parametertypen der Deklaration (ADR-025). Setter externer Properties haben noch keine Form (`setter`), Zuweisungen daran werden Todo.
 - **Adapter:** `AddComponent<T>()` fehlt (Test nutzt `addComponent(instanz)`), `Time.timeScale` fehlt, `Translate` nur ohne rotierte Eltern korrekt, `Input.GetAxis` ohne Glättung (stub).
+
+- M3a runtime-system (Plan mit Nutzer abgestimmt, ADR-019 ACCEPTED):
+  - M3a.0: Aufgabe und ADR-019 mit den Nutzerentscheidungen (Dictionary-Reihenfolge exakt .NET, Zahlformat wie Unity-Mono, eigene Exception-Hierarchie; Unsigned bleibt OPEN).
+  - M3a.1: Modul `runtime-system` (nur JDK) mit Collections, Strings, `Convert`, `Math`/`MathF`, Exceptions, `Func0`–`Func4`/`Action0`–`Action4`, `mapping.tsv`; Verhaltens-, Konsistenz- und ArchUnit-Tests.
+  - M3a.2: Generator mit Typzeilen mit Stelligkeit (`System.Func/2`), Form `helper`, `try`/`catch`/`finally`, `throw`; `catch` von `System.Exception`/`NullReferenceException`/`IndexOutOfRangeException` fängt auch `NullPointerException`/`ArrayIndexOutOfBoundsException` (`Typ.fromJava`).
+  - M3a.3: Fixture `Ledger` (Dictionary-Reihenfolge, try/catch, Null-Zugriff, Zahlformat); `RuntimeSystemEndToEndTest` mit Inventory, ControlFlow, Ledger; `StarCollectorGeneratorReportTest` (Bericht `integration-tests/target/starcollector-generator-report.txt`). Dabei korrigiert: `ArgumentNullException`/`ArgumentOutOfRangeException` nehmen wie .NET den Parameternamen, typspezifische Standardmeldungen; Zuweisungen werden wie google-java-format nach `=` umbrochen.
+  - M3a.4: Doku `runtime-system.md`, `type-mapping.md`, `generator-java.md`.
+
+## M3a: Lücken und Beobachtungen
+
+- **Zahlformat gegen echtes Unity prüfen:** G7/G15 und die Exponentengrenze (`0.0001` bleibt, `0.00001` → `1E-05`) folgen der .NET-Framework-Logik. Mit einem Referenzwert aus einem echten Unity-Lauf (z. B. `Debug.Log(1f/3f)`, `Debug.Log(0.00001f)`, `Debug.Log(12345678f)`) bestätigen. Ebenso die englischen Standardmeldungen der Exceptions und den Zeilenumbruch vor „Parameter name:“ (hier immer `\n`, unter Windows schreibt .NET `\r\n`).
+- **StarCollector:** 24 Generator-Todos, alle Unity-Adapter-Lücken (`Sprite`, `Texture2D`, `GUIStyle`, `GUI`, `Screen`, `Random`, `Mathf`, `Vector2`, `SpriteRenderer`, `Input.GetKeyDown`, `Object ==`/`!=`, Setter `Transform.position`). Einschränkung: Je Member wird nur die erste Lücke gemeldet, eine BCL-Lücke hinter einer Unity-Lücke im selben Member fällt erst nach dem Adapter-Ausbau auf.
+- **Mapping als Klassenpfad-Ressource:** Adapter und `runtime-system` liefern beide `/mapping.tsv`; auf einem gemeinsamen Klassenpfad ist nur eine sichtbar. Die Tests lesen deshalb die Dateien aus dem Repo. Für `port` (M4) eindeutige Ressourcenpfade festlegen (z. B. `META-INF/port/<modul>/mapping.tsv`).
+- **Java-Golden-Files nicht versioniert:** `.gitignore` schließt `gen/` aus, deshalb liegt von `testdata/golden/java/` nur `todos.tsv` in git; `gen/fixtures/*.java` existieren nur lokal (schon seit M3). In einem frischen Klon fehlen sie dem Golden-Test. Vorschlag: Ausnahme `!testdata/golden/java/gen/` in `.gitignore` (Regel 5 meint generiertes Java von Port-Projekten, nicht Testdaten); Nutzer entscheidet.
+- **Nicht übersetzte Java-Exceptions:** `ArithmeticException` (Ganzzahl-Division durch 0 → `DivideByZeroException`), `ClassCastException` (→ `InvalidCastException`), `NegativeArraySizeException` (→ `OverflowException`) fehlen noch.
+- **`System.Exception` und `System.SystemException`** teilen sich die Klasse `SystemException`; die Standardmeldung von `SystemException` („System error.“) wird nicht unterschieden.
+- **`catch` ohne Variable** heißt im Frontend `__ex`; zwei verschachtelte namenlose `catch` mit Übersetzung würden in Java kollidieren (`__ex$`). Kommt in den Fixtures nicht vor.
+- **Noch nicht im Mapping:** `Dictionary.TryGetValue` (braucht `out`), LINQ, `string.Format`, `StringBuilder`, `Random`, `float.Parse`/`int.Parse`, `Equals`/`GetHashCode`-Überschreibungen eigener Typen (Dictionary nutzt Java-`equals`/`hashCode`).
+- **`System.MathF`** gibt es in Unity-Mono (.NET Standard 2.0) nicht; das Mapping schadet nicht, Unity-Spiele nutzen `Mathf` (Adapter).
 
 ## Wünsche an die Engine-API (aus M1 und M3)
 
@@ -154,4 +173,5 @@ Alle erscheinen als `raw` + `:manual` bzw. als gemeldeter, übersprungener Typ, 
 
 - Vor dem Start die Checkliste in `docs/setup.md` prüfen.
 - Layout und Projektarten: `docs/projects.md` lesen (Spiele in `games/`, Engines in `engines/`, ADR-020 PROPOSED).
-- M0 und M1 sind fertig. Vor M2: .NET SDK reparieren (siehe oben), ADR-005 (Frontend als .NET-Prozess, PROPOSED) und die Spec-Lücke bei generischen Member-Referenzen klären, Branch `task/M1-engine-core` nach `main` mergen (Nutzer entscheidet).
+- Branch `task/M3a-runtime-system` nach `main` mergen (Nutzer entscheidet), dann M4 (CLI) planen. Vor dem Generator-/Golden-Test `scripts/build-dotnet.sh` laufen lassen.
+- Offene Nutzerfragen aus M3a: Java-Golden-Files versionieren (`.gitignore`), Ressourcenpfad der Mappings für M4.
