@@ -64,6 +64,10 @@ IL2CPP-Spiele sind vorerst nicht im Scope (kaum sauber dekompilierbar).
 **Optionen:** (a) separater .NET-Konsolenprozess, der IR-Text auf stdout oder in eine Datei schreibt, (b) in-process Brücke (JNI/GraalVM), (c) Java-eigener IL-Reader.
 **Empfehlung:** (a). Einfache Schnittstelle (Datei/stdout), Java-Wrapper startet den Prozess.
 **Folgen:** Das .NET SDK ist Voraussetzung für Frontend-Tests, die Tests müssen ohne SDK sauber übersprungen und im Bericht benannt werden.
+**Stand 2026-10-13:** Der Nutzer lässt den Status auf `PROPOSED`; M2 folgt der Empfehlung (a). Festgelegt für M2:
+- Der .NET-Teil wird getrennt gebaut und getestet (`dotnet build/test frontend-unity/dotnet`). `./mvnw verify` bleibt ohne .NET lauffähig; der Java-Integrationstest nutzt das gebaute Programm, wenn vorhanden, sonst wird er sichtbar übersprungen.
+- C#-Tests mit xUnit.
+- Der Java-Wrapper wirft `FrontendException` (eigene Exception des Moduls mit Exit-Code laut CLI-Vertrag); `port-cli` übersetzt sie ab M4 in `PortException`.
 
 ## ADR-006: Datenmodell des Engine-Cores
 **Status:** ACCEPTED (vom Nutzer entschieden, 2026-10-13): ECS nach ADR-016.

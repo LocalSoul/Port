@@ -22,7 +22,8 @@ Aufruf: `port-frontend-unity --assembly <dll> --out <ir-datei> [--classes <glob>
 
 ## Java-Wrapper
 - Findet das .NET-Programm (Konfiguration oder `PATH`), startet es, liest die Ausgabe, parst sie mit `IrReader`, druckt kanonisch.
-- Übersetzt .NET-Fehler in `PortException` mit Exit-Code 4 bzw. 3 laut CLI-Vertrag.
+- Übersetzt .NET-Fehler in `FrontendException` mit Exit-Code 4 bzw. 3 laut CLI-Vertrag (das CLI übersetzt sie ab M4 in `PortException`).
+- Build: getrennt vom Maven-Build (ADR-005, Stand 2026-10-13). Der Integrationstest nutzt das gebaute Programm, wenn vorhanden, sonst wird er sichtbar übersprungen.
 
 ## Tests und Fixtures
 - **Keine echten Spiele.** Fixtures sind kleine C#-Quellen unter `testdata/unity-sources/` (z. B. `Mover.cs`), kompiliert gegen **eigene Stub-Assemblies** `UnityEngine.Stubs` (nur die benötigten API-Signaturen, ohne Implementierung).

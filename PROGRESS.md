@@ -30,6 +30,15 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
   - M1.6: ArchUnit (nur API, kein `ir`/`adapter`/`frontend`, Subsysteme getrennt), Modul-Doku auf Stand, ADR-015 mit Stand nach M1 ergänzt.
   - ADR-007 (Koordinaten) ist weiter `PROPOSED`, umgesetzt wie vorgeschlagen.
 
+## Vorbereitung M2 (Stand 2026-10-13)
+
+- Vom Nutzer entschieden: ADR-005 wird befolgt, bleibt aber `PROPOSED`; `FrontendException` im Frontend statt `PortException`; xUnit; .NET-Teil getrennt vom Maven-Build.
+- Vorschläge, denen M2 folgt, solange der Nutzer nicht widerspricht:
+  - Fixtures und Stubs auf `netstandard2.1`, deterministischer Build, gepinnte Pakete mit Lock-Datei.
+  - Das Frontend bekommt eine Option, `:sha256` wegzulassen; Golden-Tests nutzen sie, weil der Hash der Test-Assembly an der Compiler-Version hängt.
+  - „Besteht den Validator" heißt: keine `error`-Diagnosen; `info` für externe `UnityEngine.*`-Typen ist erlaubt (oder Typkatalog aus den Stubs).
+- Spec-Lücken, die M2 nicht blockieren, aber vor M3a geklärt sein müssen: generische Member-Referenzen (`List<i32>::Add`), weitere C#-Modifier (`extern`, `new`, `volatile`, `async`, ...), `:attrs` an Methoden, verschachtelte Typen (`Outer.Inner` nicht von Namespaces unterscheidbar). Die M2-Fixtures meiden diese Fälle.
+
 ## Wünsche an die Engine-API (aus M1, vor M3 prüfen)
 
 - **Unity-Semantik vs. Phasenende:** Unity macht `AddComponent` und `transform.SetParent` sofort wirksam, unser Core erst am Phasenende. Der Unity-Adapter muss neu angehängte Komponenten selbst vorhalten (z. B. im `ScriptHost`) bzw. Weltpositionen für noch nicht übernommene Eltern selbst rechnen. Eventuell braucht die API ein sofortiges `setParent` außerhalb von Iterationen.

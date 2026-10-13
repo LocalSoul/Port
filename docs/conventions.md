@@ -6,7 +6,7 @@
 - Formatierung: Spotless mit google-java-format. `./mvnw -q spotless:apply` vor jedem Commit.
 - Statische Prüfung: Error Prone oder SpotBugs im Build, Maven Enforcer für Abhängigkeitsregeln, ArchUnit für Paketregeln.
 - Basis-Paket: `io.github.localsoul.port`, Gruppen-ID `io.github.localsoul`.
-- .NET-Teil (`frontend-unity/dotnet`): .NET 8 LTS oder neuer, `dotnet test`.
+- .NET-Teil (`frontend-unity/dotnet`): .NET 8 LTS oder neuer, `dotnet test` mit **xUnit**. Programm auf `net8.0`; Unity-Fixtures und Stubs auf `netstandard2.1` (entspricht Unitys Mono-Profil). Paketversionen gepinnt, Lock-Dateien (`packages.lock.json`) eingecheckt, `Deterministic` an, Nullable-Referenztypen an, Warnungen als Fehler.
 
 ## Stil: klassisch und debugbar
 
@@ -29,7 +29,7 @@ Der Nutzer legt Wert auf klassisches Debugging und gute IDE-Unterstützung. Desh
 
 ## Fehlerbehandlung
 
-- Eigene Exception-Typen pro Modul, die von einer gemeinsamen Basis erben (`PortException` in `port-cli`, `IrException` in `ir`).
+- Eigene Exception-Typen pro Modul, die von einer gemeinsamen Basis erben (`PortException` in `port-cli`, `IrException` in `ir`, `FrontendException` in `frontend-unity`). Module unterhalb des CLI kennen `PortException` nicht; ihre Exceptions tragen bei Bedarf den Exit-Code des CLI-Vertrags, das CLI übersetzt sie.
 - **Parserfehler tragen Position** (`datei:zeile:spalte`) und eine klare Meldung. Nie nur „Syntax error".
 - Keine verschluckten Exceptions. Keine `catch (Exception e)` ohne Weiterwurf oder dokumentierten Grund.
 - Domänenfehler sind Diagnosen (siehe `docs/cli-contract.md`), keine Exceptions, wenn der Lauf weitergehen kann (Lint, Validator).

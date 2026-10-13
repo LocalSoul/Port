@@ -50,7 +50,7 @@
 
 **Schritte**
 1. Modul `frontend-unity/java`: Findet das .NET-Programm (Konfiguration, sonst `PATH`), startet den Prozess, liest die Ausgabe, parst mit `IrReader`, druckt kanonisch.
-2. Fehlerabbildung: Prozessfehler → `PortException` mit Hinweis auf Exit-Code des CLI-Vertrags.
+2. Fehlerabbildung: Prozessfehler → `FrontendException` mit Exit-Code des CLI-Vertrags (Nutzerentscheidung 2026-10-13; `PortException` gibt es erst in `port-cli`, M4).
 
 **Abnahme**
 - [ ] Wrapper-Test mit vorab erzeugter IR-Datei (ohne .NET), prüft Kanonisierung.
