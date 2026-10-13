@@ -107,9 +107,9 @@
 ## M1.6 Abschluss
 
 **Abnahme**
-- [ ] ArchUnit: `engine-core` importiert nichts aus `adapter-*`, `frontend-*`, `ir`.
-- [ ] Offene Wünsche an die Engine-API stehen in `PROGRESS.md` (Nebenfunde).
-- [ ] `docs/modules/engine-api.md` und `engine-core.md` entsprechen der Implementierung.
+- [x] ArchUnit: `engine-core` importiert nichts aus `adapter-*`, `frontend-*`, `ir`.
+- [x] Offene Wünsche an die Engine-API stehen in `PROGRESS.md` (Nebenfunde).
+- [x] `docs/modules/engine-api.md` und `engine-core.md` entsprechen der Implementierung.
 
 ## Nicht-Ziele
 Fenster, echtes Rendering, Physik, Audio, Unity-/Godot-Begriffe im Core.

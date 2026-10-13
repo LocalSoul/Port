@@ -4,10 +4,10 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 
 ## Aktueller Stand
 
-- Phase: **M0 abgeschlossen** (alle Abnahmekriterien in `tasks/M0-ir.md` erfüllt, `./mvnw -q verify` grün, 465 Tests)
-- Branch `task/M0-skeleton`, noch nicht nach `main` gemergt
-- Nächste Aufgabe: `tasks/M1-engine-core.md` (neuer Branch `task/M1-...`), vorher die offenen Punkte unten durchgehen
-- Letzte Session: 2026-10-13, M0.2 bis M0.7 und ADR-024
+- Phase: **M1 abgeschlossen** (alle Abnahmekriterien in `tasks/M1-engine-core.md` erfüllt, `./mvnw -q verify` grün)
+- M0 ist nach `main` gemergt (lokal, kein Remote). M1 liegt auf Branch `task/M1-engine-core`, noch nicht gemergt.
+- Nächste Aufgabe laut `tasks/README.md`: `tasks/M2-unity-frontend.md` (braucht funktionierendes .NET SDK, siehe offene Punkte)
+- Letzte Session: 2026-10-13, M0.2 bis M0.7, ADR-024, M1.1 bis M1.6
 
 ## Erledigt
 
@@ -20,6 +20,23 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 - M0.5 Printer (Paket `printer`): kanonische Sortierung, feste Keyword-Reihenfolge, Zeilenregel (100 Zeichen, 2 Leerzeichen) in `docs/modules/ir.md`. `SymbolIds` für Deklarationen. Golden Files in `testdata/golden/ir/` (Update nur mit `-Dgolden.update=true`), zweite Fixture `testdata/ir/all-nodes.ir` mit jeder Knotenart. Strukturvergleich ohne Positionen über Test-Helfer `AstAssertions` (Record-Reflection nur im Testcode).
 - M0.6 Validator (Paket `validate`): IR002–IR005, IR001 aus Reader-Fehlern, `TypeCatalog` für externe Typen, Sortierung nach Datei/Zeile/Spalte (numerisch)/ID.
 - M0.7 Abschluss: ArchUnit-Tests (nur JDK, keine Reflection, keine Konsolenausgabe, Schichtung der Pakete), Doclint ohne Warnungen (`javadoc -Xdoclint:all`, nicht im Build), `docs/modules/ir.md` auf Stand. **ADR-004** (handgeschriebener Reader) wurde gefolgt, Status weiterhin `PROPOSED`, bitte freigeben oder verwerfen.
+
+- M1 Engine (Plan mit Nutzer abgestimmt): Module `engine-api`, `engine-core`.
+  - M1.1: ADR-006 und ADR-016 vom Nutzer entschieden (ECS, Strukturänderungen am Phasenende, `float`, Komponenten als Records). Widerspruch „Frame-Ende" in M1.4 korrigiert.
+  - M1.2: Mathe `Vec2`, `Vec3`, `Quat`, `Mat4` (StrictMath).
+  - M1.3: Scheduler mit Phasen und Fixed-Timestep.
+  - M1.4: ECS-Welt, Sparse-Set, Command-Buffer, Hierarchie, Transform-System, Dump.
+  - M1.5/M1.5a: gemeinsam umgesetzt. Input-API, `ScriptedInput`, `NullRenderer`, Subsystem-Vertrag, Event-Bus, Startprüfung.
+  - M1.6: ArchUnit (nur API, kein `ir`/`adapter`/`frontend`, Subsysteme getrennt), Modul-Doku auf Stand, ADR-015 mit Stand nach M1 ergänzt.
+  - ADR-007 (Koordinaten) ist weiter `PROPOSED`, umgesetzt wie vorgeschlagen.
+
+## Wünsche an die Engine-API (aus M1, vor M3 prüfen)
+
+- **Unity-Semantik vs. Phasenende:** Unity macht `AddComponent` und `transform.SetParent` sofort wirksam, unser Core erst am Phasenende. Der Unity-Adapter muss neu angehängte Komponenten selbst vorhalten (z. B. im `ScriptHost`) bzw. Weltpositionen für noch nicht übernommene Eltern selbst rechnen. Eventuell braucht die API ein sofortiges `setParent` außerhalb von Iterationen.
+- `Engine` (API) bietet `input()` und `events()` nur über `FrameContext` bzw. `CoreEngine`. Adapter, die außerhalb von Callbacks Ereignisse senden wollen, brauchen das in der Fassade.
+- Subsysteme werden in jedem Phasenschritt aufgerufen und filtern selbst. Eine Phasenangabe in `SubsystemInfo` würde Aufrufe sparen und die Deklaration vollständiger machen.
+- `NullRenderer` läuft vor den `LATE`-Callbacks, deren Änderungen erscheinen erst im nächsten Frame. Bei echtem Rendering eventuell eine eigene Phase `RENDER` nach `LATE`.
+- Callbacks (Adapter) nutzen den Event-Bus ohne Deklarationsprüfung. Adapter haben noch keine `SubsystemInfo`.
 
 ## Offene Punkte / Nebenfunde
 
@@ -42,6 +59,13 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 - Spec-Auslegung in M0.5, bitte bestätigen: Events stehen in der Mitgliedsreihenfolge nach Properties (Spec nennt sie nicht), Enum-Werte nach Namen sortiert (Spec: „Mitglieder nach ID"), leere optionale Listen entfallen, Kommentare gehen beim Drucken verloren, `:loc`/`:manual`/`:note` stehen am Knotenende (auch hinter Rumpf und Mitgliedern).
 - Spec-Auslegung in M0.6: Externe Typen ohne Katalog als `info` IR002, einmal pro Typname. Lokale Variablen und Sprungmarken werden nicht auf Auflösung geprüft (keine Regel dafür in IR001–IR005).
 
+- Scheduler-Toleranz: Ein FIXED-Schritt läuft ab `fixedDelta · (1 − 10⁻⁴)` im Akkumulator, sonst rutschen Schritte wegen `float`-Rundung der Frame-Dauer in den nächsten Frame (Test mit 2,5 × Fixed-Delta über 1000 Frames). Bitte bestätigen.
+- `SparseSetStore` fügt sortiert ein (O(n)) und `TransformSystem` rechnet je Entity die Elternkette (O(n · Tiefe)). Für M1 ausreichend, bei großen Szenen optimieren (ohne API-Änderung).
+- `World.dump()` setzt deterministisches `toString()` der Komponenten voraus. Adapter-Typen müssen das liefern, prüfen lässt es sich nicht.
+- `InputView` liest die erste Entity mit `InputState`. Mehrere Eingabequellen (z. B. mehrere Spieler) brauchen später ein anderes Schema.
+- Provider-Auswahl per `ServiceLoader` und `port.toml` fehlt noch (ADR-015, M12).
+- Statische Prüfung und Doclint im Build: weiterhin offen (siehe oben). Doclint wurde für `ir`, `engine-api` und `engine-core` einmalig von Hand geprüft, ohne Warnungen.
+
 ## Blockiert durch offene Entscheidung
 
 - Siehe `docs/decisions.md`, Einträge mit Status `OPEN`. Aufgaben, die davon abhängen, sind in der Aufgabendatei markiert.
@@ -50,4 +74,4 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 
 - Vor dem Start die Checkliste in `docs/setup.md` prüfen.
 - Layout und Projektarten: `docs/projects.md` lesen (Spiele in `games/`, Engines in `engines/`, ADR-020 PROPOSED).
-- M0 ist fertig. Vor M1: offene Punkte und `PROPOSED`-ADRs für M1 (006, 007, 016) mit dem Nutzer klären, Branch `task/M0-skeleton` nach `main` mergen (Nutzer entscheidet).
+- M0 und M1 sind fertig. Vor M2: .NET SDK reparieren (siehe oben), ADR-005 (Frontend als .NET-Prozess, PROPOSED) und die Spec-Lücke bei generischen Member-Referenzen klären, Branch `task/M1-engine-core` nach `main` mergen (Nutzer entscheidet).

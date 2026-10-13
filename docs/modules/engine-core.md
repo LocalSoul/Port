@@ -1,39 +1,59 @@
 # Modul `engine-core`
 
 ## Zweck
-Implementierung der eigenen Engine hinter `engine-api`. Neutral: kennt weder Unity noch Godot.
+Implementierung der eigenen Engine hinter `engine-api`. Neutral: kennt weder Unity noch Godot, keine Skripte.
 
 ## Abhängigkeiten
-`engine-api`. Sonst nichts aus dem Projekt. Niemals Adapter oder Frontends.
+Nur `engine-api` (Maven Enforcer). ArchUnit (`ArchitectureTest`) prüft: nur JDK, `engine.api` und `engine.core`; nichts aus `ir`, `adapter`, `frontend`; keine Reflection, keine Konsolenausgabe; die Pakete unter `engine.core.subsystems.*` hängen nicht voneinander ab und nutzen nur die API.
 
-## Bestandteile
-- **Welt/Entity-Verwaltung** (Form nach ADR-006, hinter Interface).
-- **Scheduler** mit Phasen `EARLY`, `FIXED`, `UPDATE`, `LATE`. Fixed-Timestep ist konfigurierbar. Reihenfolge innerhalb einer Phase ist deterministisch (Registrierungsreihenfolge, dokumentiert).
-- **Transform-System:** lokale/globale Transformationen, Eltern-Kind-Beziehungen, rechts-händig Y oben (ADR-007).
-- **Input:** abstrahierte Achsen und Tasten, im Test per Skript injizierbar (`ScriptedInput`).
-- **Rendering:** zunächst nur `NullRenderer` (ADR-014). Kein Grafikcode.
-- **Headless-Betrieb:** `Engine.step(n)` führt n Frames mit festem Zeitschritt aus, ohne Fenster und ohne Wanduhr.
+## Bestandteile (Stand M1)
 
-- **Subsystem-Verwaltung (ADR-015):** Registry für Provider (zunächst fest verdrahtete Standard-Provider, später `ServiceLoader`), `EventBus`, Prüfung von `SubsystemInfo` (ein Besitzer pro Komponente, Pflichtpaare, Konflikte). Subsysteme importieren sich nie gegenseitig.
+| Paket | Inhalt |
+|---|---|
+| `engine.core` | `CoreEngine` (Builder: `fixedDelta`, `frameDelta`, `subsystem`), `FrameHooks` (Ablauf je Phasenschritt) |
+| `engine.core.schedule` | `Scheduler`, `PhaseHooks`, `FrameContextFactory` |
+| `engine.core.world` | `CoreWorld`, `SparseSetStore`, `EntityTable`, `CommandBuffer` |
+| `engine.core.transform` | `TransformSystem` |
+| `engine.core.event` | `CoreEventBus`, `DeclaredEventBus` |
+| `engine.core.input` | `InputView` (Lesesicht auf `InputState`, kein Subsystem) |
+| `engine.core.subsystem` | `SubsystemRegistry` (Startprüfung) |
+| `engine.core.subsystems.input` | `ScriptedInput`, `InputScript` (Standard-Provider `input-scripted`) |
+| `engine.core.subsystems.render` | `NullRenderer` (Standard-Provider `render-null`) |
 
-## Datenmodell (ADR-016, PROPOSED)
+## Frame-Ablauf
+1. `EARLY` → `FIXED` × n → `UPDATE` → `LATE`. Jeder einzelne Durchlauf ist ein **Phasenschritt**.
+2. Je Phasenschritt:
+   1. nur in `LATE`: `TransformSystem` schreibt `WorldTransform`,
+   2. Sammeln der Strukturänderungen beginnt,
+   3. Subsysteme laufen (Registrierungsreihenfolge),
+   4. Callbacks laufen (Registrierungsreihenfolge),
+   5. Strukturänderungen werden ausgeführt, Event-Puffer getauscht.
+3. **Fixed-Timestep:** Akkumulator in `double`. Ein `FIXED`-Schritt läuft, solange der Akkumulator mindestens `fixedDelta · (1 − 10⁻⁴)` enthält. Die Toleranz gleicht `float`-Rundung der Frame-Dauer aus (`2.5f * 0.02f` liegt knapp unter 2,5 Schritten), der Rest bleibt für den nächsten Frame.
+4. `Time.delta` ist in allen Phasen die Frame-Dauer, `Time.frame` beginnt bei 0. Keine Wanduhr: `step(n)` nutzt die konfigurierte Frame-Dauer.
 
-- **Entity:** 64-Bit-ID, Index in den unteren, Generation in den oberen Bits. Zugriff mit veralteter Generation wirft eine klare Exception.
-- **`ComponentStore<T>`:** Interface in `engine-api`, Implementierung `SparseSetStore<T>` in `engine-core` (dichtes Array plus Index-Tabelle). Iteration in aufsteigender Entity-Reihenfolge.
-- **Command-Buffer:** Erzeugen/Zerstören von Entities und Hinzufügen/Entfernen von Komponenten während einer Iteration werden gesammelt und am Phasenende in Registrierungsreihenfolge ausgeführt.
-- **Hierarchie:** `Parent(entity)` und geordnete `Children`. Zerstören eines Elternobjekts zerstört die Kinder (dokumentiert, getestet). `TransformSystem` berechnet `WorldTransform` einmal pro Frame in der Phase `LATE` oder bei Bedarf (festlegen und dokumentieren).
-- **Erweiterungspunkt:** Adapter registrieren eigene Komponententypen (z. B. `ScriptHost`). Der Core speichert sie, ohne ihren Inhalt zu kennen.
-- **Debugbarkeit:** `World.dump()` (deterministisch, stabile Reihenfolge) und `EntityView` (liefert alle Komponenten einer Entity lesbar).
+## Datenmodell (ADR-016, ACCEPTED)
+- **Entity:** 64-Bit-ID, Index unten, Generation oben. Freie Indizes werden FIFO wiederverwendet, die Generation steigt beim Zerstören.
+- **`SparseSetStore<T>`:** dichtes Array **sortiert nach Entity-Index**, Index-Tabelle für O(1)-Zugriff. Einfügen und Entfernen sind O(n) (`arraycopy`), dafür ist die Iteration deterministisch aufsteigend.
+- **Command-Buffer:** siehe `docs/modules/engine-api.md` (Phasenende, Prüfung gegen erwarteten Zustand). Widersprüchliche `setParent` in derselben Phase, die erst zusammen einen Zyklus ergeben, werfen am Phasenende `HierarchyException`, nachdem alle übrigen Befehle ausgeführt sind.
+- **Hierarchie:** `Parent` und geordnete `Children` werden nur über `setParent` gepflegt. `destroy` zerstört den Teilbaum, Kinder vor dem Elternobjekt.
+- **Transform:** `worldMatrix(e)` rechnet auf Abruf (`Eltern · T · R · S`). Entities ohne `Transform` zählen als Identität. `TransformSystem` schreibt `WorldTransform` zu Beginn von `LATE` und entfernt veraltete Einträge. Aufwand O(n · Tiefe), ein Cache ist ohne API-Änderung möglich.
+- **Dump:** `world entities=N`, dann je Entity `entity index:generation` und je Komponente `  Einfachname toString()`. Entities aufsteigend, Komponenten nach vollem Klassennamen sortiert, genau ein abschließendes `\n`.
+
+## Standard-Provider
+- `ScriptedInput` (`input-scripted`, Art `input`, schreibt `InputState`): legt beim Start eine Entity mit `InputState` an und wendet in `EARLY` die Skriptereignisse des Frames an. `pressed`/`released` gelten nur in diesem Frame, Achsen bleiben bis zur Änderung bestehen.
+- `NullRenderer` (`render-null`, Art `render`, liest `WorldTransform`, `Renderable`): zählt in `LATE` Frames und sichtbare Renderables. Er läuft vor den `LATE`-Callbacks, deren Änderungen sieht er erst im nächsten Frame.
+- `InputView` liest die erste Entity mit `InputState`. Ohne Input-Subsystem ist alles 0 bzw. nicht gedrückt.
 
 ## Verhalten
-- Gleiche Eingabe (Szene, Eingabeskript, Zeitschritt) ergibt identischen Zustand nach n Frames (Determinismus).
+- Gleiche Eingabe (Szene, Eingabeskript, Zeitschritt) ergibt identischen Zustand und Dump nach n Frames (Tests über 100 und 1000 Frames).
 - Der Core trifft keine Annahmen über Unity-Lifecycle (`Awake`/`Start`). Das macht der Adapter über Scheduler-Phasen.
 
 ## Tests
-- Scheduler: Phasenreihenfolge, Fixed-Timestep-Akkumulator, Determinismus.
-- Transform: Eltern-Kind, Rotation/Skalierung, Koordinatenkonvention.
-- Headless-Lauf mit skriptierter Eingabe.
-- ArchUnit: kein Import aus `adapter-*`, `frontend-*`, `ir`.
+- Scheduler: Phasenreihenfolge, Akkumulator (auch 1000 Frames mit gerundeter Frame-Dauer), Determinismus.
+- Welt: Sparse-Set, Generationen, Command-Buffer während Iteration, Kaskade, Dump-Format und Determinismus.
+- Transform: Eltern verschieben, drehen und skalieren, `WorldTransform` in `LATE`.
+- Headless: Mini-Szene 100 Frames, Eingabeskript, identische Dumps, Lauf über Subsysteme.
+- Subsysteme: doppelter Schreiber, Core-Besitz, `requires`, `conflictsWith`, doppelte IDs, Event-Sichtbarkeit über 1000 Frames.
 
 ## Nicht-Ziele
 - Kein Fenster, kein echtes Rendering, keine Physik, kein Audio (spätere Meilensteine).

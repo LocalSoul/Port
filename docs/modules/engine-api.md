@@ -1,83 +1,73 @@
 # Modul `engine-api`
 
 ## Zweck
-Schmale, versionierte Schnittstelle zwischen Adaptern und Engine-Core. Enthält nur Interfaces, Wertetypen und Konstanten. Keine Implementierung.
+Schmale, versionierte Schnittstelle zwischen Adaptern und Engine-Core. Enthält nur Interfaces, Wertetypen, Komponentenschemas und Konstanten. Keine Implementierung.
 
 ## Abhängigkeiten
-Keine zu anderen Projektmodulen.
+Keine zu anderen Projektmodulen (Maven Enforcer). Nur JDK, keine Reflection, keine Konsolenausgabe (ArchUnit, `ArchitectureTest`).
 
-## Inhalt (Skizze, Details nach ADR-006)
-- **Mathe-Wertetypen:** `Vec2`, `Vec3`, `Quat`, `Mat4` (unveränderliche Records, rechts-händig Y oben nach ADR-007).
-- **Welt/Entity:** `World`, `Entity` (Form hängt an ADR-006, hinter Interface halten).
-- **Komponenten:** Basistyp `Component`, Registrierung eigener Komponententypen (Erweiterungspunkt).
-- **Scheduler:** `Phase` (`EARLY`, `FIXED`, `UPDATE`, `LATE`), Registrierung von Callbacks pro Phase, `Time` (Delta, Fixed-Delta, Frame).
-- **Subsysteme:** `Input`, `Renderer` (zunächst nur Null-Variante, ADR-014), `Physics` und `Audio` als später gefüllte Interfaces.
-- **Engine:** `Engine`-Fassade zum Erzeugen von Welt, Starten, Frame-Schritt (`step(n)`), Beenden.
+## Konventionen
+- Rechts-händig, Y oben, Meter, Radiant, Sekunden (ADR-007). Zahlen sind `float` (ADR-016).
+- Transzendente Funktionen über `StrictMath`, damit Ergebnisse auf jeder Plattform bitgleich sind.
+- Komponenten des Cores sind unveränderliche Records (ADR-016). `equals` ist exakt (`-0.0f != 0.0f`), für Rechenergebnisse gibt es `approxEquals` mit `MathConstants.EPSILON = 1e-5f`.
 
-## Welt und Komponenten (ADR-016, PROPOSED)
+## Inhalt (Stand M1)
+
+| Paket | Typen |
+|---|---|
+| `engine.api` | `Engine` (Fassade: `world`, `register`, `step`, `frameCount`, `shutdown`), `EngineException` (Basis aller Fehler, ungeprüft) |
+| `engine.api.math` | `Vec2`, `Vec3`, `Quat` (Records), `Mat4` (finale Klasse, spaltenweise, Spaltenvektoren), `MathConstants` |
+| `engine.api.world` | `World`, `Entity` (Index untere 32 Bit, Generation obere 32 Bit), `ComponentStore<T>`, `EntityView`, Exceptions `StaleEntityException`, `MissingComponentException`, `DuplicateComponentException`, `UnregisteredComponentException`, `HierarchyException`, `ReservedComponentException` |
+| `engine.api.component` | Schemas v1: `Transform`, `WorldTransform`, `Parent`, `Children`, `Renderable`, `InputState`; `Schemas` (Namen/Versionen als `ComponentType`, `CORE_OWNED`) |
+| `engine.api.schedule` | `Phase` (`EARLY`, `FIXED`, `UPDATE`, `LATE`), `Time` (Delta, Fixed-Delta, Frame ab 0), `PhaseCallback`, `FrameContext` (Phase, Zeit, Welt, Input, Event-Bus) |
+| `engine.api.input` | `Input` (`axis`, `isHeld`, `wasPressed`, `wasReleased`) |
+| `engine.api.render` | `Renderer extends Subsystem` (`framesRendered`) |
+| `engine.api.subsystem` | `Subsystem` (`info`, `init`, `run`, `shutdown`), `SubsystemInfo`, `ComponentType`, `EventType`, `Event`, `EventBus`, `SubsystemConfigurationException` |
+
+## Welt (ADR-016, ACCEPTED)
 
 ```java
 public interface World {
-    Entity create();
-    void destroy(Entity e);                       // wirkt am Phasenende (Command-Buffer)
+    Entity create();                                  // sofort
+    void destroy(Entity e);                           // Strukturänderung, Kinder rekursiv
     boolean isAlive(Entity e);
-    <T> void add(Entity e, T component);          // Typ muss registriert sein
-    <T> T get(Entity e, Class<T> type);           // wirft bei fehlender Komponente
+    List<Entity> entities();                          // aufsteigend nach Index
+    <T> void registerComponent(Class<T> type);        // Erweiterungspunkt, idempotent
+    <T> void add(Entity e, T component);              // Strukturänderung
+    <T> void set(Entity e, T component);              // ersetzt Wert, sofort
+    <T> T get(Entity e, Class<T> type);
     <T> boolean has(Entity e, Class<T> type);
-    <T> void remove(Entity e, Class<T> type);
-    <T> ComponentStore<T> store(Class<T> type);
-    <T> void registerComponent(Class<T> type);    // Erweiterungspunkt für Adapter
-    String dump();                                // deterministisch
-}
-
-public interface ComponentStore<T> {
-    int size();
-    Entity entityAt(int denseIndex);
-    T componentAt(int denseIndex);                // Iteration per for-Schleife
-}
-
-public record Entity(long id) {                   // Index und Generation in einer ID
-    int index();
-    int generation();
+    <T> void remove(Entity e, Class<T> type);         // Strukturänderung
+    <T> ComponentStore<T> store(Class<T> type);       // Iteration aufsteigend nach Index
+    void setParent(Entity child, Entity parent);      // Strukturänderung, null löst
+    Entity parentOf(Entity e);
+    List<Entity> childrenOf(Entity e);                // Anhängereihenfolge
+    Mat4 worldMatrix(Entity e);                       // auf Abruf über die Elternkette
+    EntityView view(Entity e);
+    String dump();                                    // deterministisch
 }
 ```
 
-Hinweis: Die Signaturen sind eine Skizze. Entscheidend sind Entity-Handles mit Generation, getrennter Speicher je Komponententyp, explizite Iteration und der Command-Buffer. Details dürfen im Code präzisiert werden, Abweichungen vom Entwurf gehören in ADR-016.
+- **Strukturänderungen** (`destroy`, `add`, `remove`, `setParent`) während einer Phase wirken **am Ende dieser Phase**, außerhalb eines Frames sofort. Vorbedingungen werden beim Aufruf gegen den erwarteten Zustand geprüft (aktueller Zustand plus anstehende Befehle). Befehle für bis dahin zerstörte Entities entfallen.
+- `create` und `set` wirken immer sofort. Eine neu erzeugte Entity bekommt Komponenten aus derselben Phase erst am Phasenende.
+- Pro Entity höchstens eine Komponente je Typ, der Typ ist die exakte Klasse. `toString()` der Komponenten muss deterministisch sein (für `dump`).
+- **Vom Core verwaltet:** `Parent`, `Children` (nur über `setParent`), `WorldTransform` (zu Beginn von `LATE` berechnet). Direkte Schreibzugriffe werfen `ReservedComponentException`.
+- Alle Methoden mit Entity-Parameter werfen `StaleEntityException`, wenn die Entity nicht lebt. Die Meldung unterscheidet „existiert nicht", „zerstört" und „veraltet".
 
 ## Subsystem-Vertrag (ADR-015, PROPOSED)
 
-Subsysteme (`Input`, `Renderer`, `Physics`, `Audio`) sind **getrennte Interfaces**. Sie tauschen Daten nur über den Core aus, nie direkt.
-
-```java
-public interface Subsystem {
-    SubsystemInfo info();                  // Deklaration, siehe unten
-    void init(World world, EventBus bus);
-    void run(Phase phase, FrameContext ctx);
-    void shutdown();
-}
-
-public record SubsystemInfo(
-    String id,                             // z. B. "input-godot-like"
-    String kind,                           // "input", "render", "physics", "audio", ...
-    Set<ComponentType> reads,
-    Set<ComponentType> writes,             // Besitzer: genau ein Subsystem je Komponente
-    Set<EventType> publishes,
-    Set<EventType> consumes,
-    Set<String> requires,                  // Pflichtpaare (andere Subsystem-Arten oder IDs)
-    Set<String> conflictsWith) {}
-```
-
-- `EventBus`: Ereignisse mit deterministischer Reihenfolge. Semantik (sofort oder pro Phase gepuffert) ist eine offene Teilfrage in ADR-015, bis dahin gepuffert pro Phase und dokumentiert.
-- **Komponentenschemas** (`Transform`, `Renderable`, `Collider`, `AudioSource`, ...) sind engine-neutrale, versionierte Datentypen in dieser API. Felder, die nicht jeder Provider liefert, haben dokumentierte Defaults.
-- Beim Start prüft die Engine, dass pro Komponente höchstens ein Subsystem in `writes` steht und dass alle `requires` erfüllt sind. Fehler sind eindeutige Exceptions mit Angabe der beteiligten Provider.
+- `SubsystemInfo(id, kind, reads, writes, publishes, consumes, requires, conflictsWith)`. Komponenten und Ereignisse werden mit Name und Version deklariert (`ComponentType`, `EventType`, sortierbar).
+- Subsysteme laufen in **jedem** Phasenschritt vor den Callbacks, in Registrierungsreihenfolge, und filtern selbst nach `context.phase()`. `init` läuft einmal beim Start außerhalb eines Frames.
+- `EventBus`: Was im Phasenschritt k veröffentlicht wird, ist genau im Schritt k+1 sichtbar, auch über Frame-Grenzen. Reihenfolge = Veröffentlichungsreihenfolge (`Event.sequence`). Der Bus aus `init` prüft die deklarierten Typen, `FrameContext.events()` (für Adapter) nicht.
+- Startprüfung: IDs eindeutig, höchstens ein Schreiber je Komponente (`Schemas.CORE_OWNED` gehört dem Core), `requires` passt auf ID oder Art eines *anderen* Subsystems, `conflictsWith` passt auf keines. Fehler: `SubsystemConfigurationException` mit den beteiligten IDs.
 
 ## Regeln
 - Jede Änderung ist eine bewusste Entscheidung (ADR-011). Änderungen passen alle Adapter im selben Commit an.
 - Keine Unity-, Godot- oder Engine-Core-Typen in der API.
-- Alle Typen dokumentiert mit Javadoc inklusive Einheiten und Konventionen.
+- Alle Typen dokumentiert mit Javadoc inklusive Einheiten und Konventionen (Doclint ohne Warnungen).
 
 ## Tests
-- Mathe-Wertetypen: Gleichheit, Operationen, Randfälle (Null-Vektoren, Normalisierung).
+- Mathe-Wertetypen: Operationen, Randfälle (Nullvektor, Einheitsquaternion, Toleranz), Kreuzprodukt rechts-händig, Rotation +X um +Y ergibt −Z.
 - Keine Verhaltenstests der Engine, die gehören in `engine-core`.
 
 ## Nicht-Ziele

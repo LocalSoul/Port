@@ -36,6 +36,9 @@ public final class NullRenderer implements Renderer {
   private long framesRendered;
   private int lastVisibleCount;
 
+  /** Erzeugt den Renderer. */
+  public NullRenderer() {}
+
   @Override
   public SubsystemInfo info() {
     return INFO;

@@ -142,6 +142,11 @@ IL2CPP-Spiele sind vorerst nicht im Scope (kaum sauber dekompilierbar).
 **Folgen:** Schemas sind Teil der Engine-API und unterliegen ADR-011. Das Datenmodell (ADR-006) bestimmt, wie sauber sich die Verträge ausdrücken lassen.
 **Vorgehen für Agents:** In M1 Subsysteme getrennt halten, Event-Bus und `SubsystemInfo` einführen, Standard-Provider im `engine-core` belassen. Weitere Provider-Module und `port engine`-Befehle kommen erst in M12.
 **Offene Teilfragen:** Welche Komponentenschemas gehören in Version 1? Semantik des Event-Bus (sofort oder gepuffert pro Phase)? Wie werden Kopplungen deklariert (Pflichtpaare, Konflikte)?
+**Stand nach M1 (vorläufig, Status bleibt PROPOSED):**
+- Schemas v1: `Transform`, `WorldTransform`, `Parent`, `Children` (Core-Besitz bis auf `Transform`), `Renderable` (Platzhalter), `InputState`.
+- Event-Bus: gepuffert pro Phasenschritt. Was im Schritt k veröffentlicht wird, ist genau im Schritt k+1 sichtbar. Der Bus aus `Subsystem.init` prüft deklarierte Typen.
+- Kopplungen: `requires`/`conflictsWith` als Strings, die auf ID oder Art eines anderen Subsystems passen. Fehler beim Start als `SubsystemConfigurationException`.
+- Subsysteme laufen in jedem Phasenschritt vor den Callbacks und filtern selbst nach Phase. Standard-Provider liegen in `engine-core` (`engine.core.subsystems.*`), noch ohne `ServiceLoader`.
 
 ## ADR-016: ECS-Entwurf für den Engine-Core
 **Status:** ACCEPTED (vom Nutzer entschieden, 2026-10-13, konkretisiert ADR-006)

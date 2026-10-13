@@ -17,6 +17,9 @@ public final class CoreEventBus implements EventBus {
   private List<Event> pending = new ArrayList<>();
   private long nextSequence;
 
+  /** Erzeugt einen leeren Bus. */
+  public CoreEventBus() {}
+
   @Override
   public void publish(EventType type, Object payload) {
     pending.add(new Event(type, payload, nextSequence));
