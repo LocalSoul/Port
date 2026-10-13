@@ -22,7 +22,11 @@ public final class Mapping {
     this.entries = entries;
   }
 
-  /** Leeres Mapping. */
+  /**
+   * Leeres Mapping.
+   *
+   * @return Mapping ohne Einträge
+   */
   public static Mapping empty() {
     return new Mapping(new TreeMap<>());
   }

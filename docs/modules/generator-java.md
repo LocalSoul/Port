@@ -4,34 +4,60 @@
 Erzeugt aus der IR Java-Quelltext. Weiß nichts über die konkrete Engine, nur über das Mapping eines Adapters.
 
 ## Abhängigkeiten
-`ir`. Zur Laufzeit liest er das Mapping eines Adapters als Datei (`mapping.tsv`), nie als Codeabhängigkeit auf `adapter-*`.
+Nur `ir` (Maven Enforcer, ArchUnit: nichts aus `adapter-*`, `engine-*`, keine Reflection). Das Mapping eines Adapters wird zur Laufzeit als Datei (`mapping.tsv`) gelesen, nie als Codeabhängigkeit. google-java-format nur im Test-Scope.
 
-## Eingaben und Ausgaben
-- Eingabe: `IrFile`, Mapping-Tabelle, Konfiguration (Ziel-Paket, Adapter-Paketname).
-- Ausgabe: pro Klasse `FooBase.java` (generiert), plus eine Liste offener Stellen (`todo`).
-- Handarbeit liegt in `manual/` als `Foo extends FooBase`. Der Generator überschreibt `manual/` nie.
+## API (Stand M3)
+```java
+Mapping mapping = Mapping.load(Path.of(".../mapping.tsv"));         // oder Mapping.parse(text), merge(...)
+GeneratorConfig config = new GeneratorConfig("gen.mygame", mapping, Set.of("UnsafeBits"));  // Klassen mit manual/
+GenerationResult result = new JavaGenerator(config).generate(irFiles);  // List<GeneratedFile>, List<Todo>, sortiert
+```
 
-## Generierungsregeln (Auszug)
-- `UnityEngine.Component::transform` (Property) → `transform()`, Methoden → `lowerCamelCase`, statische Aufrufe → `Typ.methode(...)`.
-- Operator-Aufrufe (`scall ...::op_Multiply`) → laut Mapping statische Methoden (`Vector3.mul`).
-- `local` → lokale Variable. `set` als Ausdruck → Zuweisung. `post-inc` usw. → Java-Äquivalent.
-- Primitive: `i8..i64`, `u8..u64`, `f32`, `f64`, `bool`, `char`, `string`. **Unsigned-Typen:** Die Abbildung hängt an ADR-019 (Teilfrage OPEN). Bis dahin als `todo` erzeugen und melden (Lint SM002). Primitive und Bibliothekstypen laut `docs/type-mapping.md`.
-- `switch` ohne Durchfallen, `try/catch/finally`, Schleifen 1:1.
-- `yield-return`, `lambda` mit Capture-Sonderfällen, Events: erst nach den zugehörigen ADRs (ADR-008). Bis dahin wird ein `todo`-Block erzeugt (`throw new UnsupportedOperationException("PORT-TODO: <Symbol>")`) und in der Ergebnisliste gemeldet.
-- `(raw cs ...)` und `:manual` am Member: Rumpf wird nicht generiert, `abstract`- oder Hook-Methode, die `manual/` implementiert.
-- Generierter Code importiert **nur** den gewählten Adapter und `runtime-system` (siehe `docs/type-mapping.md`).
+## `mapping.tsv`
+Drei Spalten, getrennt durch Tabulatoren: IR-Symbol (stabile Symbol-ID nach ADR-025, also ohne Typargumente am Typ), Java-Symbol, Form. Zeilen mit `#` und Leerzeilen werden übersprungen, doppelte Symbole sind ein Fehler (`MappingException` mit Zeilennummer).
 
-## Technik
-- JavaPoet oder ein eigener, einfacher Code-Emitter. Empfehlung: eigener Emitter mit `StringBuilder` und Einrückungsverwaltung, wenn JavaPoet beim Debuggen im Weg steht (klassischer Stil).
-- Ausgabe deterministisch, formatiert (google-java-format im Test geprüft).
+| Form | Java-Symbol | Erzeugt |
+|---|---|---|
+| `type` | voll qualifizierter Klassenname | Import, einfacher Name |
+| `method` | Methodenname | `ziel.name(args)` |
+| `static-method` | Methodenname | `Typ.name(args)` |
+| `getter` | Methodenname | `ziel.name()` (Property oder Feld) |
+| `static-getter` | Methodenname | `Typ.name()` |
+| `constructor` | Klassenname | `new Typ(args)` |
+| `operator` | Methodenname | `Typ.name(a, b)` |
+| `message` | Methodenname | gleich signierte Methode einer Unterklasse wird `@Override protected` (Lifecycle, Nutzerentscheidung M3) |
+
+## Ausgabe
+- Je IR-Klasse **`FooBase.java`** (abstrakt, alle erzeugten Member) und ein **dünnes `Foo.java`** (`public class Foo extends FooBase`, wiederholt die Konstruktoren). `Foo` entfällt, wenn `manual/Foo.java` existiert (`GeneratorConfig.manualClasses`) oder die Klasse Handarbeit braucht (Nutzerentscheidung M3). Referenzen anderer Klassen zeigen immer auf `Foo`.
+- Pakete: Zielpaket plus IR-Namespace in Kleinbuchstaben (`Game.Logic.E` → `<ziel>.game.logic.EBase`).
+- Member in kanonischer Reihenfolge (Felder, Properties, Events, Konstruktoren, Methoden, je nach Symbol-ID), Importe sortiert, eine Leerzeile zwischen Membern.
+
+## Generierungsregeln
+- **Namen:** Typen behalten den Namen, Felder auch; Methoden und Properties `lowerCamelCase` (`Update` → `update`); Java-Schlüsselwörter bekommen `_` (`new` → `new_`).
+- **Properties:** Getter `name()`, Setter `name(T value)`. Zuweisungen an Properties nur als Statement: `this.p(3)`; `p += 2` → `this.p(this.p() + 2)` (nur bei einfachem Ziel ohne Seiteneffekte).
+- **Modifier:** C#-`private` → paketsichtbar (damit `manual/Foo` im selben Paket zugreifen kann), `internal` → `public` (C#-Namespaces einer Assembly sehen einander, Java-Pakete nicht), `protected` → `protected`, `readonly` → `final`, `const` → `static final`, `sealed` (Klasse) → `final` am dünnen `Foo`, `override` → `@Override`.
+- **Typen:** Primitive laut `docs/type-mapping.md` (`string` → `String`, `object` → `Object`); Primitive als Typargument geboxt (`Box<int>` → `Box<Integer>`); eigene generische Klassen als Java-Generics, `new Box<>(...)`; Arrays mit Rang 1.
+- **Literale:** `i8`/`i16` mit Cast (`(byte) -5`), `i64` mit `L`, `f32` mit `f`, `f64` ohne Punkt mit `d`; `char` als `'a'` bzw. `(char) N`; Strings mit Oktal-Escapes für Steuerzeichen (ein `\u000A` würde javac vor dem Lexen umwandeln).
+- **Ausdrücke:** Klammern nur, wo die Java-Rangfolge es verlangt; `System.Array::Length` → `array.length`; `unchecked` entfällt (Java rechnet wie C# unchecked); `default(T)` → Nullwert des Typs.
+- **Statements:** Blöcke immer mit Klammern; `switch` klassisch mit `case x:` (IR garantiert kein Durchfallen); `foreach` → Java-for-each; `lock` → `synchronized`.
+- **Konstruktoren:** `protected FooBase(...)`, `:base-call` → `super(...)`, statischer Konstruktor → `static {}`. Hinweis: In C# laufen Feldinitialisierer vor dem Basiskonstruktor, in Java danach.
+- **Lifecycle:** Methoden, deren Signatur (`Update#`) einer `message`-Zeile eines Basistyps entspricht (Basiskette über eigene Klassen bis zum ersten externen Typ), werden `@Override protected` mit dem Java-Namen aus dem Mapping.
+
+## Offene Stellen
+- **Todo:** Ein Member mit nicht erzeugbarem Konstrukt bekommt den Rumpf `throw new UnsupportedOperationException("PORT-TODO: <Symbol>: <Grund>")` und einen `Todo`-Eintrag; Importe aus dem abgebrochenen Versuch werden zurückgenommen. Ein Feld-Initialisierer, der sich nicht erzeugen lässt, entfällt (Todo). Andere Typarten als Klassen (struct, interface, enum) werden in M3 nicht erzeugt (Todo).
+- **Handarbeit:** `raw`/`manual` im Rumpf → abstrakte Methode in `FooBase`, kein dünnes `Foo`, Todo „Klasse braucht Handarbeit: manual/Foo.java extends FooBase“.
+- Todo in M3 u. a.: externe Symbole ohne Mapping (BCL kommt mit `runtime-system` in M3a), Unsigned-Typen (ADR-019), Nullable, `ref`/`out`, mehrdimensionale Arrays, Coroutines (ADR-008), Events, Lambdas, `as`, `??`, `typeof`, `checked`, `try`/`catch` mit BCL-Exceptions, `goto`, eigene structs (ADR-009), Interfaces und Enums.
+
+## Formatierung
+Eigener Emitter (`JavaWriter`, `ExprEmitter`, `StmtEmitter`, `ClassEmitter`) im google-java-format-Stil, Nutzerentscheidung M3. `LineBreaker` setzt das Layout-Modell `Doc` (Text, Aufruf, Kette) nach den Regeln von google-java-format um: Breite 100, Ketten brechen vor `.` (erstes Glied bleibt am einfachen Empfänger), Aufrufe nach `(` mit +4, Argumente zusammen oder je eine Zeile, Javadoc dreizeilig, leere Rümpfe `{}`. Nicht abgedeckt: Umbrüche an binären Operatoren und in Block-Köpfen. `JavaGeneratorGoldenTest` lässt google-java-format über alle Golden Files laufen und verlangt keine Änderung.
+
+## Tests
+- Golden Files `testdata/golden/java/` (Java je Fixture-Klasse plus `todos.tsv`) aus `testdata/golden/ir/unity/`, aktualisieren mit `-Dgolden.update=true`.
+- Einzelregeln (`JavaGeneratorTest`): Rangfolge, Literale, Unsigned → Todo, `message` → `@Override`, Konstruktoren im dünnen `Foo`, `manualClasses`, `raw` → abstrakt, Setter, Pakete und Schlüsselwörter, ungültiges Mapping, Importe nach Todo.
+- Kompilier- und Lauftest im Modul `integration-tests` (`MoverEndToEndTest`).
 
 ## Nativer Dialekt (ab M10b)
 `cfg`-Funktionen werden als Zustandsautomat erzeugt (`switch` über das aktuelle Label in einer Schleife), `load`/`store` über `NativeMemory`, Ganzzahloperationen mit Zweierkomplement-Wrapping und vorzeichenloser Semantik nach Operandentyp (ADR-019, Unsigned-Teilfrage muss vorher entschieden sein). Siehe `docs/ir-spec.md`, Abschnitt 12.
-
-## Tests
-- Golden Files pro IR-Konstrukt (`testdata/golden/java/`).
-- Kompilier-Test: generierter Code kompiliert gegen den Adapter (nur im Integrationstest, nicht im Unit-Test des Generators).
-- `todo`-Meldungen für nicht unterstützte Konstrukte.
 
 ## Nicht-Ziele
 - Keine Optimierungen, keine Umstrukturierung der Logik.

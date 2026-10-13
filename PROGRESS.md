@@ -4,10 +4,10 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 
 ## Aktueller Stand
 
-- Phase: **M2 abgeschlossen** (alle Abnahmekriterien in `tasks/M2-unity-frontend.md` inklusive M2.6 erfüllt; `scripts/build-dotnet.sh` und `./mvnw -q verify` grün)
-- M0, M1 und M2 sind nach `main` gemergt (lokal, kein Remote).
-- Nächste Aufgabe laut `tasks/README.md`: `tasks/M3-generator-adapter.md`. Die blockierende Spec-Lücke (generische Member-Referenzen) ist mit ADR-025 geschlossen.
-- Letzte Session: 2026-10-13, M0.2 bis M0.7, ADR-024, M1.1 bis M1.6, M2.1 bis M2.6
+- Phase: **M3 abgeschlossen** (alle Abnahmekriterien in `tasks/M3-generator-adapter.md` erfüllt; `scripts/build-dotnet.sh` und `./mvnw -q verify` grün). Erstmals läuft die ganze Kette: C#-Assembly → IR → Java → kompiliert → bewegt eine Transform in der Engine.
+- M0, M1, M2 und ADR-025 sind auf `main`. M3 liegt auf Branch `task/M3-generator-adapter`, noch nicht gemergt.
+- Nächste Aufgabe laut Roadmap: M3a (`runtime-system`, BCL-Nachbau und Typabbildung, ADR-019), danach M4 (CLI) und M4a (Launcher).
+- Letzte Session: 2026-10-13, M0.2 bis M3.4, ADR-024, ADR-025
 
 ## Erledigt
 
@@ -89,9 +89,30 @@ Alle erscheinen als `raw` + `:manual` bzw. als gemeldeter, übersprungener Typ, 
   - „Besteht den Validator" heißt: keine `error`-Diagnosen; `info` für externe `UnityEngine.*`-Typen ist erlaubt (oder Typkatalog aus den Stubs).
 - Spec-Lücken, die M2 nicht blockieren, aber vor M3a geklärt sein müssen: generische Member-Referenzen (`List<i32>::Add`), weitere C#-Modifier (`extern`, `new`, `volatile`, `async`, ...), `:attrs` an Methoden, verschachtelte Typen (`Outer.Inner` nicht von Namespaces unterscheidbar). Die M2-Fixtures meiden diese Fälle.
 
-## Wünsche an die Engine-API (aus M1, vor M3 prüfen)
+- M3 Generator und Adapter (Plan mit Nutzer abgestimmt):
+  - M3.0: ADR-025 nach `main` gemergt.
+  - M3.1: `adapter-unity` (Minimalumfang, Lifecycle, Koordinaten, `mapping.tsv` mit Form-Spalte, Metadaten).
+  - M3.2: `generator-java` (FooBase + dünnes Foo, `message` → `@Override`, eigener Emitter, Golden Files mit google-java-format geprüft).
+  - M3.3: `integration-tests` (Mover End-to-End, alle Fixtures kompilieren, Handarbeit für UnsafeBits).
+  - M3.4: Doku `generator-java.md`, `adapter-unity.md`.
 
-- **Unity-Semantik vs. Phasenende:** Unity macht `AddComponent` und `transform.SetParent` sofort wirksam, unser Core erst am Phasenende. Der Unity-Adapter muss neu angehängte Komponenten selbst vorhalten (z. B. im `ScriptHost`) bzw. Weltpositionen für noch nicht übernommene Eltern selbst rechnen. Eventuell braucht die API ein sofortiges `setParent` außerhalb von Iterationen.
+## M3: Lücken und Beobachtungen
+
+- **Generator-Todos** (Liste: `testdata/golden/java/todos.tsv`):
+  - BCL-Symbole ohne Mapping (`System.String`-Vergleich, `MathF`, `List<T>`, `Func<T>`) → M3a mit `runtime-system`.
+  - Unity-API außerhalb des Minimalumfangs (`Input.GetKey`, `Mathf`, `Debug.Log`) → bedarfsgesteuert im Adapter.
+  - Unsigned (ADR-019), Nullable, `ref`/`out`, mehrdimensionale Arrays, Events, Lambdas, Coroutines (ADR-008), eigene structs (ADR-009), Interfaces und Enums.
+- **Formatierung:** `LineBreaker` deckt Ketten, Aufrufe, Javadoc und leere Rümpfe ab. Umbrüche an binären Operatoren und in langen Block-Köpfen (`if`, `for`) sind nicht umgesetzt; solcher Code wäre korrekt, aber nicht google-java-format-konform. Alternative für später: die Spiel-Projekte formatieren `gen/` per Spotless.
+- **Semantikunterschied:** In C# laufen Feldinitialisierer vor dem Basiskonstruktor, in Java danach (Kandidat für eine Lint-Regel).
+- **Mapping:** Einträge brauchen Symbol-IDs mit Parametertypen der Deklaration (ADR-025). Setter externer Properties haben noch keine Form (`setter`), Zuweisungen daran werden Todo.
+- **Adapter:** `AddComponent<T>()` fehlt (Test nutzt `addComponent(instanz)`), `Time.timeScale` fehlt, `Translate` nur ohne rotierte Eltern korrekt, `Input.GetAxis` ohne Glättung (stub).
+
+## Wünsche an die Engine-API (aus M1 und M3)
+
+- **Aus M3:** Die Unity-API ist statisch; der Adapter hält deshalb Engine und `FrameContext` in statischen Feldern (`UnityRuntime`). Eine Engine-API-Möglichkeit, den aktuellen Kontext abzufragen (oder Input/Zeit außerhalb von Callbacks), würde das vereinfachen.
+- **Aus M3:** Der Adapter muss „Frame vorbei" selbst erkennen (Ende seines `LATE`-Callbacks). Ein Ereignis „Frame-Ende" im Scheduler wäre robuster.
+
+- **Unity-Semantik vs. Phasenende:** Unity macht `AddComponent` und `transform.SetParent` sofort wirksam, unser Core erst am Phasenende. Stand M3: Skripte hält der Adapter selbst im `ScriptHost` (sofort benutzbar); `SetParent` ist im Adapter noch nicht nachgebaut. Eventuell braucht die API ein sofortiges `setParent` außerhalb von Iterationen.
 - `Engine` (API) bietet `input()` und `events()` nur über `FrameContext` bzw. `CoreEngine`. Adapter, die außerhalb von Callbacks Ereignisse senden wollen, brauchen das in der Fassade.
 - Subsysteme werden in jedem Phasenschritt aufgerufen und filtern selbst. Eine Phasenangabe in `SubsystemInfo` würde Aufrufe sparen und die Deklaration vollständiger machen.
 - `NullRenderer` läuft vor den `LATE`-Callbacks, deren Änderungen erscheinen erst im nächsten Frame. Bei echtem Rendering eventuell eine eigene Phase `RENDER` nach `LATE`.

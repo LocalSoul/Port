@@ -54,8 +54,8 @@
 - [x] Der Test nutzt die IR aus M2 (oder deren Golden File) als Eingabe.
 
 ## M3.4 Abschluss
-- [ ] Doku (`docs/modules/*`) aktualisiert.
-- [ ] Fehlende Konstrukte, Mapping-Lücken und Beobachtungen zu Engine-API-Wünschen in `PROGRESS.md`.
+- [x] Doku (`docs/modules/*`) aktualisiert.
+- [x] Fehlende Konstrukte, Mapping-Lücken und Beobachtungen zu Engine-API-Wünschen in `PROGRESS.md`.
 
 ## Nicht-Ziele
 Coroutines, Events, Delegates, Lambdas mit Capture, Unsigned-Typen (nur mit ADR), Szenen/Prefabs, Physik.
