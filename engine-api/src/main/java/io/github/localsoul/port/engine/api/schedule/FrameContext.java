@@ -1,5 +1,7 @@
 package io.github.localsoul.port.engine.api.schedule;
 
+import io.github.localsoul.port.engine.api.world.World;
+
 /** Kontext eines Phasenschritts, wird Callbacks und Subsystemen übergeben. */
 public interface FrameContext {
 
@@ -16,4 +18,11 @@ public interface FrameContext {
    * @return die Zeitwerte des laufenden Frames
    */
   Time time();
+
+  /**
+   * Liefert die Welt.
+   *
+   * @return die Welt
+   */
+  World world();
 }

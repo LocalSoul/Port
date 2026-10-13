@@ -4,6 +4,7 @@ import io.github.localsoul.port.engine.api.schedule.FrameContext;
 import io.github.localsoul.port.engine.api.schedule.Phase;
 import io.github.localsoul.port.engine.api.schedule.PhaseCallback;
 import io.github.localsoul.port.engine.api.schedule.Time;
+import io.github.localsoul.port.engine.api.world.World;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
@@ -37,6 +38,7 @@ public final class Scheduler {
   private final double stepThreshold;
   private final Map<Phase, List<PhaseCallback>> callbacks = new EnumMap<>(Phase.class);
   private PhaseHooks hooks = PhaseHooks.NONE;
+  private FrameContextFactory contextFactory = StepContext::new;
   private double accumulator;
   private long frame;
   private Phase currentPhase;
@@ -65,6 +67,15 @@ public final class Scheduler {
    */
   public void setHooks(PhaseHooks hooks) {
     this.hooks = hooks;
+  }
+
+  /**
+   * Setzt die Fabrik für den Kontext je Phasenschritt.
+   *
+   * @param contextFactory Fabrik, nicht {@code null}
+   */
+  public void setContextFactory(FrameContextFactory contextFactory) {
+    this.contextFactory = contextFactory;
   }
 
   /**
@@ -106,7 +117,7 @@ public final class Scheduler {
   private void runStep(Phase phase, Time time) {
     currentPhase = phase;
     try {
-      FrameContext context = new StepContext(phase, time);
+      FrameContext context = contextFactory.create(phase, time);
       hooks.beforeCallbacks(context);
       List<PhaseCallback> phaseCallbacks = callbacks.get(phase);
       for (int i = 0; i < phaseCallbacks.size(); i++) {
@@ -155,6 +166,12 @@ public final class Scheduler {
     return fixedDelta;
   }
 
-  /** Kontext eines Phasenschritts ohne weiteren Engine-Zustand. */
-  private record StepContext(Phase phase, Time time) implements FrameContext {}
+  /** Kontext ohne Engine-Zustand, für einen Scheduler ohne Welt (Tests). */
+  private record StepContext(Phase phase, Time time) implements FrameContext {
+
+    @Override
+    public World world() {
+      throw new IllegalStateException("Scheduler ohne Welt: keine Kontextfabrik gesetzt");
+    }
+  }
 }

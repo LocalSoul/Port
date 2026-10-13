@@ -64,14 +64,14 @@
 8. Keine Skript- oder Unity-/Godot-Begriffe im Core. Adapterdefinierte Komponententypen laufen über `registerComponent`.
 
 **Abnahme**
-- [ ] Verschobenes Elternobjekt verschiebt Kind in globalen Koordinaten (Test).
-- [ ] Rotation des Elternobjekts dreht Kind um Elternursprung (Test).
-- [ ] Eigene Komponente registrieren, an Entity hängen, abfragen (Test).
-- [ ] Entity zerstören während eines Frames: Verhalten laut Dokumentation (Test).
-- [ ] Zugriff mit veralteter Entity-Generation wirft eine klare Exception (Test).
-- [ ] Hinzufügen/Entfernen einer Komponente während der Iteration führt nicht zu Fehlern und wirkt erst am Phasenende (Test).
-- [ ] Zerstören des Elternobjekts zerstört die Kinder (Test).
-- [ ] `World.dump()` ist für gleiche Eingabe byte-identisch (Test).
+- [x] Verschobenes Elternobjekt verschiebt Kind in globalen Koordinaten (Test).
+- [x] Rotation des Elternobjekts dreht Kind um Elternursprung (Test).
+- [x] Eigene Komponente registrieren, an Entity hängen, abfragen (Test).
+- [x] Entity zerstören während eines Frames: Verhalten laut Dokumentation (Test).
+- [x] Zugriff mit veralteter Entity-Generation wirft eine klare Exception (Test).
+- [x] Hinzufügen/Entfernen einer Komponente während der Iteration führt nicht zu Fehlern und wirkt erst am Phasenende (Test).
+- [x] Zerstören des Elternobjekts zerstört die Kinder (Test).
+- [x] `World.dump()` ist für gleiche Eingabe byte-identisch (Test).
 
 ## M1.5 Input und Headless-Betrieb
 
