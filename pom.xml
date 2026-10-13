@@ -19,6 +19,7 @@
     <module>frontend-unity/java</module>
     <module>engines/unity/adapter-unity</module>
     <module>generator-java</module>
+    <module>integration-tests</module>
   </modules>
 
   <properties>

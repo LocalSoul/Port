@@ -49,9 +49,9 @@
 2. Szene: eine `GameObject` mit `Mover`, skriptierte Eingabe `Horizontal = 1`, 60 Frames bei festem Zeitschritt.
 
 **Abnahme**
-- [ ] Nach 60 Frames hat sich die Transform um `speed * Summe(deltaTime)` bewegt, erwarteter Wert exakt berechnet im Test (nicht kopiert aus der Ausgabe). `getAxis` liefert in M3 den skriptierten Rohwert 1.0, die Bewegung ist also von Anfang an voll.
-- [ ] Lauf ist deterministisch (zweimal identisches Ergebnis).
-- [ ] Der Test nutzt die IR aus M2 (oder deren Golden File) als Eingabe.
+- [x] Nach 60 Frames hat sich die Transform um `speed * Summe(deltaTime)` bewegt, erwarteter Wert exakt berechnet im Test (nicht kopiert aus der Ausgabe). `getAxis` liefert in M3 den skriptierten Rohwert 1.0, die Bewegung ist also von Anfang an voll.
+- [x] Lauf ist deterministisch (zweimal identisches Ergebnis).
+- [x] Der Test nutzt die IR aus M2 (oder deren Golden File) als Eingabe.
 
 ## M3.4 Abschluss
 - [ ] Doku (`docs/modules/*`) aktualisiert.
