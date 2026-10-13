@@ -1,0 +1,42 @@
+(ir :version 1 :assembly "Assembly-CSharp")
+
+(class Inventory :mods (public)
+  (field counter System.Func<i32> :mods (private))
+  (field items System.Collections.Generic.List<i32> :mods (private)
+    :init (new System.Collections.Generic.List<i32>::.ctor#))
+  (field label Box<string> :mods (private) :init (new Box<string>::.ctor#))
+  (method Count i32 () :mods (public)
+    (block
+      (return (call (field this Inventory::counter) System.Func<i32>::Invoke#))))
+  (method Fill void ((count i32)) :mods (public)
+    (block
+      (expr (call (field this Inventory::items) System.Collections.Generic.List<i32>::Clear#))
+      (for ((local i i32 0i32)) (< i count) ((post-inc i))
+        (block
+          (expr (call (field this Inventory::items) System.Collections.Generic.List<i32>::Add#T i))))
+      (expr
+        (call (field this Inventory::items) System.Collections.Generic.List<i32>::set_Item#i32,T
+          0i32
+          42i32))
+      (expr
+        (call (field this Inventory::items) System.Collections.Generic.List<i32>::RemoveAt#i32
+          (- count 1i32)))
+      (expr (call (field this Inventory::label) Box<string>::Put#T "voll"))))
+  (method Name string () :mods (public)
+    (block
+      (return (call (field this Inventory::label) Box<string>::Get#))))
+  (method SetCounter void ((source System.Func<i32>)) :mods (public)
+    (block
+      (expr (set (field this Inventory::counter) source))))
+  (method Total i32 () :mods (public)
+    (block
+      (local sum i32 0i32)
+      (for ((local i i32 0i32))
+        (< i (prop (field this Inventory::items) System.Collections.Generic.List<i32>::Count))
+        ((post-inc i))
+        (block
+          (expr
+            (set-op + sum
+              (call (field this Inventory::items) System.Collections.Generic.List<i32>::get_Item#i32
+                i)))))
+      (return sum))))

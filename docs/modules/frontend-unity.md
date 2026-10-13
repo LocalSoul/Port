@@ -23,7 +23,7 @@ Build: `scripts/build-dotnet.sh`, danach `./mvnw verify`. Ohne gebautes Programm
 Aufruf: `port-frontend-unity --assembly <dll> --out <verzeichnis> [--classes <glob>]... [--references <verzeichnis>]... [--no-sha256]`
 
 - **Ausgabe:** eine Datei je Typ, `<qualifizierter Name>.ir`, jede mit Kopf `(ir :version 1 :assembly "<Name>" [:sha256 "<hex>"])` (Nutzerentscheidung M2). Rohformat; kanonisch macht der Java-`IrPrinter`.
-- `--classes`: Muster auf den vollen Typnamen (`*`, `?`, mehrfach oder kommagetrennt).
+- `--classes`: Muster auf den IR-Typnamen, wie er im Dateinamen steht (ohne .NET-Stelligkeit wie `` `1 ``; `*`, `?`, mehrfach oder kommagetrennt).
 - `--references`: zusätzliche Suchverzeichnisse für referenzierte Assemblies (Default: Verzeichnis der Assembly). Nicht auflösbare Typen werden `unknown` (IR003).
 - `--no-sha256`: ohne Hash, für Golden-Tests (der Hash der Test-Assembly hängt an der Compiler-Version).
 - **Exit-Codes** (`docs/cli-contract.md`): 0 Erfolg, auch mit `raw`-Stellen; 2 ungültige Argumente; 3 Assembly fehlt oder ist unlesbar; 4 Absturz des Dekompilers bei mindestens einem Typ (die übrigen Typen werden trotzdem geschrieben).
@@ -40,6 +40,9 @@ C# 7.3 (Unitys Mono-Profil), `UseDebugSymbols`, `AlwaysUseBraces`. Abgeschaltet:
 - **Literale:** immer mit Typsuffix; `float`/`double` im kürzesten Rundreiseformat mit `.0` bzw. kleinem `e`; NaN/Unendlich als `(sfield System.Single::NaN)` usw.; `char` als `(char N)`.
 - **Operatoren:** auf Primitiven `opsym`; eigene Operatoren (`Vector3 * float`) und `string ==` als `scall ...::op_*`; String-Verkettung paarweise als `System.String::Concat#string,string` bzw. `#object,object`; `==`/`!=` zwischen Referenztypen ohne eigenen Operator als `System.Object::ReferenceEquals`. Implizite numerische Umwandlungen werden zu `(conv T x)`.
 - **Zuweisungen:** `x++`/`++x` → `post-inc`/`pre-inc`; `+=` auf Primitiven → `set-op`, auf `string` → `set` mit `Concat`.
+- **Generische Typen (ADR-025):** Member-Referenzen tragen die Typargumente der Instanz, die Parametertypen bleiben offen (`System.Collections.Generic.List<i32>::Add#T`). Eigene generische Typen werden zu `(class Box :generics (T) ...)`.
+- **Indexer:** Bei Arrays `(index ...)`. Bei anderen Typen ein Aufruf der Accessoren, z. B. `(call list ...List<i32>::get_Item#i32 i)` bzw. `set_Item#i32,T`. Zusammengesetzte Zuweisungen und `++`/`--` auf Indexer sind noch nicht unterstützt (`raw`).
+- **Delegate-Aufrufe:** `f()` wird zu `(call f System.Func<i32>::Invoke#)`.
 - **Member:** Implizites `this` wird explizit. Feldinitialisierer stehen am Feld, triviale Default-Konstruktoren entfallen (macht der Dekompiler). `: base(...)` wird `:base-call`.
 - **Auto-Properties** (Nutzerentscheidung M2): privates Feld `__auto_<Name>` plus `:get (return (field this T::__auto_<Name>))` und `:set (block (expr (set ... value)))`.
 - **Modifier:** Zugriff (`protected internal`, `private protected` als zwei Modifier), `static`, `abstract`, `virtual`, `override`, `sealed`, `readonly`, `const`.
@@ -59,7 +62,7 @@ C# 7.3 (Unitys Mono-Profil), `UseDebugSymbols`, `AlwaysUseBraces`. Abgeschaltet:
 - **Fehler:** `FrontendException` mit Exit-Code laut CLI-Vertrag. Programm-Exit 3 → 3, anderer Exit ≠ 0 → 4, ungültige IR → 4 mit `datei:zeile:spalte`, Programm nicht startbar → 1. Das CLI übersetzt sie ab M4 in `PortException`.
 
 ## Tests und Fixtures
-- **Fixtures** (`testdata/unity-sources/`): `Mover` (Spec-Beispiel), `Counter`, `ControlFlow`, `Holder`, `UnsafeBits` (`fixed`-Block → `raw`), `Edges` (gefaltete Konstanten, Lambda-Initialisierer). Gebaut gegen die eigenen Stubs, reproduzierbar (Hash-Vergleich im Build-Skript), eingebettete PDB für echte Variablennamen.
+- **Fixtures** (`testdata/unity-sources/`): `Mover` (Spec-Beispiel), `Counter`, `ControlFlow`, `Holder`, `UnsafeBits` (`fixed`-Block → `raw`), `Edges` (gefaltete Konstanten, Lambda-Initialisierer, Delegate-Aufruf), `Box` und `Inventory` (eigener generischer Typ, `List<int>` mit Indexer, `Func<int>`). Gebaut gegen die eigenen Stubs, reproduzierbar (Hash-Vergleich im Build-Skript), eingebettete PDB für echte Variablennamen.
 - **xUnit:** Literale, String-Escapes, Namen, Globs, Ende-zu-Ende gegen die Fixtures (Dateien, PDB-Namen, `raw`, Determinismus, Exit-Codes 2 und 3).
 - **Java:**
   - Wrapper-Tests ohne .NET.

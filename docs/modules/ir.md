@@ -53,8 +53,9 @@ Das ganze Modul nutzt nur das JDK, keine Reflection und schreibt nie auf `System
 
 ## Typ- und Member-Atome (M0.3, Paket `io.github.localsoul.port.ir.atom`)
 - `TypeRef.parse(text, atomStart)` liefert einen sealed `TypeRef`: `PrimitiveType`, `NamedType` (qualifizierter Name plus Typargumente), `ArrayType` (Rang ≥ 1), `NullableType`, `ByRefType`.
-- `MemberRef.parse(text, atomStart)` liefert deklarierenden Typ (qname), Namen (Bezeichner, `.ctor`, `.cctor`), generische Argumente und optional die Parameterliste. `hasParameterList` unterscheidet `Foo::Bar#` (Methode ohne Parameter) von `Foo::Bar` (Feld/Property).
-- Beide sind Wertobjekte **ohne** Quellposition (gleicher Text ergibt gleiche Objekte). Die Position trägt der AST-Knoten. `toString()` ist kanonisch, bei `MemberRef` ist es die stabile Symbol-ID.
+- `MemberRef.parse(text, atomStart)` liefert deklarierenden Typ (qname), dessen Typargumente (`declaringTypeArguments`, ADR-025, z. B. `List<UnityEngine.Transform>::Add#T`), Namen (Bezeichner, `.ctor`, `.cctor`), generische Argumente der Methode und optional die Parameterliste. `hasParameterList` unterscheidet `Foo::Bar#` (Methode ohne Parameter) von `Foo::Bar` (Feld/Property).
+- `MemberRef.symbolId()` ist die stabile Symbol-ID: die Referenz ohne Typargumente am deklarierenden Typ (`System.Collections.Generic.List::Add#T`). `toString()` enthält sie.
+- Beide sind Wertobjekte **ohne** Quellposition (gleicher Text ergibt gleiche Objekte). Die Position trägt der AST-Knoten. `toString()` ist kanonisch.
 - Suffixe gelten von links nach rechts (`i32?[]` = Array von `i32?`). `&` muss das letzte Suffix sein, `??` ist verboten. Primitive haben keine Typargumente, `<>` ist leer und damit ungültig.
 - Fehlerpositionen = Position des Atoms plus Versatz der Fehlerstelle. Nicht geschlossene `[` und `<` melden die öffnende Stelle.
 
@@ -93,7 +94,7 @@ Das ganze Modul nutzt nur das JDK, keine Reflection und schreibt nie auf `System
   - `.ctor`/`.cctor`: Konstruktor mit passendem `static` und gleichen Parametertypen,
   - Methode: gleiche Parametertypen; bei generischen Methoden nur Name, Anzahl der Typparameter und Anzahl der Parameter.
   
-  Geprüft werden auch Typen in Typargumenten, Arrays und Member-Signaturen. Attributtypen (`:attrs`) zählen als Typreferenz.
+  Geprüft werden auch Typen in Typargumenten (auch am deklarierenden Typ), Arrays und Member-Signaturen. Attributtypen (`:attrs`) zählen als Typreferenz. Parametertypen sind offen (ADR-025): Bei Referenzen auf generische Typen oder Methoden gelten einfache Namen ohne Punkt (`T`) als Typparameter und werden nicht aufgelöst.
 - **IR003:** `unknown` irgendwo in einem Typ (auch verschachtelt), `error`.
 - **IR004:** doppelte Typnamen und doppelte Mitglieds-IDs je Typ (Felder, Properties und Events teilen `Typ::name`). Gemeldet wird jedes weitere Vorkommen mit Verweis auf das erste. Parameter mit `:ref`/`:out`/`:in` ergeben andere IDs (`i32&`).
 - **IR005:** Zyklus über `:base` und `:implements` zwischen Typen der Datei. Jeder Typ auf dem Zyklus wird gemeldet, mit Pfad (`A -> B -> C -> A`).

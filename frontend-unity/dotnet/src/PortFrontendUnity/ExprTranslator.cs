@@ -130,7 +130,10 @@ internal sealed class ExprTranslator
             items.AddRange(arguments);
             return S.L(items);
         }
-        var callItems = new List<Sx> { S.A("call"), CallTarget(expression.Target), S.A(reference) };
+        Sx target = method.DeclaringType.Kind == TypeKind.Delegate
+            ? Translate(expression.Target)
+            : CallTarget(expression.Target);
+        var callItems = new List<Sx> { S.A("call"), target, S.A(reference) };
         callItems.AddRange(arguments);
         return S.L(callItems);
     }
@@ -305,6 +308,10 @@ internal sealed class ExprTranslator
 
     private Sx IncDec(string head, UnaryOperatorExpression expression)
     {
+        if (IsIndexerCall(expression.Expression))
+        {
+            throw new UnsupportedConstructException(head + " auf Indexer");
+        }
         if (!TypeNames.IsNumericOrBool(expression.Expression.Rr().Type))
         {
             throw new UnsupportedConstructException(head + " auf Nicht-Primitiv");
@@ -314,6 +321,10 @@ internal sealed class ExprTranslator
 
     private Sx Assignment(AssignmentExpression expression)
     {
+        if (IsIndexerCall(expression.Left))
+        {
+            return IndexerAssignment((IndexerExpression)expression.Left!, expression);
+        }
         Sx target = Translate(expression.Left);
         Sx value = Translate(expression.Right);
         if (expression.Operator == AssignmentOperatorType.Assign)
@@ -333,6 +344,21 @@ internal sealed class ExprTranslator
         }
         string op = Operators.Binary(AssignmentExpression.GetCorrespondingBinaryOperator(expression.Operator)!.Value);
         return S.L(S.A("set-op"), S.A(op), target, value);
+    }
+
+    /// <summary><c>list[i] = v</c> → <c>(call list ...::set_Item#i32,T i v)</c>; zusammengesetzt nicht unterstützt.</summary>
+    private Sx IndexerAssignment(IndexerExpression indexer, AssignmentExpression expression)
+    {
+        if (expression.Operator != AssignmentOperatorType.Assign)
+        {
+            throw new UnsupportedConstructException("zusammengesetzte Zuweisung auf Indexer");
+        }
+        IMethod setter = IndexerProperty(indexer).Setter
+            ?? throw new UnsupportedConstructException("Indexer ohne set");
+        var call = new List<Sx> { S.A("call"), Translate(indexer.Target), S.A(MemberRefs.Of(setter)) };
+        call.AddRange(TranslateAll(indexer.Arguments));
+        call.Add(Translate(expression.Right));
+        return S.L(call);
     }
 
     private Sx Cast(CastExpression expression)
@@ -369,11 +395,30 @@ internal sealed class ExprTranslator
         IType targetType = expression.Target.Rr().Type;
         if (targetType.Kind != TypeKind.Array)
         {
-            throw new UnsupportedConstructException("Indexer auf " + targetType.FullName + " (nur Arrays in M2)");
+            IMethod getter = IndexerProperty(expression).Getter
+                ?? throw new UnsupportedConstructException("Indexer ohne get");
+            var call = new List<Sx> { S.A("call"), Translate(expression.Target), S.A(MemberRefs.Of(getter)) };
+            call.AddRange(TranslateAll(expression.Arguments));
+            return S.L(call);
         }
         var items = new List<Sx> { S.A("index"), Translate(expression.Target) };
         items.AddRange(TranslateAll(expression.Arguments));
         return S.L(items);
+    }
+
+    /// <summary>Indexer-Property eines Nicht-Array-Zugriffs (ADR-025: Aufruf von get_Item/set_Item).</summary>
+    private static IProperty IndexerProperty(IndexerExpression expression)
+    {
+        if (expression.Rr() is MemberResolveResult { Member: IProperty property })
+        {
+            return property;
+        }
+        throw new UnsupportedConstructException("Indexer ohne aufgelöste Property");
+    }
+
+    private static bool IsIndexerCall(Expression? expression)
+    {
+        return expression is IndexerExpression indexer && indexer.Target.Rr().Type.Kind != TypeKind.Array;
     }
 
     private Sx ArrayCreate(ArrayCreateExpression expression)

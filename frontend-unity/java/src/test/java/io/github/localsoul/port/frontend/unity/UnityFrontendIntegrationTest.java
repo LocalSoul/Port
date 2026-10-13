@@ -44,7 +44,17 @@ class UnityFrontendIntegrationTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"ControlFlow", "Counter", "Edges", "Holder", "Mover", "UnsafeBits"})
+  @ValueSource(
+      strings = {
+        "Box",
+        "ControlFlow",
+        "Counter",
+        "Edges",
+        "Holder",
+        "Inventory",
+        "Mover",
+        "UnsafeBits"
+      })
   void matchesGoldenFile(String type) throws IOException {
     String printed = all.canonicalTexts().get(type);
     Path golden = RepoPaths.GOLDEN_DIR.resolve(type + ".ir");
@@ -60,9 +70,10 @@ class UnityFrontendIntegrationTest {
   @Test
   void translatesExactlyTheFixtureTypes() {
     assertEquals(
-        List.of("ControlFlow", "Counter", "Edges", "Holder", "Mover", "UnsafeBits"),
+        List.of(
+            "Box", "ControlFlow", "Counter", "Edges", "Holder", "Inventory", "Mover", "UnsafeBits"),
         new ArrayList<>(all.canonicalTexts().keySet()));
-    assertTrue(all.summary().contains("6 Typen"), all.summary());
+    assertTrue(all.summary().contains("8 Typen"), all.summary());
   }
 
   @Test
@@ -104,6 +115,17 @@ class UnityFrontendIntegrationTest {
                 "(class Mover :base UnityEngine.MonoBehaviour\n",
                 "(class Mover :base UnityEngine.MonoBehaviour :mods (public)\n");
     assertEquals(expected, all.canonicalTexts().get("Mover"));
+  }
+
+  /**
+   * ADR-025: Member generischer Typen und Indexer ohne raw-Stellen, Symbol-ID ohne Typargumente.
+   */
+  @Test
+  void genericMembersAreTranslatedWithoutRaw() {
+    String inventory = all.canonicalTexts().get("Inventory");
+    assertTrue(!inventory.contains("(raw"), inventory);
+    assertTrue(!all.summary().contains("raw: Inventory"), all.summary());
+    assertTrue(inventory.contains("System.Collections.Generic.List<i32>::get_Item#i32"), inventory);
   }
 
   @Test

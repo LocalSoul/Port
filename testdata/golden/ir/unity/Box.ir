@@ -1,0 +1,10 @@
+(ir :version 1 :assembly "Assembly-CSharp")
+
+(class Box :generics (T) :mods (public)
+  (field value T :mods (private))
+  (method Get T () :mods (public)
+    (block
+      (return (field this Box<T>::value))))
+  (method Put void ((item T)) :mods (public)
+    (block
+      (expr (set (field this Box<T>::value) item)))))

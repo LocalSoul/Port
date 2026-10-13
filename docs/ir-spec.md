@@ -138,7 +138,7 @@ expr :=
 | "(" "new"    mref {expr} ")"                      ; mref = .ctor-Referenz
 | "(" "new-array" type expr {expr} ")"              ; Längen je Dimension
 | "(" "array-lit" type {expr} ")"
-| "(" "index"  expr expr {expr} ")"                 ; Array-/Indexer-Zugriff
+| "(" "index"  expr expr {expr} ")"                 ; Array-Zugriff (Indexer: get_Item/set_Item, ADR-025)
 | "(" opsym expr expr ")"                           ; nur für Primitive
 | "(" ( "neg" | "not" | "bnot" ) expr ")"
 | "(" "checked" expr ")" | "(" "unchecked" expr ")"
@@ -163,6 +163,7 @@ lvalue := ident | "(" "field" expr mref ")" | "(" "sfield" mref ")"
 
 Regeln:
 - Operatoren auf eigenen Typen (`Vector3 * float`) sind **immer** `scall ...::op_Multiply#...`. Nur Primitive nutzen `(* a b)`.
+- `index` gilt nur für Arrays. Indexer anderer Typen sind Aufrufe ihrer Accessoren: `(call list System.Collections.Generic.List<T>::get_Item#i32 i)` bzw. `...::set_Item#i32,T i v` (ADR-025).
 - Arithmetik ist standardmäßig `unchecked`. Überlaufgeprüfte Operationen stehen in `(checked ...)`.
 - Zuweisung ist ein Ausdruck (`set`); als Statement steht `(expr (set ...))`.
 - Wertsemantik: `struct`-Werte werden bei `set`, Argumentübergabe und `return` implizit kopiert (wie in C#). Ein optionaler Pass darf explizite `(copy expr)`-Knoten einfügen.

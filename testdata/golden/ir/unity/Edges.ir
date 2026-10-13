@@ -10,5 +10,4 @@
           (/ (* (conv f32 i) (sfield System.MathF::PI)) (conv f32 count))))))
   (method Produce i32 () :mods (public)
     (block
-      (raw cs "return producer();"))
-    :manual "Member eines generischen Typs System.Func (Spec-Lücke vor M3a)"))
+      (return (call (field this Edges::producer) System.Func<i32>::Invoke#)))))

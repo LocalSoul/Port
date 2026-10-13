@@ -65,7 +65,8 @@ internal static class Frontend
             .ToList();
         foreach (ITypeDefinition type in types)
         {
-            if (!Glob.MatchesAny(options.Classes, type.ReflectionName))
+            // Gefiltert wird nach dem IR-Namen (ohne Stelligkeit wie `1), wie er auch im Dateinamen steht.
+            if (!Glob.MatchesAny(options.Classes, IrName(type)))
             {
                 continue;
             }
@@ -99,6 +100,18 @@ internal static class Frontend
             // Kein Verschlucken: Meldung auf stderr, Exit-Code 4 am Ende (docs/cli-contract.md).
             error.WriteLine("Fehler bei " + type.ReflectionName + ": " + e.GetType().Name + ": " + e.Message);
             return false;
+        }
+    }
+
+    private static string IrName(ITypeDefinition type)
+    {
+        try
+        {
+            return TypeNames.QualifiedName(type);
+        }
+        catch (UnsupportedConstructException)
+        {
+            return type.ReflectionName;
         }
     }
 

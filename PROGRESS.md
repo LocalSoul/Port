@@ -6,7 +6,7 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 
 - Phase: **M2 abgeschlossen** (alle Abnahmekriterien in `tasks/M2-unity-frontend.md` inklusive M2.6 erfüllt; `scripts/build-dotnet.sh` und `./mvnw -q verify` grün)
 - M0, M1 und M2 sind nach `main` gemergt (lokal, kein Remote).
-- Nächste Aufgabe laut `tasks/README.md`: `tasks/M3-generator-adapter.md`. Davor die Spec-Lücken unten klären.
+- Nächste Aufgabe laut `tasks/README.md`: `tasks/M3-generator-adapter.md`. Die blockierende Spec-Lücke (generische Member-Referenzen) ist mit ADR-025 geschlossen.
 - Letzte Session: 2026-10-13, M0.2 bis M0.7, ADR-024, M1.1 bis M1.6, M2.1 bis M2.6
 
 ## Erledigt
@@ -42,14 +42,12 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
     - `Mover.ir` entspricht dem Spec-Beispiel bis auf `:sha256` und `:mods (public)` an der Klasse. Die Modifier stehen in der Assembly, das Spec-Beispiel lässt sie weg.
   - `AGENTS.md` ist schreibgeschützt. Vorschlag für den Abschnitt „Wichtige Befehle": `scripts/build-dotnet.sh   # Fixtures (reproduzierbar), Frontend bauen und testen; vor ./mvnw verify für die Integrationstests`.
 
-## ADR-025 Generische Member-Referenzen (in Arbeit, Branch `task/ADR-025-generic-member-refs`)
+## ADR-025 Generische Member-Referenzen (2026-10-13, erledigt)
 
-- Erledigt: ADR-025 (ACCEPTED), Spec Abschnitt 4, `ir` (`MemberRef.declaringTypeArguments`, `symbolId()`, Parser, Validator inkl. offener Parametertypen), Tests grün.
-- Offen:
-  - Unity-Frontend `MemberRefs.cs`: Typargumente des deklarierenden Typs ausgeben, offene Parametertypen aus `MemberDefinition`.
-  - Delegate-Aufruf: Ziel ist der Delegate-Wert, nicht `this` (`CallTarget`).
-  - Fixture mit eigenem generischen Typ und `List<T>`, Golden Files neu (`Edges` ändert sich), StarCollector-Lauf wiederholen.
-  - Doku `docs/modules/ir.md` und `frontend-unity.md`, Lückenliste in PROGRESS, Merge.
+- ADR-025 (ACCEPTED, mit Nachtrag zu Indexern) und Spec Abschnitte 4 und 7: Typargumente am deklarierenden Typ, offene Parametertypen, Symbol-ID ohne Typargumente am Typ, Indexer als `get_Item`/`set_Item`, `index` nur für Arrays.
+- `ir`: `MemberRef.declaringTypeArguments`, `symbolId()`, Parser, Validator.
+- Frontend: Member generischer Typen, Indexer, Delegate-Aufrufe, Klassenfilter nach IR-Name. Neue Fixtures `Box` und `Inventory`.
+- StarCollector: jetzt **0 raw-Stellen** (vorher 6, alle `List<T>`).
 
 ## StarCollector-Probelauf (M2.6, 2026-10-13)
 
@@ -58,20 +56,20 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 - Der Lauf hat zwei echte Fehler gefunden, beide behoben und mit Fixture `Edges` abgedeckt:
   - Verschachtelte Rechenausdrücke ohne Typannotation wurden als Nicht-Primitiv abgelehnt.
   - Nicht übersetzbare Feld-Initialisierer erzeugten eine namenlose Platzhalter-Methode statt `(raw cs ...)` im `:init`.
-- Arbeitsliste für M3a: Generische Member-Referenzen (`List<T>::Add`, `Func<T>::Invoke`) sind die einzige Lücke, die das Spiel blockiert.
+- Nachtrag ADR-025: Nach dem Schließen der Lücke übersetzt das Frontend StarCollector ohne `raw`-Stellen.
 
 ## Bekannte Lücken des Unity-Frontends (Stand M2)
 
 Alle erscheinen als `raw` + `:manual` bzw. als gemeldeter, übersprungener Typ, nie still:
 
 - **Spec-Lücken (brauchen ADR):**
-  - Member generischer Typinstanzen (`List<T>::Add`), Delegates und Lambdas (`Func<T>`).
+  - Lambdas und anonyme Methoden (Delegate-Aufrufe selbst gehen seit ADR-025).
   - Verschachtelte Typen.
   - Attribute an Methoden (entfallen mit Hinweis).
   - Abstrakte und Interface-Properties: Accessoren ohne Rumpf sind nicht darstellbar.
   - Weitere C#-Modifier (`extern`, `new`, `volatile`, `async`, `unsafe`).
 - **Noch nicht umgesetzt:**
-  - Indexer und Indexer-Zugriffe außer Arrays.
+  - Indexer-Deklarationen sowie `+=`/`++` auf Indexer-Zugriffe (Lesen und Schreiben gehen seit ADR-025).
   - Operatoren auf Enums (Vergleich, Flags) und lifted Nullable-Operatoren.
   - Objekt- und Collection-Initialisierer.
   - `throw;` und `catch` mit `when`.
@@ -110,7 +108,7 @@ Alle erscheinen als `raw` + `:manual` bzw. als gemeldeter, übersprungener Typ, 
   - Die Spec definiert `exp` nicht. Umgesetzt als `e`/`E`, optional `+`/`-`, Ziffern.
   - Ganzzahl-Suffix an Zahl mit Punkt oder Exponent (`5.0i32`) und `-0x...` werden abgelehnt (Grammatik erlaubt das erste formal).
 - Spec-Auslegung in M0.3: `&` nur als letztes Suffix, `??` verboten (C# erlaubt beides nicht).
-- Der deklarierende Typ einer Member-Referenz ist laut Spec nur ein `qname`. Members generischer Typinstanzen (`List<i32>::Add#i32`) lassen sich so nicht ausdrücken, nur über die offene Form (`System.Collections.Generic.List::Add#T`?). Spätestens vor M2 klären (Spec-Änderung braucht ADR).
+- Member-Referenzen auf generische Typinstanzen: mit ADR-025 geklärt.
 - Spec-Auslegung in M0.4, bitte bestätigen (Details in `docs/modules/ir.md`):
   - Unbekannte Keywords nehmen das folgende Element als Wert mit, wenn es kein Keyword ist. Spec Abschnitt 11 sagt nur „ignorieren". Folge: Künftige Keywords sollten immer einen Wert haben, sonst schlucken sie z. B. einen Methodenrumpf. Eventuell als Satz in Spec Abschnitt 11 aufnehmen (ADR).
   - `(copy expr)` wird gelesen, obwohl es nur in den Regeln von Abschnitt 7 und nicht in der Grammatik steht.

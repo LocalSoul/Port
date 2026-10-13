@@ -26,8 +26,8 @@ public class FrontendTests
         var result = Run("--assembly", Fixtures.Assembly(), "--out", outDir, "--no-sha256");
         Assert.Equal(0, result.Exit);
         string[] files = Directory.GetFiles(outDir).Select(Path.GetFileName).OrderBy(n => n, StringComparer.Ordinal).ToArray()!;
-        Assert.Equal(new[] { "ControlFlow.ir", "Counter.ir", "Edges.ir", "Holder.ir", "Mover.ir", "UnsafeBits.ir" }, files);
-        Assert.Contains("6 Typen", result.Error);
+        Assert.Equal(new[] { "Box.ir", "ControlFlow.ir", "Counter.ir", "Edges.ir", "Holder.ir", "Inventory.ir", "Mover.ir", "UnsafeBits.ir" }, files);
+        Assert.Contains("8 Typen", result.Error);
     }
 
     [Fact]
@@ -66,6 +66,22 @@ public class FrontendTests
         Assert.Contains("(sfield System.MathF::PI) 2.0f32", text);
         Assert.Contains("(raw cs \"() => 1\")", text);
         Assert.Contains("raw: Edges::producer:", result.Error);
+    }
+
+    [Fact]
+    public void GenericMemberReferencesFollowAdr025()
+    {
+        string outDir = Fixtures.TempDir();
+        var result = Run("--assembly", Fixtures.Assembly(), "--out", outDir, "--classes", "Box,Inventory", "--no-sha256");
+        Assert.Equal(0, result.Exit);
+        Assert.Contains("0 raw-Stellen", result.Error);
+        string inventory = File.ReadAllText(Path.Combine(outDir, "Inventory.ir"));
+        Assert.Contains("System.Collections.Generic.List<i32>::Add#T", inventory);
+        Assert.Contains("System.Collections.Generic.List<i32>::get_Item#i32", inventory);
+        Assert.Contains("System.Collections.Generic.List<i32>::set_Item#i32,T", inventory);
+        Assert.Contains("System.Func<i32>::Invoke#", inventory);
+        Assert.Contains("Box<string>::Put#T", inventory);
+        Assert.Contains("Box<T>::value", File.ReadAllText(Path.Combine(outDir, "Box.ir")));
     }
 
     [Fact]
