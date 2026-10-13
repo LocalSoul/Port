@@ -44,4 +44,10 @@
 Oberfläche (M12a), Provider-Mischung (M12), Download von Spielen, Git-Submodule.
 
 ## Abhängigkeiten/Entscheidungen
-ADR-020 (PROPOSED, folgen und im Bericht nennen), ADR-015 (nur Standard-Provider), ADR-021 (OPEN, nicht berühren).
+ADR-020 (PROPOSED, folgen und im Bericht nennen), ADR-015 (nur Standard-Provider), ADR-021 (OPEN, nicht berühren), ADR-010 (OPEN, nicht berühren).
+
+Vom Nutzer entschieden (2026-10-13):
+- **Startpunkt:** Startliste im Profil (`[run] spawn`, `frames`, `args`); ein headless Starter im Adapter legt je Eintrag ein GameObject mit dem Skript an, läuft N Frames und gibt den Welt-Dump aus. Übergang bis ADR-010/M8.
+- **Spiele:** `games/demo` (synthetische Fixtures, startet) und `games/starcollector` (Katalog und Prüfung, startet noch nicht).
+- **Bauen:** `launch run` baut das Spiel bei veraltetem Hash selbst (gen + build); Engine und Plattform werden nur geprüft (fehlend oder älter als die Quellen → Exit 8 mit Befehl). Kein Maven-Aufruf aus dem Launcher.
+- **Mapping-Ort:** über `engines/<e>/port.toml`, `[engine.build] module`; Mapping aus `<modul>/src/main/resources/mapping.tsv`, Klassen aus `target/classes`.
