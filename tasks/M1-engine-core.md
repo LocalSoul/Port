@@ -20,8 +20,8 @@
 3. Prüfe, ob deine Erkenntnisse ADR-016 (ECS-Entwurf, `PROPOSED`) widerlegen. Wenn nicht, folge ihm hinter den Interfaces. Wenn ja, anhalten und den Nutzer fragen.
 
 **Abnahme**
-- [ ] ADR-006 enthält beide Optionen, Kriterien und eine Empfehlung.
-- [ ] Der Nutzer hat entschieden, oder der Bericht nennt klar, dass die Implementierung vorläufig ist.
+- [x] ADR-006 enthält beide Optionen, Kriterien und eine Empfehlung.
+- [x] Der Nutzer hat entschieden, oder der Bericht nennt klar, dass die Implementierung vorläufig ist.
 
 ## M1.2 Module und Mathe
 
@@ -57,7 +57,7 @@
 1. `World`, `Entity`, `Component` laut Interfaces in `engine-api`.
 2. Transform-System: lokale Position/Rotation/Skalierung, Eltern-Kind, globale Transformation abfragbar.
 3. Erweiterungspunkt für eigene Komponententypen (Registrierung, Abfrage nach Typ).
-4. Entities erzeugen und zerstören, Zerstörung wirkt am Frame-Ende (dokumentiert, getestet).
+4. Entities erzeugen und zerstören, Zerstörung wirkt am Phasenende (ADR-016, vom Nutzer entschieden; dokumentiert, getestet).
 5. Entity-IDs mit Generation, `ComponentStore` als Sparse-Set, Command-Buffer für Strukturänderungen während der Iteration, Iteration in aufsteigender Entity-Reihenfolge.
 6. `Parent`/`Children`, Zerstören eines Elternobjekts zerstört die Kinder.
 7. `World.dump()` (deterministisch) und `EntityView` für Debugging.

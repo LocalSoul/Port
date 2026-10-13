@@ -15,7 +15,7 @@ Format pro Eintrag: Kontext, Optionen, Empfehlung/Entscheidung, Folgen.
 | 003 | Nur Unity-Mono im Scope | ACCEPTED, ab M10b abgelöst durch 023 | – |
 | 004 | Handgeschriebener IR-Reader statt ANTLR | PROPOSED | M0 |
 | 005 | Unity-Frontend als separater .NET-Prozess | PROPOSED | M2 |
-| 006 | Datenmodell des Cores (ECS, siehe 016) | PROPOSED | M1 |
+| 006 | Datenmodell des Cores (ECS, siehe 016) | ACCEPTED | – |
 | 007 | Koordinatenkonvention | PROPOSED | M1 |
 | 008 | Coroutines | OPEN | M3 (Coroutines selbst ab M10) |
 | 009 | struct-Semantik im Java-Backend | OPEN | M3 |
@@ -25,7 +25,7 @@ Format pro Eintrag: Kontext, Optionen, Empfehlung/Entscheidung, Folgen.
 | 013 | Erstes Zielspiel 2D oder 3D | OPEN | M9 |
 | 014 | Rendering-Backend des Cores | OPEN | M9 |
 | 015 | Subsystem-Provider und Mischbarkeit | PROPOSED | M1 (Grundlagen), M12 |
-| 016 | ECS-Entwurf | PROPOSED | M1 |
+| 016 | ECS-Entwurf | ACCEPTED | – |
 | 017 | KI-Fix-Phase | PROPOSED | M7a |
 | 018 | Agent-first Tool-Design | PROPOSED | M6a |
 | 019 | BCL-Nachbau und Typabbildung | PROPOSED (Teilfrage Unsigned-Typen OPEN) | M3a |
@@ -66,10 +66,22 @@ IL2CPP-Spiele sind vorerst nicht im Scope (kaum sauber dekompilierbar).
 **Folgen:** Das .NET SDK ist Voraussetzung für Frontend-Tests, die Tests müssen ohne SDK sauber übersprungen und im Bericht benannt werden.
 
 ## ADR-006: Datenmodell des Engine-Cores
-**Status:** PROPOSED (Entwurf: ECS mit Sparse-Set-Speicher, Details in ADR-016)
-**Optionen:** (a) ECS mit Entities als IDs und Komponenten in Speichern, (b) einfacher Entity-Baum mit Komponenten pro Entity.
-**Kriterium:** Beide fremden Modelle (Unity GameObject/Component, Godot Node-Baum) sollen sich sauber abbilden lassen, ohne dass der Core eines übernimmt.
-**Vorgehen für Agents:** Dem Entwurf aus ADR-016 folgen, aber immer hinter den Interfaces in `engine-api` (`World`, `Entity`, `ComponentStore`) implementieren, damit der Speicher später austauschbar bleibt. Widersprechen die Erkenntnisse beim Bauen dem Entwurf, anhalten und den Nutzer fragen.
+**Status:** ACCEPTED (vom Nutzer entschieden, 2026-10-13): ECS nach ADR-016.
+**Kontext:** Der Core muss fremde Objektmodelle aufnehmen (Unity GameObject/Component, Godot Node-Baum), ohne eines davon zu übernehmen, und Subsysteme sollen sich mischen lassen (ADR-015).
+**Optionen:** (a) ECS mit Entities als IDs und Komponenten in Speichern je Typ, (b) einfacher Entity-Baum mit Komponentenliste pro Objekt.
+
+| Kriterium | (a) ECS (Sparse-Set, ADR-016) | (b) Entity-Baum |
+|---|---|---|
+| Unity-Abbildung | `GameObject` = Entity plus `Name`/`Active`/`Layer`/`Tag`-Komponenten, Eltern-Kind über `Parent`/`Children`. Mehrere Skripte gleichen Typs über adapterseitigen `ScriptHost`. | Direkt: Objekt mit Komponentenliste und Kindern. Fast 1:1, aber der Core übernimmt damit Unitys Modell. |
+| Godot-Abbildung | Knoten = Entity, Knotentyp = Komponentenmenge, Signals = Events, Gruppen = Tag-Komponenten. | Knotenbaum passt, aber Godot-Knoten *sind* ihr Typ (Vererbung), der Baum müsste Typ und Komponenten vermischen. |
+| Mischen von Subsystemen (ADR-015) | Sauber: Subsysteme lesen/schreiben Komponententypen, Besitz pro Typ prüfbar. | Schwer prüfbar: Subsysteme greifen auf Objekte zu, wer was schreibt, ist nicht deklarierbar. |
+| Aufwand | Höher: Speicher, Generationen, Command-Buffer. | Gering. |
+| Debugbarkeit | Schlechter ohne Werkzeuge; ausgeglichen durch `World.dump()`, `EntityView`, Records. | Gut: Objekte im Debugger direkt sichtbar. |
+| Performance-Erwartung | Gut für viele gleichartige Entities (dichte Arrays je Typ). Für M1 ohne Bedeutung. | Ausreichend für kleine Spiele, Zeigerjagd bei vielen Objekten. |
+| Determinismus | Iteration explizit in Entity-Reihenfolge. | Reihenfolge hängt am Baum, ebenfalls machbar. |
+
+**Empfehlung und Entscheidung:** (a). Ausschlaggebend sind die neutrale Abbildung beider Fremdmodelle und die prüfbaren Subsystem-Verträge. Die schlechtere Debugbarkeit wird durch Dump, `EntityView` und unveränderliche Records ausgeglichen.
+**Vorgehen:** Implementierung immer hinter den Interfaces in `engine-api` (`World`, `Entity`, `ComponentStore`), damit der Speicher austauschbar bleibt.
 
 ## ADR-007: Koordinatenkonvention des Cores
 **Status:** PROPOSED
@@ -132,7 +144,7 @@ IL2CPP-Spiele sind vorerst nicht im Scope (kaum sauber dekompilierbar).
 **Offene Teilfragen:** Welche Komponentenschemas gehören in Version 1? Semantik des Event-Bus (sofort oder gepuffert pro Phase)? Wie werden Kopplungen deklariert (Pflichtpaare, Konflikte)?
 
 ## ADR-016: ECS-Entwurf für den Engine-Core
-**Status:** PROPOSED (konkretisiert ADR-006)
+**Status:** ACCEPTED (vom Nutzer entschieden, 2026-10-13, konkretisiert ADR-006)
 **Entwurf:**
 1. **Entity** ist eine 64-Bit-ID aus Index und Generation. Veraltete Handles werden erkannt.
 2. **Komponenten** sind reine Datenrecords mit versioniertem Schema (siehe ADR-015), je Typ ein **Sparse-Set-Speicher** hinter dem Interface `ComponentStore`. Ein Wechsel auf Archetypen bleibt später möglich, ohne die API zu ändern.
@@ -146,6 +158,10 @@ IL2CPP-Spiele sind vorerst nicht im Scope (kaum sauber dekompilierbar).
 - Unity: `GameObject` = Entity plus `Name`, `Active`, `Layer`, `Tag`. Mehrere Skripte desselben Typs pro Objekt laufen über den adapterseitigen `ScriptHost`.
 - Godot: Knotenbaum = Entities mit `Parent`/`Children`, Knotentyp = Komponentenmenge, Signals = Events, Gruppen = Tag-Komponenten.
 **Alternative:** Einfacher Entity-Baum. Leichter zu debuggen, aber das Mischen von Subsystemen (ADR-015) ist weniger sauber.
+**Detailentscheidungen (Nutzer, 2026-10-13):**
+- Strukturänderungen (Zerstören, Komponente hinzufügen/entfernen) während einer Phase wirken **am Ende dieser Phase**, nicht am Frame-Ende. Außerhalb eines Frames (Szenenaufbau) wirken sie sofort.
+- Mathe und Transform rechnen mit **`float`** (wie Unity und Godot im Standard-Build).
+- Komponenten des Cores sind **unveränderliche Records**. Werte werden mit `world.set(entity, wert)` ersetzt, das wirkt sofort und ist keine Strukturänderung. Adapter-eigene Komponententypen dürfen beliebige Klassen sein, der Core speichert sie nur.
 **Offene Teilfragen:** Archetypen statt Sparse-Set bei Performanceproblemen? Wie viele Komponenten pro Typ und Entity (genau eine, außer Erweiterungstypen)?
 
 ## ADR-017: KI-Agent-Phase `fix` nach `ir`
