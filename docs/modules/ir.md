@@ -39,6 +39,18 @@ public record Diagnostic(String id, Severity severity, String symbol, String mes
 - Suffixe gelten von links nach rechts (`i32?[]` = Array von `i32?`). `&` muss das letzte Suffix sein, `??` ist verboten. Primitive haben keine Typargumente, `<>` ist leer und damit ungültig.
 - Fehlerpositionen = Position des Atoms plus Versatz der Fehlerstelle. Nicht geschlossene `[` und `<` melden die öffnende Stelle.
 
+## AST und Reader (M0.4, Pakete `io.github.localsoul.port.ir.ast` und `...ir.reader`)
+- Einstieg: `new IrReader().read(text, fileName)` liefert `IrFile` (Dateiname, `IrHeader`, Typen in Eingabereihenfolge). Der Reader bricht beim ersten Fehler mit `IrSyntaxException` ab.
+- Knoten: sealed Interfaces `IrNode` → `Expr`, `Stmt`, `TypeDecl`, `MemberDecl` plus Teilknoten (`SwitchCase`, `SwitchDefault`, `CatchClause`, `FinallyClause`, `Param`, `AttributeUse`, `EnumMember`, `IrHeader`). `RawNode` und `ManualNode` sind zugleich `Expr` und `Stmt`. Jeder Knoten hat `span()` und `attrs()` (`NodeAttrs`: `:loc`, `:manual`, `:note`).
+- Optionale Teile sind `null` (z. B. `IfStmt.elseBranch`, `CtorDecl.baseCallArguments` – `null` = kein `:base-call`, leere Liste = `:base-call ()`). `MethodDecl.body` ist `null` genau bei `:abstract`.
+- Keywords: Bekannte Keywords mit Wert nehmen genau das nächste Element, doppelte sind ein Fehler. Flags ohne Wert: `:abstract` (method), `:ref`/`:out`/`:in` (Parameter). **Unbekannte Keywords** werden ignoriert und nehmen das nächste Element als Wert mit, wenn es kein Keyword ist. Künftige Keywords sollten deshalb immer einen Wert haben.
+- Positionsargumente stehen in Eingabereihenfolge, Keywords dürfen dazwischen stehen (z. B. `(method M void () :mods (public) (block))`).
+- Nativer Dialekt: Knotennamen aus Spec Abschnitt 12 (`cfg`, `bb`, `load`, `store`, `ncall`, `br`, ...) und das Keyword `:native` werden mit „nativer Dialekt nicht unterstützt" abgelehnt. `(raw asm ...)` ist als Teil von Abschnitt 9 erlaubt.
+- Zusätzliche Prüfungen des Readers: Wertebereich von Zahlen (dezimal nach Typ, Hex als Bitmuster bis zur Typbreite, Gleitkomma ohne Überlauf auf Unendlich), `nat` nur in `:version`, `(char ...)` (0–65535) und `:size` (ADR-024), `:version` muss 1 sein, Modifier nur aus der Liste in Spec Abschnitt 5, `new` braucht eine `.ctor`-Referenz, Ziele von `set`/`set-op`/`pre-inc` usw. müssen L-Werte sein, `(default ...)` bzw. `(finally ...)` muss der letzte Zweig sein, höchstens eines von `:ref`/`:out`/`:in`.
+- `(copy expr)` (Spec Abschnitt 7, Regeln) wird als `CopyExpr` gelesen.
+- Fehlermeldungen unterscheiden „unbekannter Knotenname", „ist ein Statement/Ausdruck an dieser Stelle", „falsche Stelligkeit" (mit Kurzsyntax) und „X erwartet, gefunden Y".
+- Nicht im Reader geprüft (Validator oder später): `switch`-Zweige ohne Durchfallen, Symbolauflösung (IR002), doppelte IDs (IR004), Zyklen (IR005).
+
 ## Verhalten
 - Der native Dialekt (Spec Abschnitt 12) wird erst in M10b implementiert. Bis dahin lehnt der Reader seine Knoten mit klarer Meldung ab.
 - Der Reader lehnt unbekannte **Knotennamen** ab und ignoriert unbekannte **Keywords** (Spec Abschnitt 11).
@@ -47,7 +59,7 @@ public record Diagnostic(String id, Severity severity, String symbol, String mes
 - `print(read(x))` ist idempotent und `read(print(f))` ist strukturell gleich `f`.
 
 ## Tests
-- Beispiel aus Spec Abschnitt 10 als Golden File.
+- Beispiel aus Spec Abschnitt 10 als Golden File (`testdata/ir/spec-example.ir`).
 - Roundtrip, Idempotenz, Fehlerfälle mit erwarteter Position.
 - Eine Testklasse pro Knotengruppe (Deklarationen, Statements, Ausdrücke, Atome).
 

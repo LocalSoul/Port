@@ -1,5 +1,6 @@
 package io.github.localsoul.port.ir.sexpr;
 
+import io.github.localsoul.port.ir.Identifiers;
 import io.github.localsoul.port.ir.IrSyntaxException;
 import io.github.localsoul.port.ir.SourceSpan;
 
@@ -178,28 +179,7 @@ public final class IrLexer {
   private static boolean isKeywordName(String name) {
     String[] parts = name.split("-", -1);
     for (String part : parts) {
-      if (!isIdent(part)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  /**
-   * Prüft {@code [A-Za-z_][A-Za-z0-9_]*}.
-   *
-   * @param s zu prüfender Text
-   * @return {@code true}, wenn {@code s} ein Bezeichner ist
-   */
-  static boolean isIdent(String s) {
-    if (s.isEmpty()) {
-      return false;
-    }
-    for (int i = 0; i < s.length(); i++) {
-      char c = s.charAt(i);
-      boolean letter = (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '_';
-      boolean digit = c >= '0' && c <= '9';
-      if (!letter && !(digit && i > 0)) {
+      if (!Identifiers.isIdent(part)) {
         return false;
       }
     }

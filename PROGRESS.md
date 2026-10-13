@@ -4,9 +4,9 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 
 ## Aktueller Stand
 
-- Phase: M0 (IR), M0.1 bis M0.3 erledigt
-- Aktive Aufgabe: `tasks/M0-ir.md`, nächste Teilaufgabe M0.4 (AST und Reader für Deklarationen, Statements, Ausdrücke), Branch `task/M0-skeleton`
-- Letzte Session: 2026-10-13, M0.2 (Lexer und S-Expression-Reader) und M0.3 (Typ- und Member-Atome)
+- Phase: M0 (IR), M0.1 bis M0.4 erledigt
+- Aktive Aufgabe: `tasks/M0-ir.md`, nächste Teilaufgabe M0.5 (Printer, kanonisch), Branch `task/M0-skeleton`
+- Letzte Session: 2026-10-13, M0.2 (Lexer und S-Expression-Reader) M0.3 (Typ- und Member-Atome), ADR-024, M0.4 (AST und Reader)
 
 ## Erledigt
 
@@ -14,6 +14,8 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 - M0.1 Repo-Skelett: Parent-POM `io.github.localsoul:recomp-parent` (Java 25, UTF-8, alle Plugins gepinnt, `project.build.outputTimestamp` fest), Modul `ir`, Maven-Wrapper 3.3.4 (only-script, Maven 3.9.16), Spotless (google-java-format 1.36.1, `check` in `verify`), Enforcer (Java ≥ 25, Maven ≥ 3.9, gepinnte Plugins, Dependency-Konvergenz, Verbot von Lombok/JUnit 4/Logging-Bibliotheken; in `ir` zusätzlich keine Projektmodule), JUnit 5.14.4, ArchUnit 1.5.0 (Test-Scope), Platzhaltertest.
 - M0.2 Lexer und S-Expression-Reader (Paket `io.github.localsoul.port.ir.sexpr`): `IrLexer`, `SExprReader`, `SExpr`-Knoten mit `SourceSpan`, `IrException`/`IrSyntaxException`. 73 Tests. Folgt ADR-004 (handgeschriebener Reader, Status weiter `PROPOSED`). Platzhaltertest entfernt.
 - M0.3 Typ- und Member-Atome (Paket `io.github.localsoul.port.ir.atom`): `TypeRef` (sealed: Primitive, benannt/generisch, Array, Nullable, ByRef), `MemberRef` (stabile Symbol-ID), Parser mit Fehlerposition im Atom. Insgesamt 134 Tests.
+- ADR-024 (`nat` ohne Suffix in `:version`, `(char ...)`, `:size`) vom Nutzer freigegeben, Spec angepasst. `docs/ir-spec.md` ist schreibgeschützt (vom Nutzer so gewollt), für die Änderung wurde der Schutz mit Erlaubnis kurz aufgehoben und wiederhergestellt.
+- M0.4 AST und Reader: Paket `ast` (sealed `IrNode`/`Expr`/`Stmt`/`TypeDecl`/`MemberDecl`, Records je Knoten), Paket `reader` (`IrReader`). Spec-Beispiel liegt als Fixture in `testdata/ir/spec-example.ir`. Insgesamt 419 Tests.
 
 ## Offene Punkte / Nebenfunde
 
@@ -28,7 +30,12 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
   - Ganzzahl-Suffix an Zahl mit Punkt oder Exponent (`5.0i32`) und `-0x...` werden abgelehnt (Grammatik erlaubt das erste formal).
 - Spec-Auslegung in M0.3: `&` nur als letztes Suffix, `??` verboten (C# erlaubt beides nicht).
 - Der deklarierende Typ einer Member-Referenz ist laut Spec nur ein `qname`. Members generischer Typinstanzen (`List<i32>::Add#i32`) lassen sich so nicht ausdrücken, nur über die offene Form (`System.Collections.Generic.List::Add#T`?). Spätestens vor M2 klären (Spec-Änderung braucht ADR).
-- Wertebereich von Zahlen (`300u8`) wird in M0.2 nicht geprüft, vorgesehen für M0.4.
+- Spec-Auslegung in M0.4, bitte bestätigen (Details in `docs/modules/ir.md`):
+  - Unbekannte Keywords nehmen das folgende Element als Wert mit, wenn es kein Keyword ist. Spec Abschnitt 11 sagt nur „ignorieren". Folge: Künftige Keywords sollten immer einen Wert haben, sonst schlucken sie z. B. einen Methodenrumpf. Eventuell als Satz in Spec Abschnitt 11 aufnehmen (ADR).
+  - `(copy expr)` wird gelesen, obwohl es nur in den Regeln von Abschnitt 7 und nicht in der Grammatik steht.
+  - Strengere Prüfungen: Modifier nur aus der Spec-Liste (C# kennt auch `extern`, `new`, `volatile`, `async` usw., das wird ab M2 relevant), `new` nur mit `.ctor`, `default`/`finally` als letzter Zweig, `:version` muss 1 sein.
+  - `:attrs` gibt es laut Grammatik nur an Typen und Feldern. An Methoden wird es als unbekanntes Keyword ignoriert (Datenverlust ab M2 möglich).
+- Für M0.5 offen: AST-Records enthalten `SourceSpan`, `equals` vergleicht also Positionen mit. Für „`read(print(f))` ist strukturell gleich `f`" braucht es einen Vergleich ohne Positionen (z. B. Normalisierer, der Spans entfernt).
 
 ## Blockiert durch offene Entscheidung
 

@@ -56,9 +56,9 @@
 4. Attribute `:loc`, `:manual`, `:note` an jedem Knoten.
 
 **Abnahme**
-- [ ] Das Beispiel aus Spec Abschnitt 10 wird fehlerfrei gelesen, jeder Knoten hat die erwartete Position.
-- [ ] Je Knotenart mindestens ein Positiv- und ein Negativtest (falsche Stelligkeit, falscher Typ des Arguments).
-- [ ] Unbekannter Knotenname führt zu Fehler, unbekanntes Keyword wird ignoriert.
+- [x] Das Beispiel aus Spec Abschnitt 10 wird fehlerfrei gelesen, jeder Knoten hat die erwartete Position.
+- [x] Je Knotenart mindestens ein Positiv- und ein Negativtest (falsche Stelligkeit, falscher Typ des Arguments).
+- [x] Unbekannter Knotenname führt zu Fehler, unbekanntes Keyword wird ignoriert.
 
 ## M0.5 Printer (kanonisch)
 
