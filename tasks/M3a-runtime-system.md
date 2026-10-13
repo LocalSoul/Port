@@ -29,14 +29,14 @@
 
 **Abnahme**
 - [x] Golden Files aktualisiert, keine BCL-Todos mehr für die Fixtures (außer Lambdas und Unsigned), google-java-format-konform.
-- [ ] `catch` von `System.Exception`/`NullReferenceException` fängt auch Java-NPE (Test).
+- [x] `catch` von `System.Exception`/`NullReferenceException` fängt auch Java-NPE (Test).
 
 ## M3a.3 End-to-End
 
 **Abnahme**
-- [ ] `Inventory` (List, Indexer, Func, eigener generischer Typ) und `ControlFlow.Score` laufen mit erwarteten Ergebnissen.
-- [ ] Neue Fixture mit `Dictionary` (Reihenfolge nach Remove/Add) und `try`/`catch` läuft C# → IR → Java mit Erwartungswerten aus .NET-Semantik.
-- [ ] StarCollector-Todo-Bericht ohne BCL-Lücken.
+- [x] `Inventory` (List, Indexer, Func, eigener generischer Typ) und `ControlFlow.Score` laufen mit erwarteten Ergebnissen.
+- [x] Neue Fixture mit `Dictionary` (Reihenfolge nach Remove/Add) und `try`/`catch` läuft C# → IR → Java mit Erwartungswerten aus .NET-Semantik.
+- [x] StarCollector-Todo-Bericht ohne BCL-Lücken.
 
 ## M3a.4 Abschluss
 - [ ] Doku `runtime-system.md`, `type-mapping.md`, `generator-java.md` aktualisiert.

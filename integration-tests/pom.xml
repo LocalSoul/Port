@@ -35,6 +35,18 @@
     </dependency>
     <dependency>
       <groupId>io.github.localsoul</groupId>
+      <artifactId>frontend-unity</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.github.localsoul</groupId>
+      <artifactId>runtime-system</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.github.localsoul</groupId>
       <artifactId>engine-core</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>

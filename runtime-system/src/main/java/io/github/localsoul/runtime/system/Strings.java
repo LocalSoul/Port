@@ -88,9 +88,15 @@ public final class Strings {
    */
   public static String substring(String s, int start, int length) {
     String text = receiver(s);
-    if (start < 0 || length < 0 || start > text.length() - length) {
+    if (start < 0) {
+      throw new ArgumentOutOfRangeException("startIndex", "StartIndex cannot be less than zero.");
+    }
+    if (length < 0) {
+      throw new ArgumentOutOfRangeException("length", "Length cannot be less than zero.");
+    }
+    if (start > text.length() - length) {
       throw new ArgumentOutOfRangeException(
-          "Index and length must refer to a location within the string.");
+          "length", "Index and length must refer to a location within the string.");
     }
     return text.substring(start, start + length);
   }

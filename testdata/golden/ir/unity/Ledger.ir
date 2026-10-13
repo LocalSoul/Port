@@ -1,0 +1,94 @@
+(ir :version 1 :assembly "Assembly-CSharp")
+
+(class Ledger :mods (public)
+  (field entries System.Collections.Generic.Dictionary<string,i32> :mods (private)
+    :init (new System.Collections.Generic.Dictionary<string,i32>::.ctor#))
+  (method Check string ((amount i32)) :mods (public)
+    (block
+      (try
+        (block
+          (if (< amount 0i32)
+            (block
+              (throw (new System.InvalidOperationException::.ctor#string "negativ"))))
+          (return "ok"))
+        (catch ex System.Exception
+          (block
+            (return (prop ex System.Exception::Message)))))))
+  (method Format string ((value f32)) :mods (public)
+    (block
+      (return (scall System.String::Concat#object,object "v=" value))))
+  (method Guard string ((other Ledger)) :mods (public)
+    (block
+      (local log string "try;")
+      (try
+        (block
+          (expr
+            (call (field other Ledger::entries)
+              System.Collections.Generic.Dictionary<string,i32>::Clear#))
+          (expr (set log (scall System.String::Concat#string,string log "ok;"))))
+        (catch ex System.NullReferenceException
+          (block
+            (expr
+              (set log
+                (scall System.String::Concat#string,string
+                  (scall System.String::Concat#string,string
+                    (scall System.String::Concat#string,string log "nre:")
+                    (prop ex System.Exception::Message))
+                  ";")))))
+        (finally
+          (block
+            (expr (set log (scall System.String::Concat#string,string log "finally"))))))
+      (return log)))
+  (method Lookup i32 ((key string)) :mods (public)
+    (block
+      (try
+        (block
+          (return
+            (call (field this Ledger::entries)
+              System.Collections.Generic.Dictionary<string,i32>::get_Item#TKey
+              key)))
+        (catch __ex System.Collections.Generic.KeyNotFoundException
+          (block
+            (return -1i32))))))
+  (method Order string () :mods (public)
+    (block
+      (expr
+        (call (field this Ledger::entries) System.Collections.Generic.Dictionary<string,i32>::Clear#))
+      (expr
+        (call (field this Ledger::entries)
+          System.Collections.Generic.Dictionary<string,i32>::Add#TKey,TValue
+          "a"
+          1i32))
+      (expr
+        (call (field this Ledger::entries)
+          System.Collections.Generic.Dictionary<string,i32>::Add#TKey,TValue
+          "b"
+          2i32))
+      (expr
+        (call (field this Ledger::entries)
+          System.Collections.Generic.Dictionary<string,i32>::Add#TKey,TValue
+          "c"
+          3i32))
+      (expr
+        (call (field this Ledger::entries)
+          System.Collections.Generic.Dictionary<string,i32>::Remove#TKey
+          "b"))
+      (expr
+        (call (field this Ledger::entries)
+          System.Collections.Generic.Dictionary<string,i32>::Add#TKey,TValue
+          "d"
+          4i32))
+      (local text string "")
+      (foreach pair System.Collections.Generic.KeyValuePair<string,i32> (field this Ledger::entries)
+        (block
+          (expr
+            (set text
+              (scall System.String::Concat#string,string
+                (scall System.String::Concat#object,object
+                  (scall System.String::Concat#string,string
+                    (scall System.String::Concat#string,string text
+                      (prop pair System.Collections.Generic.KeyValuePair<string,i32>::Key))
+                    "=")
+                  (prop pair System.Collections.Generic.KeyValuePair<string,i32>::Value))
+                ";")))))
+      (return text))))

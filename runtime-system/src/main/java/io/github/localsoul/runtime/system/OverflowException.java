@@ -23,4 +23,9 @@ public class OverflowException extends SystemException {
   protected String dotnetName() {
     return "System.OverflowException";
   }
+
+  @Override
+  protected String defaultMessage() {
+    return "Arithmetic operation resulted in an overflow.";
+  }
 }

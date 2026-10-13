@@ -23,4 +23,9 @@ public class NotSupportedException extends SystemException {
   protected String dotnetName() {
     return "System.NotSupportedException";
   }
+
+  @Override
+  protected String defaultMessage() {
+    return "Specified method is not supported.";
+  }
 }

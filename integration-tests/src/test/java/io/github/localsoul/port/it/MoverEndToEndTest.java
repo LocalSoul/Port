@@ -12,21 +12,6 @@ import io.github.localsoul.port.engine.core.subsystems.input.InputScript;
 import io.github.localsoul.port.engine.core.subsystems.input.ScriptedInput;
 import io.github.localsoul.port.generator.java.GeneratedFile;
 import io.github.localsoul.port.generator.java.GenerationResult;
-import io.github.localsoul.port.generator.java.GeneratorConfig;
-import io.github.localsoul.port.generator.java.JavaGenerator;
-import io.github.localsoul.port.generator.java.Mapping;
-import io.github.localsoul.port.ir.ast.IrFile;
-import io.github.localsoul.port.ir.reader.IrReader;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -36,9 +21,6 @@ import org.junit.jupiter.api.Test;
  */
 class MoverEndToEndTest {
 
-  private static final Path ROOT = Path.of("..").toAbsolutePath().normalize();
-  private static final Path IR_DIR = ROOT.resolve("testdata/golden/ir/unity");
-  private static final Path MANUAL = Path.of("src/test/resources/manual");
   private static final float FIXED_DELTA = 0.02f;
   private static final float FRAME_DELTA = 1f / 60f;
   private static final int FRAMES = 60;
@@ -48,33 +30,8 @@ class MoverEndToEndTest {
 
   @BeforeAll
   static void generateAndCompile() throws Exception {
-    Mapping mapping;
-    try (InputStream in = UnityRuntime.class.getResourceAsStream("/mapping.tsv")) {
-      mapping = Mapping.parse(new String(in.readAllBytes(), StandardCharsets.UTF_8));
-    }
-    GeneratorConfig config = new GeneratorConfig("gen.fixtures", mapping, Set.of("UnsafeBits"));
-    generated = new JavaGenerator(config).generate(readIr());
-    Map<String, String> sources = new TreeMap<>();
-    for (GeneratedFile file : generated.files()) {
-      sources.put(file.path(), file.content());
-    }
-    sources.put(
-        "gen/fixtures/UnsafeBits.java",
-        Files.readString(MANUAL.resolve("gen/fixtures/UnsafeBits.java")));
-    classes = InMemoryCompiler.compile(sources);
-  }
-
-  private static List<IrFile> readIr() throws Exception {
-    List<IrFile> files = new ArrayList<>();
-    try (DirectoryStream<Path> stream = Files.newDirectoryStream(IR_DIR, "*.ir")) {
-      for (Path path : stream) {
-        files.add(
-            new IrReader()
-                .read(
-                    Files.readString(path, StandardCharsets.UTF_8), path.getFileName().toString()));
-      }
-    }
-    return files;
+    generated = GeneratedFixtures.generated();
+    classes = GeneratedFixtures.classes();
   }
 
   /** Ein Lauf: GameObject mit Mover, Horizontal = 1 ab Frame 0, 60 Frames. */
@@ -117,12 +74,13 @@ class MoverEndToEndTest {
   }
 
   @Test
-  void generatedCodeImportsOnlyTheAdapter() {
+  void generatedCodeImportsOnlyTheAdapterAndRuntimeSystem() {
     for (GeneratedFile file : generated.files()) {
       for (String line : file.content().split("\n")) {
         if (line.startsWith("import ")) {
           assertTrue(
-              line.startsWith("import io.github.localsoul.adapter.unity."),
+              line.startsWith("import io.github.localsoul.adapter.unity.")
+                  || line.startsWith("import io.github.localsoul.runtime.system."),
               file.path() + ": " + line);
         }
       }

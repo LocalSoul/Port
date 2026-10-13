@@ -130,7 +130,7 @@ public final class Dictionary<K, V> implements Iterable<KeyValuePair<K, V>> {
 
   private static void checkKey(Object key) {
     if (key == null) {
-      throw new ArgumentNullException("Value cannot be null. (Parameter 'key')");
+      throw new ArgumentNullException("key");
     }
   }
 }

@@ -33,7 +33,7 @@ public final class List<T> implements Iterable<T> {
    */
   public List(int capacity) {
     if (capacity < 0) {
-      throw new ArgumentOutOfRangeException("Non-negative number required.");
+      throw new ArgumentOutOfRangeException("capacity", "Non-negative number required.");
     }
     this.items = new Object[java.lang.Math.max(capacity, 1)];
   }
@@ -94,7 +94,8 @@ public final class List<T> implements Iterable<T> {
    */
   public void insert(int index, T item) {
     if (index < 0 || index > size) {
-      throw new ArgumentOutOfRangeException("Index must be within the bounds of the List.");
+      throw new ArgumentOutOfRangeException(
+          "index", "Index must be within the bounds of the List.");
     }
     ensureCapacity(size + 1);
     System.arraycopy(items, index, items, index + 1, size - index);
@@ -192,6 +193,7 @@ public final class List<T> implements Iterable<T> {
   private void checkIndex(int index) {
     if (index < 0 || index >= size) {
       throw new ArgumentOutOfRangeException(
+          "index",
           "Index was out of range. Must be non-negative and less than the size of the collection.");
     }
   }

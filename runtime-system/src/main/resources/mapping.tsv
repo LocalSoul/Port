@@ -15,12 +15,15 @@ System.Action::Invoke#T1,T2,T3,T4	invoke	method
 System.ArgumentException	io.github.localsoul.runtime.system.ArgumentException	type
 System.ArgumentException::.ctor#	ArgumentException	constructor
 System.ArgumentException::.ctor#string	ArgumentException	constructor
+System.ArgumentException::.ctor#string,string	ArgumentException	constructor
 System.ArgumentNullException	io.github.localsoul.runtime.system.ArgumentNullException	type
 System.ArgumentNullException::.ctor#	ArgumentNullException	constructor
 System.ArgumentNullException::.ctor#string	ArgumentNullException	constructor
+System.ArgumentNullException::.ctor#string,string	ArgumentNullException	constructor
 System.ArgumentOutOfRangeException	io.github.localsoul.runtime.system.ArgumentOutOfRangeException	type
 System.ArgumentOutOfRangeException::.ctor#	ArgumentOutOfRangeException	constructor
 System.ArgumentOutOfRangeException::.ctor#string	ArgumentOutOfRangeException	constructor
+System.ArgumentOutOfRangeException::.ctor#string,string	ArgumentOutOfRangeException	constructor
 System.Boolean	io.github.localsoul.runtime.system.Convert	type
 System.Boolean::ToString#	toString	helper
 System.Char	io.github.localsoul.runtime.system.Convert	type

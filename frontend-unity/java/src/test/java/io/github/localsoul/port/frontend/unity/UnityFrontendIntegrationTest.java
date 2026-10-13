@@ -52,6 +52,7 @@ class UnityFrontendIntegrationTest {
         "Edges",
         "Holder",
         "Inventory",
+        "Ledger",
         "Mover",
         "UnsafeBits"
       })
@@ -71,9 +72,17 @@ class UnityFrontendIntegrationTest {
   void translatesExactlyTheFixtureTypes() {
     assertEquals(
         List.of(
-            "Box", "ControlFlow", "Counter", "Edges", "Holder", "Inventory", "Mover", "UnsafeBits"),
+            "Box",
+            "ControlFlow",
+            "Counter",
+            "Edges",
+            "Holder",
+            "Inventory",
+            "Ledger",
+            "Mover",
+            "UnsafeBits"),
         new ArrayList<>(all.canonicalTexts().keySet()));
-    assertTrue(all.summary().contains("8 Typen"), all.summary());
+    assertTrue(all.summary().contains("9 Typen"), all.summary());
   }
 
   @Test

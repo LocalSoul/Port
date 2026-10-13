@@ -69,14 +69,22 @@ class StringsMathTest {
   @Test
   void exceptionsHaveDotNetNamesAndDefaultMessages() {
     assertEquals(
-        "Exception of type 'System.ArgumentException' was thrown.",
-        new ArgumentException().message());
+        "Value does not fall within the expected range.", new ArgumentException().message());
+    assertEquals(
+        "Exception of type 'System.Exception' was thrown.", new SystemException().message());
+    assertEquals(
+        "Value cannot be null.\nParameter name: key", new ArgumentNullException("key").message());
+    assertEquals("key", new ArgumentNullException("key").paramName());
+    assertEquals(
+        "zu groß\nParameter name: index",
+        new ArgumentOutOfRangeException("index", "zu groß").message());
+    assertEquals("kaputt\nParameter name: x", new ArgumentException("kaputt", "x").message());
     assertEquals("kaputt", new InvalidOperationException("kaputt").getMessage());
     assertTrue(new ArgumentNullException() instanceof ArgumentException);
     assertTrue(new ArgumentException() instanceof SystemException);
     assertTrue(new SystemException() instanceof RuntimeException);
     assertEquals(
-        "Exception of type 'System.Collections.Generic.KeyNotFoundException' was thrown.",
+        "The given key was not present in the dictionary.",
         new io.github.localsoul.runtime.system.collections.generic.KeyNotFoundException()
             .message());
   }

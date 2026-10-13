@@ -23,4 +23,9 @@ public class InvalidOperationException extends SystemException {
   protected String dotnetName() {
     return "System.InvalidOperationException";
   }
+
+  @Override
+  protected String defaultMessage() {
+    return "Operation is not valid due to the current state of the object.";
+  }
 }

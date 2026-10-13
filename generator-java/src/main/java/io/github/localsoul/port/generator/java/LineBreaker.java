@@ -14,6 +14,8 @@ import java.util.List;
  *   <li>Aufruf: Umbruch nach {@code (}, Argumente mit {@code +4}; passen sie zusammen in eine
  *       Zeile, stehen sie dort, sonst je Argument eine Zeile. Die schließende Klammer folgt dem
  *       letzten Argument.
+ *   <li>Zuweisung und Deklaration mit Initialisierer: Umbruch zuerst nach {@code =}, der Wert
+ *       beginnt die nächste Zeile mit {@code +4} und wird dort nach denselben Regeln gesetzt.
  *   <li>Unteilbarer Text (z. B. ein langer String) bleibt auch über 100 Zeichen ganz.
  * </ol>
  *
@@ -38,6 +40,23 @@ final class LineBreaker {
     }
     String rendered =
         prefix + render(expr, indent + prefix.length(), indent, suffix.length()) + suffix;
+    return relative(rendered, indent);
+  }
+
+  /**
+   * Setzt {@code target = expr;} bzw. {@code target op= expr;} ab Einrückung {@code indent}.
+   *
+   * @param target linke Seite mit Operator, z. B. {@code "int x ="} oder {@code "sum +="}
+   * @return Text; Folgezeilen sind relativ zu {@code indent} eingerückt
+   */
+  String assignment(String target, Doc expr, int indent) {
+    String flat = target + " " + Doc.flat(expr) + ";";
+    if (indent + flat.length() <= WIDTH) {
+      return flat;
+    }
+    int valueIndent = indent + CONTINUATION;
+    String rendered =
+        target + "\n" + " ".repeat(valueIndent) + render(expr, valueIndent, valueIndent, 1) + ";";
     return relative(rendered, indent);
   }
 

@@ -25,4 +25,9 @@ public class KeyNotFoundException extends SystemException {
   protected String dotnetName() {
     return "System.Collections.Generic.KeyNotFoundException";
   }
+
+  @Override
+  protected String defaultMessage() {
+    return "The given key was not present in the dictionary.";
+  }
 }

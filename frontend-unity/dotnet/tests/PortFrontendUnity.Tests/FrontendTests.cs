@@ -26,8 +26,8 @@ public class FrontendTests
         var result = Run("--assembly", Fixtures.Assembly(), "--out", outDir, "--no-sha256");
         Assert.Equal(0, result.Exit);
         string[] files = Directory.GetFiles(outDir).Select(Path.GetFileName).OrderBy(n => n, StringComparer.Ordinal).ToArray()!;
-        Assert.Equal(new[] { "Box.ir", "ControlFlow.ir", "Counter.ir", "Edges.ir", "Holder.ir", "Inventory.ir", "Mover.ir", "UnsafeBits.ir" }, files);
-        Assert.Contains("8 Typen", result.Error);
+        Assert.Equal(new[] { "Box.ir", "ControlFlow.ir", "Counter.ir", "Edges.ir", "Holder.ir", "Inventory.ir", "Ledger.ir", "Mover.ir", "UnsafeBits.ir" }, files);
+        Assert.Contains("9 Typen", result.Error);
     }
 
     [Fact]

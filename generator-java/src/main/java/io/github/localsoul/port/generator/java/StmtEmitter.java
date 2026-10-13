@@ -93,6 +93,10 @@ final class StmtEmitter {
     out.line(breaker.statement(prefix, expr, ";", out.indent()));
   }
 
+  private void assignment(String target, Expr value, JavaWriter out) {
+    out.line(breaker.assignment(target, expressions.emit(value).doc(), out.indent()));
+  }
+
   private void returnStmt(ReturnStmt stmt, JavaWriter out) {
     if (stmt.value() == null) {
       out.line("return;");
@@ -107,6 +111,11 @@ final class StmtEmitter {
         expr instanceof CallExpr || expr instanceof StaticCallExpr || expr instanceof NewExpr;
     if (plainCall) {
       statement("", expressions.emit(expr).doc(), out);
+    } else if (expr instanceof SetExpr set && !isProperty(set.target())) {
+      assignment(expressions.lvalue(set.target()) + " =", set.value(), out);
+    } else if (expr instanceof SetOpExpr set && !isProperty(set.target())) {
+      assignment(
+          expressions.lvalue(set.target()) + " " + set.op().spelling() + "=", set.value(), out);
     } else {
       out.line(expressionStatement(expr) + ";");
     }
@@ -140,7 +149,7 @@ final class StmtEmitter {
       out.line(declaration + ";");
       return;
     }
-    statement(declaration + " = ", expressions.emit(local.initializer()).doc(), out);
+    assignment(declaration + " =", local.initializer(), out);
   }
 
   private void ifStmt(IfStmt stmt, JavaWriter out) {
