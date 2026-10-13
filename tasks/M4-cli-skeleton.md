@@ -58,9 +58,9 @@
 4. `--from`/`--only` für Lifecycle-Befehle.
 
 **Abnahme**
-- [ ] Auf dem Testspiel laufen `init → extract → ir → gen → build` durch, `status` zeigt konsistente Werte.
-- [ ] Kompilierfehler im generierten Java erzeugt Exit 7 mit Diagnose.
-- [ ] `--strict` macht offene `@manual`-Stellen zu Exit 5.
+- [x] Auf dem Testspiel laufen `init → extract → ir → gen → build` durch, `status` zeigt konsistente Werte.
+- [x] Kompilierfehler im generierten Java erzeugt Exit 7 mit Diagnose.
+- [x] `--strict` macht offene `@manual`-Stellen zu Exit 5.
 
 ## M4.5 Abschluss
 - [ ] `docs/cli-contract.md` und `docs/modules/port-cli.md` entsprechen dem Stand.

@@ -3,6 +3,8 @@ package io.github.localsoul.port.core;
 import io.github.localsoul.port.frontend.unity.FrontendConfig;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Findet die Teile der Plattform, die ein Spiel-Projekt braucht (Frontend-Programm, Mappings,
@@ -57,5 +59,80 @@ public final class PlatformLocator {
 
   private static boolean configured(String value) {
     return value != null && !value.isBlank();
+  }
+
+  /**
+   * Adapter-Ordner: {@code --adapter}, sonst {@code engines/<name>/adapter-<name>} der Plattform.
+   *
+   * @param override {@code --adapter} oder {@code null}
+   * @param adapterName {@code game.requires.adapter}
+   * @return vorhandener Ordner
+   * @throws PortException Exit 8, wenn er nicht existiert
+   */
+  public Path adapter(Path override, String adapterName) throws PortException {
+    Path dir = override;
+    if (dir == null) {
+      dir = requireRoot().resolve("engines").resolve(adapterName).resolve("adapter-" + adapterName);
+    }
+    if (!Files.isDirectory(dir)) {
+      throw missing("Adapter nicht gefunden: " + dir, "--adapter <pfad> angeben");
+    }
+    return dir;
+  }
+
+  /**
+   * Mapping-Dateien von Adapter und runtime-system.
+   *
+   * @param adapter Adapter-Ordner
+   * @return zwei vorhandene Dateien
+   * @throws PortException Exit 8, wenn eine fehlt
+   */
+  public List<Path> mappings(Path adapter) throws PortException {
+    List<Path> files = new ArrayList<>();
+    files.add(adapter.resolve("src/main/resources/mapping.tsv"));
+    files.add(requireRoot().resolve("runtime-system/src/main/resources/mapping.tsv"));
+    for (Path file : files) {
+      if (!Files.isRegularFile(file)) {
+        throw missing("Mapping nicht gefunden: " + file, null);
+      }
+    }
+    return files;
+  }
+
+  /**
+   * Klassenpfad für {@code build}: kompilierte Klassen von Adapter, runtime-system, engine-api und
+   * engine-core.
+   *
+   * @param adapter Adapter-Ordner
+   * @return vorhandene Ordner
+   * @throws PortException Exit 8, wenn die Plattform nicht gebaut ist
+   */
+  public List<Path> classpath(Path adapter) throws PortException {
+    Path root = requireRoot();
+    List<Path> entries = new ArrayList<>();
+    entries.add(adapter.resolve("target/classes"));
+    entries.add(root.resolve("runtime-system/target/classes"));
+    entries.add(root.resolve("engine-api/target/classes"));
+    entries.add(root.resolve("engine-core/target/classes"));
+    for (Path entry : entries) {
+      if (!Files.isDirectory(entry)) {
+        throw missing("Plattform nicht gebaut: " + entry + " fehlt", "./mvnw -q install");
+      }
+    }
+    return entries;
+  }
+
+  private Path requireRoot() throws PortException {
+    if (root == null) {
+      throw missing(
+          "Plattform unbekannt: Projekt liegt nicht im Monorepo und PORT_HOME ist nicht gesetzt",
+          "PORT_HOME auf das Recomp-Repository setzen");
+    }
+    return root;
+  }
+
+  private static PortException missing(String message, String hint) {
+    return new PortException(
+        ExitCode.DEPENDENCY, Diagnostic.error(DiagnosticIds.PLATFORM, message, null, hint));
   }
 }

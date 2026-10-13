@@ -20,6 +20,8 @@ public final class Pipeline {
   public Pipeline() {
     steps.put(Phase.EXTRACT, new ExtractStep());
     steps.put(Phase.IR, new IrStep());
+    steps.put(Phase.GEN, new GenStep());
+    steps.put(Phase.BUILD, new BuildStep());
   }
 
   /**

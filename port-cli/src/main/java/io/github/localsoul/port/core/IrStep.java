@@ -36,6 +36,15 @@ final class IrStep implements PhaseStep {
       throws PortException {
     Path assembly = project.resolve(project.manifest().source());
     TranslationResult translated = translate(project, assembly);
+    if (translated.canonicalTexts().isEmpty()) {
+      throw new PortException(
+          ExitCode.TRANSLATOR,
+          Diagnostic.error(
+              DiagnosticIds.FRONTEND,
+              "Frontend lieferte keine Typen",
+              project.manifest().source(),
+              "Ausgabe des Frontends prüfen (port -v ir)"));
+    }
     Path irDir = project.resolve(DIR);
     List<String> written = new ArrayList<>();
     Set<String> expected = new TreeSet<>();

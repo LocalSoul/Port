@@ -1,0 +1,38 @@
+{
+  "schema": "port/1",
+  "command": "status",
+  "ok": true,
+  "exitCode": 0,
+  "data": {
+    "phase": "build",
+    "classes": 9,
+    "manualOpen": 2,
+    "irChanged": 0
+  },
+  "diagnostics": [
+    {
+      "id": "PORT-LATER",
+      "severity": "info",
+      "symbol": null,
+      "message": "irChanged braucht den Index (M5), hier immer 0",
+      "location": null,
+      "hint": null
+    },
+    {
+      "id": "PORT-MANUAL",
+      "severity": "warn",
+      "symbol": null,
+      "message": "1 Handarbeitsstelle(n) (raw/:manual) ohne manual/-Klasse",
+      "location": "ir/Edges.ir",
+      "hint": null
+    },
+    {
+      "id": "PORT-MANUAL",
+      "severity": "warn",
+      "symbol": null,
+      "message": "1 Handarbeitsstelle(n) (raw/:manual) ohne manual/-Klasse",
+      "location": "ir/UnsafeBits.ir",
+      "hint": null
+    }
+  ]
+}
