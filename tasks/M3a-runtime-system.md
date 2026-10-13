@@ -16,9 +16,9 @@
 3. `mapping.tsv` für alle umgesetzten Symbole.
 
 **Abnahme**
-- [ ] Verhaltenstests gegen dokumentiertes .NET-Verhalten: Indexer und `RemoveAt` außerhalb des Bereichs, Änderung während `foreach`, doppelter/fehlender Schlüssel, Dictionary-Reihenfolge nach `Remove`/`Add`, Banker's Rounding, Zahlformat (G7/G15), String-Verkettung mit `null`.
-- [ ] Konsistenztest: jedes Mapping-Ziel existiert.
-- [ ] ArchUnit: nur JDK, keine Reflection, keine Projektmodule.
+- [x] Verhaltenstests gegen dokumentiertes .NET-Verhalten: Indexer und `RemoveAt` außerhalb des Bereichs, Änderung während `foreach`, doppelter/fehlender Schlüssel, Dictionary-Reihenfolge nach `Remove`/`Add`, Banker's Rounding, Zahlformat (G7/G15), String-Verkettung mit `null`.
+- [x] Konsistenztest: jedes Mapping-Ziel existiert.
+- [x] ArchUnit: nur JDK, keine Reflection, keine Projektmodule.
 
 ## M3a.2 Generator
 
