@@ -5,7 +5,7 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 ## Aktueller Stand
 
 - Phase: **M3 abgeschlossen** (alle Abnahmekriterien in `tasks/M3-generator-adapter.md` erfüllt; `scripts/build-dotnet.sh` und `./mvnw -q verify` grün). Erstmals läuft die ganze Kette: C#-Assembly → IR → Java → kompiliert → bewegt eine Transform in der Engine.
-- M0, M1, M2 und ADR-025 sind auf `main`. M3 liegt auf Branch `task/M3-generator-adapter`, noch nicht gemergt.
+- M0 bis M3 und ADR-025 sind auf `main` (lokal, kein Remote).
 - Nächste Aufgabe laut Roadmap: M3a (`runtime-system`, BCL-Nachbau und Typabbildung, ADR-019), danach M4 (CLI) und M4a (Launcher).
 - Letzte Session: 2026-10-13, M0.2 bis M3.4, ADR-024, ADR-025
 
