@@ -1,0 +1,12 @@
+(ir :version 1 :assembly "Assembly-CSharp")
+
+(class UnsafeBits :mods (public)
+  (method First i32 ((values i32[])) :mods (public)
+    (block
+      (local result i32 0i32)
+      (raw cs "fixed (int* p = values)\n{\n    result = *p;\n}")
+      (return (+ result (call this UnsafeBits::Plain#i32 result))))
+    :manual "fixed-Block (unsafe, Zeiger)")
+  (method Plain i32 ((a i32)) :mods (public)
+    (block
+      (return (+ a 1i32)))))

@@ -31,10 +31,10 @@
 5. Alle Referenzen voll aufgelöst als `mref` mit Signatur.
 
 **Abnahme**
-- [ ] Für `Mover.cs` entsteht die IR aus Spec Abschnitt 10, nach Kanonisierung durch den Java-`IrPrinter` byte-gleich zum Golden File.
-- [ ] Für die weiteren Fixtures liegen Golden Files unter `testdata/golden/ir/`.
-- [ ] Die erzeugte IR besteht den Validator (keine IR001–IR005).
-- [ ] Zwei Läufe erzeugen bytegleiche Ausgabe (Determinismus).
+- [x] Für `Mover.cs` entsteht die IR aus Spec Abschnitt 10, nach Kanonisierung durch den Java-`IrPrinter` byte-gleich zum Golden File.
+- [x] Für die weiteren Fixtures liegen Golden Files unter `testdata/golden/ir/`.
+- [x] Die erzeugte IR besteht den Validator (keine IR001–IR005).
+- [x] Zwei Läufe erzeugen bytegleiche Ausgabe (Determinismus).
 
 ## M2.3 Nicht übersetzbare Konstrukte
 
@@ -43,8 +43,8 @@
 2. Das Programm bricht nicht ab, es meldet die Anzahl auf stderr.
 
 **Abnahme**
-- [ ] Eine Fixture mit `unsafe`-Block erzeugt `raw` und `:manual`, der Rest der Klasse wird normal übersetzt.
-- [ ] Das Programm endet mit Exit-Code 0 und einer Zusammenfassung, wenn nur `raw`-Stellen auftreten (die Behandlung als Fehler ist Sache des CLI-Vertrags, Exit 4 nur bei echten Abstürzen/Unlesbarkeit).
+- [x] Eine Fixture mit `unsafe`-Block erzeugt `raw` und `:manual`, der Rest der Klasse wird normal übersetzt.
+- [x] Das Programm endet mit Exit-Code 0 und einer Zusammenfassung, wenn nur `raw`-Stellen auftreten (die Behandlung als Fehler ist Sache des CLI-Vertrags, Exit 4 nur bei echten Abstürzen/Unlesbarkeit).
 
 ## M2.4 Java-Wrapper
 
@@ -53,9 +53,9 @@
 2. Fehlerabbildung: Prozessfehler → `FrontendException` mit Exit-Code des CLI-Vertrags (Nutzerentscheidung 2026-10-13; `PortException` gibt es erst in `port-cli`, M4).
 
 **Abnahme**
-- [ ] Wrapper-Test mit vorab erzeugter IR-Datei (ohne .NET), prüft Kanonisierung.
-- [ ] Integrationstest mit .NET-Programm läuft nur, wenn `dotnet` vorhanden ist, sonst wird er übersprungen und im Testbericht als übersprungen sichtbar (Assumption).
-- [ ] Ungültige Ausgabe des Programms führt zu klarer Fehlermeldung mit Position.
+- [x] Wrapper-Test mit vorab erzeugter IR-Datei (ohne .NET), prüft Kanonisierung.
+- [x] Integrationstest mit .NET-Programm läuft nur, wenn `dotnet` vorhanden ist, sonst wird er übersprungen und im Testbericht als übersprungen sichtbar (Assumption).
+- [x] Ungültige Ausgabe des Programms führt zu klarer Fehlermeldung mit Position.
 
 ## M2.5 Abschluss
 - [ ] `docs/modules/frontend-unity.md` entspricht dem Stand.

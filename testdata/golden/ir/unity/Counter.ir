@@ -1,0 +1,24 @@
+(ir :version 1 :assembly "Assembly-CSharp")
+
+(class Counter :base UnityEngine.MonoBehaviour :mods (public)
+  (field __auto_Total i32 :mods (private))
+  (field count i32 :mods (private))
+  (field label string :mods (public) :init "Zähler")
+  (prop Total i32 :mods (public) :get (return (field this Counter::__auto_Total))
+    :set (block
+      (expr (set (field this Counter::__auto_Total) value))))
+  (method Twice i32 ((value i32)) :mods (public)
+    (block
+      (return (* value 2i32))))
+  (method Update void () :mods (private)
+    (block
+      (expr (post-inc (field this Counter::count)))
+      (expr (set-op + (prop this Counter::Total) 2i32))
+      (if (scall UnityEngine.Input::GetKey#string "space")
+        (block
+          (expr (set-op + (field this Counter::count) 10i32))))
+      (expr
+        (scall UnityEngine.Debug::Log#object
+          (scall System.String::Concat#object,object
+            (scall System.String::Concat#string,string (field this Counter::label) ": ")
+            (field this Counter::count)))))))

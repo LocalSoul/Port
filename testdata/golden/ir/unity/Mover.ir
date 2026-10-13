@@ -1,0 +1,15 @@
+(ir :version 1 :assembly "Assembly-CSharp")
+
+(class Mover :base UnityEngine.MonoBehaviour :mods (public)
+  (field speed f32 :mods (public) :init 5.0f32)
+  (method Update void () :mods (private)
+    (block
+      (local h f32 (scall UnityEngine.Input::GetAxis#string "Horizontal"))
+      (expr
+        (call (prop this UnityEngine.Component::transform)
+          UnityEngine.Transform::Translate#UnityEngine.Vector3
+          (scall UnityEngine.Vector3::op_Multiply#UnityEngine.Vector3,f32
+            (scall UnityEngine.Vector3::op_Multiply#UnityEngine.Vector3,f32
+              (new UnityEngine.Vector3::.ctor#f32,f32,f32 h 0.0f32 0.0f32)
+              (field this Mover::speed))
+            (sprop UnityEngine.Time::deltaTime)))))))

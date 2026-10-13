@@ -16,6 +16,7 @@
     <module>ir</module>
     <module>engine-api</module>
     <module>engine-core</module>
+    <module>frontend-unity/java</module>
   </modules>
 
   <properties>

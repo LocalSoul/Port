@@ -1,0 +1,4 @@
+(ir :version 1 :assembly "Fixture")
+
+(class Bad
+  (field x 5.0))

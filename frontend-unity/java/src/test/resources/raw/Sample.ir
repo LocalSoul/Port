@@ -1,0 +1,12 @@
+(ir :version 1 :assembly "Fixture")
+
+(class
+  Sample
+  :mods
+  (public)
+  (method
+    B
+    void
+    ()
+    (block))
+  (field   a   i32 :mods (private)))
