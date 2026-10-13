@@ -5,8 +5,8 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 ## Aktueller Stand
 
 - Phase: **M1 abgeschlossen** (alle Abnahmekriterien in `tasks/M1-engine-core.md` erfüllt, `./mvnw -q verify` grün)
-- M0 ist nach `main` gemergt (lokal, kein Remote). M1 liegt auf Branch `task/M1-engine-core`, noch nicht gemergt.
-- Nächste Aufgabe laut `tasks/README.md`: `tasks/M2-unity-frontend.md` (braucht funktionierendes .NET SDK, siehe offene Punkte)
+- M0 und M1 sind nach `main` gemergt (lokal, kein Remote). M2 läuft auf Branch `task/M2-unity-frontend`.
+- Aktive Aufgabe: `tasks/M2-unity-frontend.md`, Vorbereitung (Entscheidungen siehe unten)
 - Letzte Session: 2026-10-13, M0.2 bis M0.7, ADR-024, M1.1 bis M1.6
 
 ## Erledigt
@@ -40,7 +40,7 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 
 ## Offene Punkte / Nebenfunde
 
-- .NET SDK defekt/unvollständig: `dotnet --version` meldet `/usr/lib64/dotnet/host/fxr does not contain any version-numbered child folders`. Vor M2 beheben.
+- .NET SDK: behoben (2026-10-13). SDK 8.0.131, Runtime 8.0.31; Build und NuGet-Restore (`ICSharpCode.Decompiler`) in einem Testprojekt geprüft.
 - Zielspiel wird ein selbst kompiliertes 2048 (Unity, möglichst Mono-Build, siehe ADR-003). Noch nicht vorhanden.
 - Statische Prüfung (Error Prone oder SpotBugs, `docs/conventions.md`) ist noch nicht im Build. Kein Abnahmekriterium von M0, Wahl durch den Nutzer offen. Doclint könnte bei der Gelegenheit ebenfalls in den Build.
 - Die SLF4J-Warnung „No SLF4J providers were found“ beim Build stammt von Werkzeugen im Build und ist harmlos.
