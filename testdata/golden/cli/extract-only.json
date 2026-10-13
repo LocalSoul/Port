@@ -1,0 +1,17 @@
+{
+  "schema": "port/1",
+  "command": "extract",
+  "ok": true,
+  "exitCode": 0,
+  "data": {
+    "phases": [
+      "extract"
+    ],
+    "extract": {
+      "source": "input/game.dll",
+      "size": 3,
+      "sha256": "6a7dc6f4267242f01f6636a45c31da51c036da1e9879abce7e1d0aaa76aad876"
+    }
+  },
+  "diagnostics": []
+}

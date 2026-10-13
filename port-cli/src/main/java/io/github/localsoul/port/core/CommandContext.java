@@ -13,6 +13,7 @@ import java.nio.file.Path;
  * @param quiet {@code -q}
  * @param offline {@code --offline} (in M4 ohne Wirkung)
  * @param log Fortschrittsausgabe (stderr)
+ * @param platformHome Plattformwurzel außerhalb des Monorepos ({@code PORT_HOME}) oder {@code null}
  */
 public record CommandContext(
     Path workingDir,
@@ -21,7 +22,8 @@ public record CommandContext(
     boolean verbose,
     boolean quiet,
     boolean offline,
-    PrintStream log) {
+    PrintStream log,
+    Path platformHome) {
 
   /**
    * Fortschrittsmeldung auf stderr, nur mit {@code -v}.

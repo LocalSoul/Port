@@ -21,6 +21,8 @@ class InitCommandTest {
     Path dll = temp.resolve("downloads/Assembly-CSharp.dll");
     Files.createDirectories(dll.getParent());
     Files.write(dll, new byte[] {1, 2, 3, 4});
+    Files.write(temp.resolve("downloads/UnityEngine.dll"), new byte[] {5});
+    Files.writeString(temp.resolve("downloads/readme.txt"), "nicht kopieren");
     return dll;
   }
 
@@ -42,6 +44,8 @@ class InitCommandTest {
         "init-port.toml", Files.readString(project.resolve("port.toml"), StandardCharsets.UTF_8));
     String gitignore = Files.readString(project.resolve(".gitignore"));
     assertTrue(gitignore.contains("input/\ngen/\n.port/\n"), gitignore);
+    assertTrue(Files.isRegularFile(project.resolve("input/UnityEngine.dll")));
+    assertFalse(Files.exists(project.resolve("input/readme.txt")));
     assertFalse(Files.exists(project.resolve(".git")));
   }
 

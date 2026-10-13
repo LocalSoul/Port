@@ -3,6 +3,7 @@ package io.github.localsoul.port.core;
 import io.github.localsoul.port.json.JsonObject;
 import io.github.localsoul.port.json.JsonValue;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -11,7 +12,8 @@ import java.util.List;
 /**
  * {@code port init}: legt ein Spiel-Projekt an ({@code docs/cli-contract.md}). Im Monorepo unter
  * {@code games/<name>/}, sonst unter {@code <projektordner>/<name>/}. Kein Git-Init in M4
- * (Nutzerentscheidung).
+ * (Nutzerentscheidung). {@code --source} kopiert die Assembly samt der {@code *.dll} aus ihrem
+ * Ordner nach {@code input/}.
  */
 public final class InitService {
 
@@ -30,7 +32,8 @@ public final class InitService {
    * @param context globale Einstellungen
    * @param name Projektname ({@code [a-z0-9][a-z0-9_-]*})
    * @param frontend Frontend ({@code unity})
-   * @param source Eingabe-Assembly, die nach {@code input/} kopiert wird, oder {@code null}
+   * @param source Eingabe-Assembly, die mit ihren Nachbar-DLLs nach {@code input/} kopiert wird,
+   *     oder {@code null}
    * @return Ergebnis mit {@code path} und {@code created}
    * @throws PortException Exit 2 bei ungültigen Argumenten oder abweichendem Manifest, Exit 3 bei
    *     fehlender Quelle, Exit 1 bei Schreibfehlern
@@ -64,9 +67,8 @@ public final class InitService {
           created.add(directory + "/");
         }
       }
-      if (source != null
-          && ProjectFiles.writeAtomic(project.resolve(sourcePath), Files.readAllBytes(source))) {
-        created.add(sourcePath);
+      if (source != null) {
+        copyInputs(source, project, created);
       }
       if (ProjectFiles.writeAtomic(project.resolve(".gitignore"), GITIGNORE)) {
         created.add(".gitignore");
@@ -98,6 +100,31 @@ public final class InitService {
             .put("created", JsonValue.strings(created))
             .build();
     return CommandResult.ok("init", data, diagnostics);
+  }
+
+  /**
+   * Kopiert die Assembly und alle {@code *.dll} aus ihrem Ordner nach {@code input/}: Das Frontend
+   * löst Referenzen (bei Unity {@code Managed/UnityEngine*.dll}) im Ordner der Eingabe auf
+   * (Nutzerentscheidung M4).
+   */
+  private static void copyInputs(Path source, Path project, List<String> created)
+      throws IOException {
+    List<Path> files = new ArrayList<>();
+    files.add(source);
+    Path folder = source.toAbsolutePath().getParent();
+    try (DirectoryStream<Path> stream = Files.newDirectoryStream(folder, "*.dll")) {
+      for (Path path : stream) {
+        if (!path.getFileName().equals(source.getFileName()) && Files.isRegularFile(path)) {
+          files.add(path);
+        }
+      }
+    }
+    for (Path file : files) {
+      String target = "input/" + file.getFileName();
+      if (ProjectFiles.writeAtomic(project.resolve(target), Files.readAllBytes(file))) {
+        created.add(target);
+      }
+    }
   }
 
   private static void checkArguments(String name, String frontend) throws PortException {

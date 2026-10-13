@@ -11,6 +11,7 @@
       "data/",
       "input/",
       "input/Assembly-CSharp.dll",
+      "input/UnityEngine.dll",
       "ir/",
       "manual/",
       "port.toml"

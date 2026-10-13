@@ -24,6 +24,9 @@ public final class DiagnosticIds {
   /** Frontend fehlt oder ist fehlgeschlagen. */
   public static final String FRONTEND = "PORT-FRONTEND";
 
+  /** Nicht aufgelöste Typen in der IR (fehlende Referenz-Assemblies). */
+  public static final String UNRESOLVED = "PORT-UNRESOLVED";
+
   /** IR-Datei ungültig. */
   public static final String IR = "PORT-IR";
 

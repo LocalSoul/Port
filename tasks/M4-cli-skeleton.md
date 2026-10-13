@@ -11,6 +11,7 @@
   - TOML: **tomlj** (nur Lesen, mit Fehlerpositionen); `port.toml` schreibt `init` als festen Text.
   - JSON: **eigener kleiner Writer** (feste Schlüsselreihenfolge, keine Abhängigkeit).
   - Git: **kein Git-Init in M4** (JGit bringt slf4j-api mit, das der Enforcer verbietet; Entscheidung mit ADR, wenn die Git-Befehle drankommen).
+  - Referenz-Assemblies: `init --source` kopiert die Assembly samt aller `*.dll` aus ihrem Ordner nach `input/` (bei Unity `Managed/`); `ir` warnt bei nicht aufgelösten Typen (`PORT-UNRESOLVED`, IR003).
   - Engine-Pfad bis M4a: `--adapter <pfad>` mit Monorepo-Konvention als Standard, gekapselt in `PlatformLocator` (wird in M4a durch Katalog/Profile ersetzt). Plattform außerhalb des Monorepos über `PORT_HOME`.
 
 ---
@@ -44,9 +45,9 @@
 2. `ir`: Frontend aufrufen (M2), IR in `ir/` schreiben (kanonisch, atomar).
 
 **Abnahme**
-- [ ] Hash-Abweichung führt zu Exit 3.
-- [ ] Zweiter `ir`-Lauf ohne Änderung schreibt keine Dateien neu (Zeitstempel/Inhalt unverändert).
-- [ ] Ohne .NET SDK: klare Fehlermeldung, Tests des Frontends werden übersprungen und benannt.
+- [x] Hash-Abweichung führt zu Exit 3.
+- [x] Zweiter `ir`-Lauf ohne Änderung schreibt keine Dateien neu (Zeitstempel/Inhalt unverändert).
+- [x] Ohne .NET SDK: klare Fehlermeldung, Tests des Frontends werden übersprungen und benannt.
 
 ## M4.4 `gen`, `build`, `status`
 

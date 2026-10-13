@@ -35,10 +35,18 @@ public final class Main {
   static final String OFFLINE = "--offline";
   static final String STRICT = "--strict";
 
-  private final List<PortCommand> commands;
+  /** Systemeigenschaft mit der Plattformwurzel (Vorrang vor {@link #HOME_ENVIRONMENT}). */
+  static final String HOME_PROPERTY = "port.home";
 
-  Main(List<PortCommand> commands) {
+  /** Umgebungsvariable mit der Plattformwurzel, wenn das Projekt außerhalb des Monorepos liegt. */
+  static final String HOME_ENVIRONMENT = "PORT_HOME";
+
+  private final List<PortCommand> commands;
+  private final Path platformHome;
+
+  Main(List<PortCommand> commands, Path platformHome) {
     this.commands = List.copyOf(commands);
+    this.platformHome = platformHome;
   }
 
   /**
@@ -48,7 +56,9 @@ public final class Main {
    */
   public static void main(String[] args) {
     Path workingDir = Path.of("").toAbsolutePath();
-    int exitCode = new Main(Commands.all()).run(args, System.out, System.err, workingDir);
+    int exitCode =
+        new Main(Commands.all(), configuredHome(workingDir))
+            .run(args, System.out, System.err, workingDir);
     System.exit(exitCode);
   }
 
@@ -83,7 +93,7 @@ public final class Main {
       return ExitCode.SUCCESS.code();
     }
     boolean json = flag(parsed, sub, JSON);
-    CommandContext context = context(parsed, sub, workingDir, err);
+    CommandContext context = context(parsed, sub, workingDir, err, platformHome);
     PortCommand command = command(sub.commandSpec().name());
     CommandResult result;
     try {
@@ -94,6 +104,17 @@ public final class Main {
               command.name(), JsonObject.empty(), List.of(e.diagnostic()), e.exitCode());
     }
     return emit(result, json, context.strict(), context.quiet(), out, err);
+  }
+
+  private static Path configuredHome(Path workingDir) {
+    String home = System.getProperty(HOME_PROPERTY);
+    if (home == null || home.isBlank()) {
+      home = System.getenv(HOME_ENVIRONMENT);
+    }
+    if (home == null || home.isBlank()) {
+      return null;
+    }
+    return workingDir.resolve(home).toAbsolutePath().normalize();
   }
 
   private CommandSpec rootSpec() {
@@ -141,7 +162,7 @@ public final class Main {
   }
 
   private static CommandContext context(
-      ParseResult root, ParseResult sub, Path workingDir, PrintStream err) {
+      ParseResult root, ParseResult sub, Path workingDir, PrintStream err, Path platformHome) {
     String directory = sub.matchedOptionValue(DIRECTORY, null);
     if (directory == null) {
       directory = root.matchedOptionValue(DIRECTORY, null);
@@ -154,7 +175,8 @@ public final class Main {
         flag(root, sub, VERBOSE),
         flag(root, sub, QUIET),
         flag(root, sub, OFFLINE),
-        err);
+        err,
+        platformHome);
   }
 
   private PortCommand command(String name) {

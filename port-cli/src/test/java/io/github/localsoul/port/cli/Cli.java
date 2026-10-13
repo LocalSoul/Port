@@ -13,15 +13,20 @@ final class Cli {
 
   private Cli() {}
 
+  /** Plattform = dieses Repository (wie {@code PORT_HOME}). */
   static Run run(Path workingDir, String... args) {
-    return run(Commands.all(), workingDir, args);
+    return run(Commands.all(), Golden.ROOT, workingDir, args);
   }
 
   static Run run(List<PortCommand> commands, Path workingDir, String... args) {
+    return run(commands, Golden.ROOT, workingDir, args);
+  }
+
+  static Run run(List<PortCommand> commands, Path home, Path workingDir, String... args) {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     ByteArrayOutputStream err = new ByteArrayOutputStream();
     int exitCode =
-        new Main(commands)
+        new Main(commands, home)
             .run(
                 args,
                 new PrintStream(out, true, StandardCharsets.UTF_8),
