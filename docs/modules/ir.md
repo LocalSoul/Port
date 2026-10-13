@@ -32,6 +32,13 @@ public record Diagnostic(String id, Severity severity, String symbol, String mes
 - Strings dürfen Zeilenumbrüche enthalten. Escapes: `\\ \" \n \r \t \uXXXX` (genau 4 Hexziffern), alles andere ist ein Fehler an der Position des Backslashs.
 - Fehler: `IrSyntaxException` (Basis `IrException`, geprüft) mit `span()` und `reason()`, Meldung `datei:zeile:spalte: Grund`. Nicht geschlossene Klammern und Strings melden die Position der Öffnung.
 
+## Typ- und Member-Atome (M0.3, Paket `io.github.localsoul.port.ir.atom`)
+- `TypeRef.parse(text, atomStart)` liefert einen sealed `TypeRef`: `PrimitiveType`, `NamedType` (qualifizierter Name plus Typargumente), `ArrayType` (Rang ≥ 1), `NullableType`, `ByRefType`.
+- `MemberRef.parse(text, atomStart)` liefert deklarierenden Typ (qname), Namen (Bezeichner, `.ctor`, `.cctor`), generische Argumente und optional die Parameterliste. `hasParameterList` unterscheidet `Foo::Bar#` (Methode ohne Parameter) von `Foo::Bar` (Feld/Property).
+- Beide sind Wertobjekte **ohne** Quellposition (gleicher Text ergibt gleiche Objekte). Die Position trägt der AST-Knoten. `toString()` ist kanonisch, bei `MemberRef` ist es die stabile Symbol-ID.
+- Suffixe gelten von links nach rechts (`i32?[]` = Array von `i32?`). `&` muss das letzte Suffix sein, `??` ist verboten. Primitive haben keine Typargumente, `<>` ist leer und damit ungültig.
+- Fehlerpositionen = Position des Atoms plus Versatz der Fehlerstelle. Nicht geschlossene `[` und `<` melden die öffnende Stelle.
+
 ## Verhalten
 - Der native Dialekt (Spec Abschnitt 12) wird erst in M10b implementiert. Bis dahin lehnt der Reader seine Knoten mit klarer Meldung ab.
 - Der Reader lehnt unbekannte **Knotennamen** ab und ignoriert unbekannte **Keywords** (Spec Abschnitt 11).

@@ -43,9 +43,9 @@
 3. Beide mit Parser (Untersyntax) und Printer. Rückgabe von `toString` ist kanonisch und stabil (= stabile Symbol-ID).
 
 **Abnahme**
-- [ ] `Dictionary<string,i32[]>`, `f32[,]`, `System.Collections.Generic.List<i32>` parsen und drucken identisch.
-- [ ] `UnityEngine.Transform::Translate#UnityEngine.Vector3`, `Foo::.ctor#f32,f32,f32`, `Foo::Bar#` (leere Parameterliste) parsen und drucken identisch.
-- [ ] Fehlerfälle (`Foo::`, `<>`, `i32[`) melden Position und Ursache.
+- [x] `Dictionary<string,i32[]>`, `f32[,]`, `System.Collections.Generic.List<i32>` parsen und drucken identisch.
+- [x] `UnityEngine.Transform::Translate#UnityEngine.Vector3`, `Foo::.ctor#f32,f32,f32`, `Foo::Bar#` (leere Parameterliste) parsen und drucken identisch.
+- [x] Fehlerfälle (`Foo::`, `<>`, `i32[`) melden Position und Ursache.
 
 ## M0.4 AST und Reader für Deklarationen, Statements, Ausdrücke
 
