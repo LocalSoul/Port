@@ -2,6 +2,8 @@
 
 Verbindliche Spezifikation für Befehle, Flags, Ausgaben und Exit-Codes. Implementierung: `port-cli` (Java, picocli).
 
+**Stand M4:** umgesetzt sind `init`, `extract`, `ir`, `gen`, `build`, `status` und die globalen Flags `--json`, `-C`, `-q`, `-v`, `--offline` (noch ohne Wirkung), `--strict`. Alles andere ist Vertrag für spätere Meilensteine. JSON als Standard ohne Terminal (ADR-018) kommt mit M6a.
+
 ## Globale Flags
 
 | Flag | Bedeutung |
@@ -40,6 +42,15 @@ Bei nicht-interaktiver Ausgabe (kein Terminal) ist JSON der Standard (ADR-018).
 | `port run` | auf der eigenen Engine starten |
 
 `build`, `package` und `run` brauchen eine Engine zum Kompilieren bzw. Starten: `--profile <name>` oder `--adapter <engines/pfad>`; ohne Angabe gilt `launch.toml` im Spielordner. `port launch run` ist der übliche Weg für den Start (siehe unten).
+
+**Stand M4 (bis Katalog und Profile in M4a):** Jeder Lifecycle-Befehl führt seine Phase und alle Folgephasen aus (`extract → ir → gen → build`; Index und Lint kommen mit M5/M6), `--only` nur die Phase, `--from <phase>` ab einer anderen Phase. `gen` und `build` nehmen `--adapter <pfad>`; ohne Angabe gilt `engines/<a>/adapter-<a>` mit `a = game.requires.adapter`. Plattformwurzel (Adapter, `runtime-system`, gebautes Frontend) ist das Monorepo, in dem das Projekt liegt, sonst `PORT_HOME` (bzw. Systemeigenschaft `port.home`). `gen --class <muster>` erzeugt nur passende Typen (`*`, `?`).
+
+Dateien eines Spiel-Projekts in M4:
+- `init --source <dll>` kopiert die Assembly **und alle `*.dll` aus ihrem Ordner** (bei Unity `Managed/`) nach `input/`, damit das Frontend Referenzen auflöst; `sha256` gilt der Assembly. Außerhalb des Monorepos wird (noch) kein Git-Repo angelegt (`info PORT-GIT`).
+- `extract` schreibt `.port/extract.tsv`, alle Phasen `.port/state.tsv` (zuletzt abgeschlossene Phase).
+- `ir` schreibt `ir/<Typ>.ir` (kanonisch, mit `:sha256`), entfernt veraltete `.ir`.
+- `gen` schreibt `gen/game/<name>/...` (Paket `game.<name>`); Klassen in `manual/` (beliebige Unterordner, Abgleich über den einfachen Klassennamen) ersetzen das dünne `Foo`.
+- `build` kompiliert `gen/` und `manual/` nach `.port/classes`.
 
 ### Suche und Navigation (auf dem Index)
 `port find <name>`, `port refs <symbol>`, `port callers <methode>`, `port callees <methode>`, `port uses <Adapter-API>`, `port show <symbol> [--ir|--src|--java]`, `port outline <klasse>`.
@@ -114,6 +125,8 @@ Eine ungültige Kombination liefert Diagnosen und Exit-Code 2.
 | 10 | Vorgeschlagener Fix oder Patch besteht die Prüfung nicht |
 | 11 | Konformitätstest weicht außerhalb der Toleranzen ab (ADR-022) |
 
+Erreichbarkeit (Stand M4, je mit Test in `port-cli`): 0; 1 (Frontend-Programm fehlt, Ein-/Ausgabefehler); 2 (Argumente, `port.toml`, IR-Syntax, Projekt existiert anders); 3 (Eingabe fehlt, Hash weicht ab, Assembly unlesbar); 4 (Frontend stürzt ab, liefert ungültige Ausgabe oder keine Typen); 5 (`--strict` mit offener Handarbeit); 7 (Kompilierfehler); 8 (Adapter, Mapping oder gebaute Plattform fehlen). Noch nicht erreichbar: 6 (ab M7), 9 (ab M6), 10 (ab M6a/M7a), 11 (ab M11a).
+
 ## JSON-Hülle (`--json`)
 
 Jeder Befehl gibt genau **ein** JSON-Objekt auf stdout aus. Alles andere (Fortschritt, Logs) geht auf stderr.
@@ -143,6 +156,8 @@ Regeln:
 - `data` ist pro Befehl dokumentiert (siehe unten), Felder dürfen hinzukommen, nie wegfallen oder ihren Typ ändern.
 - `diagnostics` ist immer ein Array (leer, wenn nichts zu melden ist), sortiert nach `location`, dann `id`.
 - `severity` ∈ `error`, `warn`, `info`.
+- Alle Felder einer Diagnose sind immer vorhanden, `symbol`, `location` und `hint` können `null` sein. `location` ist relativ zum Projektordner.
+- Die JSON-Ausgabe ist eingerückt (zwei Leerzeichen) und endet mit einem Zeilenumbruch.
 - Schlüssel in Objekten stehen in fester, dokumentierter Reihenfolge. Listen sind sortiert (deterministisch).
 
 ### `data` pro Befehl (Mindestumfang)
@@ -155,6 +170,10 @@ Regeln:
 | `find` | `{ "matches": [ { "symbol": "...", "kind": "class\|method\|field\|prop", "location": "..." } ] }` |
 | `deps check` | `{ "adapter": "...", "missing": [ "..." ], "stub": [ "..." ] }` |
 | `gen` | `{ "files": [ "gen/Foo.java" ], "todoCount": n }` |
+| `init` (M4) | `{ "path": "games/x", "monorepo": bool, "created": [ ... ] }` |
+| Lifecycle (M4) | `{ "phases": [ "extract", ... ], "<phase>": { ... } }` je ausgeführter Phase: `extract` `{source, size, sha256}`, `ir` `{types, written, removed}`, `gen` `{files, todoCount, written, removed}`, `build` `{sources, classes, output}` |
+
+Diagnose-IDs der CLI selbst (M4): `PORT-ARGS`, `PORT-MANIFEST`, `PORT-EXISTS`, `PORT-GIT`, `PORT-INPUT`, `PORT-HASH`, `PORT-FRONTEND`, `PORT-UNRESOLVED` (nicht aufgelöste Typen, meist fehlende Referenz-Assemblies), `PORT-IR`, `PORT-TODO` (Generator-Todo), `PORT-MANUAL` (offene Handarbeit, mit `--strict` Exit 5), `PORT-COMPILE`, `PORT-PLATFORM`, `PORT-LATER` (braucht späteren Meilenstein), `PORT-IO`.
 
 ## Designregeln
 

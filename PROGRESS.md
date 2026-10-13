@@ -4,10 +4,10 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 
 ## Aktueller Stand
 
-- Phase: **M3a abgeschlossen** und nach `main` gemergt (alle Abnahmekriterien in `tasks/M3a-runtime-system.md` erfüllt; `scripts/build-dotnet.sh` und `./mvnw -q verify` grün). Übersetzter Spielcode nutzt jetzt `List`, `Dictionary`, Strings, Math, Exceptions und `Func`/`Action` mit .NET-Semantik.
+- Phase: **M4 abgeschlossen** auf Branch `task/M4-cli-skeleton` (alle Abnahmekriterien in `tasks/M4-cli-skeleton.md` erfüllt; `scripts/build-dotnet.sh` und `./mvnw -q verify` grün). Das CLI `port` steuert die Pipeline auf einem Projektordner: `init → extract → ir → gen → build`, `status`, JSON-Hülle und Exit-Codes nach Vertrag. Merge nach `main` steht aus (Nutzer entscheidet).
 - M0 bis M3a, ADR-019 und ADR-025 sind auf `main` (lokal, kein Remote).
-- Nächste Aufgabe laut Roadmap: M4 (CLI), danach M4a (Launcher).
-- Letzte Session: 2026-10-13, M0.2 bis M3a.4, ADR-019, ADR-024, ADR-025
+- Nächste Aufgabe laut Roadmap: M4a (Monorepo-Layout, Katalog, Launcher headless, ADR-020).
+- Letzte Session: 2026-10-13, M0.2 bis M4.5, ADR-019, ADR-024, ADR-025
 
 ## Erledigt
 
@@ -114,6 +114,24 @@ Alle erscheinen als `raw` + `:manual` bzw. als gemeldeter, übersprungener Typ, 
   - M3a.3: Fixture `Ledger` (Dictionary-Reihenfolge, try/catch, Null-Zugriff, Zahlformat); `RuntimeSystemEndToEndTest` mit Inventory, ControlFlow, Ledger; `StarCollectorGeneratorReportTest` (Bericht `integration-tests/target/starcollector-generator-report.txt`). Dabei korrigiert: `ArgumentNullException`/`ArgumentOutOfRangeException` nehmen wie .NET den Parameternamen, typspezifische Standardmeldungen; Zuweisungen werden wie google-java-format nach `=` umbrochen.
   - M3a.4: Doku `runtime-system.md`, `type-mapping.md`, `generator-java.md`.
 
+- M4 CLI-Grundgerüst (Plan mit Nutzer abgestimmt):
+  - M4.0: Nutzerentscheidungen (tomlj, eigener JSON-Writer, kein Git-Init in M4, `--adapter` + Monorepo-Konvention über `PlatformLocator`).
+  - M4.1: Modul `port-cli` (picocli programmatisch, Pakete `cli`, `core`, `json`, `output`), Ergebnisobjekt, zentrale Exit-Codes, JSON-Hülle mit Golden Files (`testdata/golden/cli/`), Abgleich der Exit-Codes mit dem Vertrag.
+  - M4.2: `init` (im Monorepo unter `games/<name>/`), Manifest lesen mit Fehlerposition.
+  - M4.3: `extract`, `ir`, Pipeline mit Folgephasen, `--only`, `--from`. Nutzerentscheidung unterwegs: `init --source` kopiert die Nachbar-DLLs (Referenzen) nach `input/`, `ir` warnt bei nicht aufgelösten Typen.
+  - M4.4: `gen`, `build`, `status`; End-to-End auf dem Testspiel (zweiter Lauf ändert nichts, zwei Projekte byte-identisch, Exit 3/4/5/7/8).
+  - M4.5: Doku `cli-contract.md`, `port-cli.md`.
+
+## M4: Lücken und Beobachtungen
+
+- **Kein ausführbares Paket:** `port` startet nur über `Main` mit Klassenpfad (siehe `docs/modules/port-cli.md`). Ein Startskript oder Fat-Jar wäre für den Alltag nötig (Kandidat für M4a).
+- **Plattform muss gebaut sein:** `build` nutzt `target/classes` von Adapter, `runtime-system`, `engine-api`, `engine-core`, `gen` die Mapping-Dateien aus `src/main/resources`. Das ist bewusst eine Übergangslösung bis Katalog/Profile (M4a); dort auch den Ressourcenpfad der Mappings klären (offener Punkt aus M3a).
+- **`manual/`-Abgleich über einfache Klassennamen:** zwei Typen gleichen Namens in verschiedenen Namespaces wären nicht unterscheidbar.
+- **Diagnosen von `gen`:** Der Generator meldet je Member nur die erste Lücke; ein Member mit Mapping-Lücke vor einem `raw` erscheint als `PORT-TODO`, nicht als `PORT-MANUAL`. `status` zählt Handarbeit deshalb direkt in der IR.
+- **Meldungen von picocli** (z. B. „Unmatched argument“) sind englisch.
+- **JSON ohne Terminal als Standard** (ADR-018) und `--dry-run`/Paginierung: M6a.
+- `AGENTS.md` ist schreibgeschützt. Vorschlag für „Wichtige Befehle“: Start von `port` (sobald es ein Startskript gibt).
+
 ## M3a: Lücken und Beobachtungen
 
 - **Zahlformat gegen echtes Unity prüfen:** G7/G15 und die Exponentengrenze (`0.0001` bleibt, `0.00001` → `1E-05`) folgen der .NET-Framework-Logik. Mit einem Referenzwert aus einem echten Unity-Lauf (z. B. `Debug.Log(1f/3f)`, `Debug.Log(0.00001f)`, `Debug.Log(12345678f)`) bestätigen. Ebenso die englischen Standardmeldungen der Exceptions und den Zeilenumbruch vor „Parameter name:“ (hier immer `\n`, unter Windows schreibt .NET `\r\n`).
@@ -173,5 +191,5 @@ Alle erscheinen als `raw` + `:manual` bzw. als gemeldeter, übersprungener Typ, 
 
 - Vor dem Start die Checkliste in `docs/setup.md` prüfen.
 - Layout und Projektarten: `docs/projects.md` lesen (Spiele in `games/`, Engines in `engines/`, ADR-020 PROPOSED).
-- M4 (CLI) mit dem Nutzer planen. Vor dem Generator-/Golden-Test `scripts/build-dotnet.sh` laufen lassen.
-- Offene Nutzerfrage aus M3a: Ressourcenpfad der Mappings für M4.
+- Branch `task/M4-cli-skeleton` nach `main` mergen (Nutzer entscheidet), dann M4a mit dem Nutzer planen. Vor dem Generator-/Golden-Test `scripts/build-dotnet.sh` laufen lassen.
+- Offene Nutzerfrage aus M3a: Ressourcenpfad der Mappings, jetzt für M4a (M4 liest Dateipfade über `PlatformLocator`).

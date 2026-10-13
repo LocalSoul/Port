@@ -26,7 +26,7 @@
 **Abnahme**
 - [x] JSON-Hülle entspricht dem Vertrag (`schema`, `command`, `ok`, `exitCode`, `data`, `diagnostics`), Golden-File-Test.
 - [x] Mit `--json` steht auf stdout genau ein JSON-Objekt, sonst nichts.
-- [ ] Alle Exit-Codes des Vertrags sind in einem Testfall erreichbar oder als „noch nicht erreichbar" dokumentiert.
+- [x] Alle Exit-Codes des Vertrags sind in einem Testfall erreichbar oder als „noch nicht erreichbar" dokumentiert.
 
 ## M4.2 `init` und Manifest
 
@@ -63,8 +63,8 @@
 - [x] `--strict` macht offene `@manual`-Stellen zu Exit 5.
 
 ## M4.5 Abschluss
-- [ ] `docs/cli-contract.md` und `docs/modules/port-cli.md` entsprechen dem Stand.
-- [ ] Abweichungen vom Vertrag (falls nötig) sind als ADR eingetragen und mit dem Nutzer abgestimmt.
+- [x] `docs/cli-contract.md` und `docs/modules/port-cli.md` entsprechen dem Stand.
+- [x] Abweichungen vom Vertrag (falls nötig) sind als ADR eingetragen und mit dem Nutzer abgestimmt. (Keine Abweichung; Ergänzungen wie `PORT_HOME`, `PORT-*`-IDs und `data` der Lifecycle-Befehle stehen im Vertrag. Git-Init ist nach Nutzerentscheidung verschoben, betrifft nur die Aufgabe.)
 
 ## Nicht-Ziele
 Index, Suchbefehle, Lint, `ir --update`, `deps`, `adapter`-Befehle, GraalVM Native Image (kommen in M5 bis M10).
