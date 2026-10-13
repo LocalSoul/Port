@@ -1,0 +1,64 @@
+# M4: CLI-Grundgerüst (`port`)
+
+**Ziel:** Ein headless CLI `port` mit `init`, `extract`, `ir`, `gen`, `build`, `status`, das die Pipeline aus M0 bis M3 auf dem synthetischen Testspiel steuert. `--json` und Exit-Codes nach `docs/cli-contract.md`.
+
+**Eingaben:** `AGENTS.md`, `docs/cli-contract.md`, `docs/modules/port-cli.md`, `docs/architecture.md`.
+
+**Abhängigkeiten/Entscheidungen**
+- M0 bis M3 sind abgeschlossen.
+- Neue Hauptabhängigkeiten (picocli, TOML-Bibliothek) vorab im Plan nennen.
+
+---
+
+## M4.1 Gerüst und Ausgabe
+
+**Schritte**
+1. Modul `port-cli`, picocli, Pakete `cli/`, `core/`, `output/` (siehe Modulbeschreibung).
+2. Globale Flags: `--json`, `-C`, `-q`, `-v`, `--offline`, `--strict`.
+3. Ergebnisobjekt pro Befehl, zentrale Ableitung des Exit-Codes, Renderer für Text und JSON-Hülle.
+
+**Abnahme**
+- [ ] JSON-Hülle entspricht dem Vertrag (`schema`, `command`, `ok`, `exitCode`, `data`, `diagnostics`), Golden-File-Test.
+- [ ] Mit `--json` steht auf stdout genau ein JSON-Objekt, sonst nichts.
+- [ ] Alle Exit-Codes des Vertrags sind in einem Testfall erreichbar oder als „noch nicht erreichbar" dokumentiert.
+
+## M4.2 `init` und Manifest
+
+**Schritte**
+1. `port init <name> [--frontend unity] [--source <pfad>]`: erzeugt `port.toml` (mit `[project] kind = "game"`, `[game.requires]`), `.gitignore`, Ordner `input/`, `ir/`, `manual/`, `data/`. Außerhalb eines Git-Repos wird eines angelegt (JGit), innerhalb des Monorepos nicht. Das Zielverzeichnis ist `games/<name>/`, wenn der Befehl im Monorepo läuft (`--kind engine` kommt in M4a).
+2. Manifest lesen und validieren (Ungültiges → Exit 2 mit Diagnose und Position).
+
+**Abnahme**
+- [ ] `init` auf leerem Ordner erzeugt die Struktur aus dem Vertrag, wiederholter Aufruf ändert nichts (Idempotenz) oder meldet klar „existiert".
+- [ ] Ungültige `port.toml` führt zu Exit 2 mit verständlicher Diagnose.
+
+## M4.3 `extract`, `ir`
+
+**Schritte**
+1. `extract`: Eingabe-Datei prüfen (Existenz, SHA-256 gegen Manifest), Ergebnis in `.port/`.
+2. `ir`: Frontend aufrufen (M2), IR in `ir/` schreiben (kanonisch, atomar).
+
+**Abnahme**
+- [ ] Hash-Abweichung führt zu Exit 3.
+- [ ] Zweiter `ir`-Lauf ohne Änderung schreibt keine Dateien neu (Zeitstempel/Inhalt unverändert).
+- [ ] Ohne .NET SDK: klare Fehlermeldung, Tests des Frontends werden übersprungen und benannt.
+
+## M4.4 `gen`, `build`, `status`
+
+**Schritte**
+1. `gen`: Generator aufrufen, Ergebnis in `gen/`, `todo`-Liste in `data` und `diagnostics`.
+2. `build`: Java kompilieren (`javax.tools`), Fehler → Exit 7.
+3. `status`: Phase, Anzahl Klassen, offene `@manual`, geänderte IR-Knoten (soweit ohne Index möglich, sonst Zähler 0 mit Hinweis).
+4. `--from`/`--only` für Lifecycle-Befehle.
+
+**Abnahme**
+- [ ] Auf dem Testspiel laufen `init → extract → ir → gen → build` durch, `status` zeigt konsistente Werte.
+- [ ] Kompilierfehler im generierten Java erzeugt Exit 7 mit Diagnose.
+- [ ] `--strict` macht offene `@manual`-Stellen zu Exit 5.
+
+## M4.5 Abschluss
+- [ ] `docs/cli-contract.md` und `docs/modules/port-cli.md` entsprechen dem Stand.
+- [ ] Abweichungen vom Vertrag (falls nötig) sind als ADR eingetragen und mit dem Nutzer abgestimmt.
+
+## Nicht-Ziele
+Index, Suchbefehle, Lint, `ir --update`, `deps`, `adapter`-Befehle, GraalVM Native Image (kommen in M5 bis M10).

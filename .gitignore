@@ -1,0 +1,22 @@
+# Originaldateien kommerzieller Spiele, nie committen
+original/
+
+# Port-Projekte (AGENTS.md, Regel 5)
+input/
+gen/
+.port/
+
+# Build-Ausgaben
+target/
+bin/
+obj/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+*.swp
+.DS_Store

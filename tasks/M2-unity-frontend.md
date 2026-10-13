@@ -1,0 +1,65 @@
+# M2: Unity-Frontend (C# → IR)
+
+**Ziel:** Ein .NET-Programm, das eine Unity-Mono-Assembly in IR umwandelt, plus Java-Wrapper. Getestet mit synthetischen Fixtures, nicht mit echten Spielen.
+
+**Eingaben:** `AGENTS.md`, `docs/ir-spec.md`, `docs/modules/frontend-unity.md`, `docs/modules/ir.md`, `docs/decisions.md` (ADR-003, ADR-005).
+
+**Abhängigkeiten/Entscheidungen**
+- M0 ist abgeschlossen (IR-Reader/Printer/Validator stehen).
+- **ADR-005 (separater .NET-Prozess)** ist `PROPOSED`. Du darfst folgen und weist im Bericht darauf hin.
+- Das .NET SDK muss vorhanden sein. Wenn nicht: sage es klar, überspringe nicht stillschweigend, und liefere zumindest die Fixtures und den Java-Wrapper mit Tests gegen vorab erzeugte Beispielausgabe.
+
+---
+
+## M2.1 Fixtures
+
+**Schritte**
+1. `testdata/unity-stubs/`: C#-Projekt `UnityEngine.Stubs` mit **nur den Signaturen**, die die Fixtures brauchen (`MonoBehaviour`, `Component`, `Transform`, `Vector3` als `struct` mit Operatoren, `Input`, `Time`, `Mathf` o. Ä.). Keine Implementierung.
+2. `testdata/unity-sources/`: kleine Spielklassen (`Mover.cs` aus Spec-Beispiel, ein Zähler, eine Klasse mit `if`/`for`/`switch`, eine mit einem Feld und Property). Die Fixtures nutzen nur Primitive und `string` aus dem BCL, keine Collections (die kommen in M3a).
+3. Skript oder MSBuild-Ziel, das daraus eine Test-Assembly `Assembly-CSharp.dll` baut (nicht eingecheckt, wird erzeugt).
+
+**Abnahme**
+- [ ] `dotnet build testdata/...` erzeugt die Test-Assembly reproduzierbar.
+
+## M2.2 Dekompilierung in IR, Grundumfang
+
+**Schritte**
+1. .NET-Konsolenprogramm `port-frontend-unity` (siehe `docs/modules/frontend-unity.md`), Aufruf `--assembly <dll> --out <ir>`.
+2. Mit `ICSharpCode.Decompiler` Typen, Felder, Properties, Methoden, Konstruktoren auslesen.
+3. Ausdrücke und Anweisungen nach IR (Spec Abschnitte 5 bis 7): `local`, `set`, `if`, `while`, `for`, `foreach`, `switch` (ohne Durchfallen), `return`, Aufrufe (`call`, `scall`, `new`), Operatoren, Felder, Properties, Literale mit Typsuffix.
+4. Operatoren auf eigenen Typen als `scall ...::op_*` (Spec Regel Abschnitt 7).
+5. Alle Referenzen voll aufgelöst als `mref` mit Signatur.
+
+**Abnahme**
+- [ ] Für `Mover.cs` entsteht die IR aus Spec Abschnitt 10, nach Kanonisierung durch den Java-`IrPrinter` byte-gleich zum Golden File.
+- [ ] Für die weiteren Fixtures liegen Golden Files unter `testdata/golden/ir/`.
+- [ ] Die erzeugte IR besteht den Validator (keine IR001–IR005).
+- [ ] Zwei Läufe erzeugen bytegleiche Ausgabe (Determinismus).
+
+## M2.3 Nicht übersetzbare Konstrukte
+
+**Schritte**
+1. Unbekannte oder nicht unterstützte Konstrukte (z. B. `unsafe`, komplexes LINQ) werden zu `(raw cs "<Originalcode>")` und das Member bekommt `:manual "<Grund>"`.
+2. Das Programm bricht nicht ab, es meldet die Anzahl auf stderr.
+
+**Abnahme**
+- [ ] Eine Fixture mit `unsafe`-Block erzeugt `raw` und `:manual`, der Rest der Klasse wird normal übersetzt.
+- [ ] Das Programm endet mit Exit-Code 0 und einer Zusammenfassung, wenn nur `raw`-Stellen auftreten (die Behandlung als Fehler ist Sache des CLI-Vertrags, Exit 4 nur bei echten Abstürzen/Unlesbarkeit).
+
+## M2.4 Java-Wrapper
+
+**Schritte**
+1. Modul `frontend-unity/java`: Findet das .NET-Programm (Konfiguration, sonst `PATH`), startet den Prozess, liest die Ausgabe, parst mit `IrReader`, druckt kanonisch.
+2. Fehlerabbildung: Prozessfehler → `PortException` mit Hinweis auf Exit-Code des CLI-Vertrags.
+
+**Abnahme**
+- [ ] Wrapper-Test mit vorab erzeugter IR-Datei (ohne .NET), prüft Kanonisierung.
+- [ ] Integrationstest mit .NET-Programm läuft nur, wenn `dotnet` vorhanden ist, sonst wird er übersprungen und im Testbericht als übersprungen sichtbar (Assumption).
+- [ ] Ungültige Ausgabe des Programms führt zu klarer Fehlermeldung mit Position.
+
+## M2.5 Abschluss
+- [ ] `docs/modules/frontend-unity.md` entspricht dem Stand.
+- [ ] Bekannte Lücken (nicht unterstützte Konstrukte) stehen als Liste in `PROGRESS.md`.
+
+## Nicht-Ziele
+IL2CPP, Szenen/Prefabs, Optimierung des IR, Godot-Frontend.
