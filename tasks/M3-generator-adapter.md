@@ -37,10 +37,10 @@
 5. Nicht unterstützte Konstrukte (Coroutines, Events, `raw`) erzeugen `todo`-Blöcke und werden in der Ergebnisliste gemeldet.
 
 **Abnahme**
-- [ ] Golden-File-Test: IR des `Mover` ergibt das erwartete `MoverBase.java` (`testdata/golden/java/`).
-- [ ] Generierter Code ist deterministisch und google-java-format-konform.
-- [ ] Unbekannte Konstrukte erzeugen `todo` mit Symbol und werden gemeldet.
-- [ ] Der Generator hat keine Abhängigkeit auf `adapter-*` oder `engine-*` (ArchUnit).
+- [x] Golden-File-Test: IR des `Mover` ergibt das erwartete `MoverBase.java` (`testdata/golden/java/`).
+- [x] Generierter Code ist deterministisch und google-java-format-konform.
+- [x] Unbekannte Konstrukte erzeugen `todo` mit Symbol und werden gemeldet.
+- [x] Der Generator hat keine Abhängigkeit auf `adapter-*` oder `engine-*` (ArchUnit).
 
 ## M3.3 End-to-End
 

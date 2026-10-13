@@ -18,6 +18,7 @@
     <module>engine-core</module>
     <module>frontend-unity/java</module>
     <module>engines/unity/adapter-unity</module>
+    <module>generator-java</module>
   </modules>
 
   <properties>
