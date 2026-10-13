@@ -5,7 +5,7 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 ## Aktueller Stand
 
 - Phase: **M2 abgeschlossen** (alle Abnahmekriterien in `tasks/M2-unity-frontend.md` inklusive M2.6 erfüllt; `scripts/build-dotnet.sh` und `./mvnw -q verify` grün)
-- M0 und M1 sind nach `main` gemergt (lokal, kein Remote). M2 liegt auf Branch `task/M2-unity-frontend`, noch nicht gemergt.
+- M0, M1 und M2 sind nach `main` gemergt (lokal, kein Remote).
 - Nächste Aufgabe laut `tasks/README.md`: `tasks/M3-generator-adapter.md`. Davor die Spec-Lücken unten klären.
 - Letzte Session: 2026-10-13, M0.2 bis M0.7, ADR-024, M1.1 bis M1.6, M2.1 bis M2.6
 
