@@ -20,3 +20,7 @@ obj/
 .settings/
 *.swp
 .DS_Store
+
+# Lokale Spiel-Builds des Nutzers (groß, enthalten Unity-DLLs). Eingecheckt wird nur
+# die Spiel-Assembly unter testdata/starcollector/ (siehe README dort).
+testdata/Builds/
