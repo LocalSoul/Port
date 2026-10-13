@@ -1,0 +1,17 @@
+{
+  "schema": "port/1",
+  "command": "extract",
+  "ok": false,
+  "exitCode": 3,
+  "data": {},
+  "diagnostics": [
+    {
+      "id": "PORT-HASH",
+      "severity": "error",
+      "symbol": null,
+      "message": "SHA-256 von input/Assembly-CSharp.dll stimmt nicht mit port.toml überein",
+      "location": "input/Assembly-CSharp.dll",
+      "hint": "Eingabe prüfen oder sha256 in port.toml anpassen"
+    }
+  ]
+}

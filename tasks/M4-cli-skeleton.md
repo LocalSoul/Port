@@ -23,8 +23,8 @@
 3. Ergebnisobjekt pro Befehl, zentrale Ableitung des Exit-Codes, Renderer für Text und JSON-Hülle.
 
 **Abnahme**
-- [ ] JSON-Hülle entspricht dem Vertrag (`schema`, `command`, `ok`, `exitCode`, `data`, `diagnostics`), Golden-File-Test.
-- [ ] Mit `--json` steht auf stdout genau ein JSON-Objekt, sonst nichts.
+- [x] JSON-Hülle entspricht dem Vertrag (`schema`, `command`, `ok`, `exitCode`, `data`, `diagnostics`), Golden-File-Test.
+- [x] Mit `--json` steht auf stdout genau ein JSON-Objekt, sonst nichts.
 - [ ] Alle Exit-Codes des Vertrags sind in einem Testfall erreichbar oder als „noch nicht erreichbar" dokumentiert.
 
 ## M4.2 `init` und Manifest

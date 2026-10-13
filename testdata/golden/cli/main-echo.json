@@ -1,0 +1,11 @@
+{
+  "schema": "port/1",
+  "command": "echo",
+  "ok": true,
+  "exitCode": 0,
+  "data": {
+    "projectDir": "<work>/games/demo",
+    "strict": false
+  },
+  "diagnostics": []
+}

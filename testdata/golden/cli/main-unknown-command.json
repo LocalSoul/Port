@@ -1,0 +1,17 @@
+{
+  "schema": "port/1",
+  "command": "port",
+  "ok": false,
+  "exitCode": 2,
+  "data": {},
+  "diagnostics": [
+    {
+      "id": "PORT-ARGS",
+      "severity": "error",
+      "symbol": null,
+      "message": "Unmatched argument at index 1: 'gibtsnicht'",
+      "location": null,
+      "hint": "port --help"
+    }
+  ]
+}

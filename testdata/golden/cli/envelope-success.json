@@ -1,0 +1,39 @@
+{
+  "schema": "port/1",
+  "command": "gen",
+  "ok": true,
+  "exitCode": 0,
+  "data": {
+    "files": [
+      "gen/a/Foo.java",
+      "gen/a/FooBase.java"
+    ],
+    "todoCount": 1
+  },
+  "diagnostics": [
+    {
+      "id": "PORT-LATER",
+      "severity": "info",
+      "symbol": null,
+      "message": "geänderte IR-Knoten brauchen den Index (M5)",
+      "location": null,
+      "hint": null
+    },
+    {
+      "id": "PORT-TODO",
+      "severity": "warn",
+      "symbol": "Foo::Baz#",
+      "message": "Lambda",
+      "location": "ir/Foo.ir:9:12",
+      "hint": null
+    },
+    {
+      "id": "PORT-TODO",
+      "severity": "warn",
+      "symbol": "Foo::Bar#",
+      "message": "externes Symbol",
+      "location": "ir/Foo.ir:10:3",
+      "hint": null
+    }
+  ]
+}
