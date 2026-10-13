@@ -5,6 +5,8 @@ original/
 input/
 gen/
 .port/
+# Ausnahme: Golden Files des Generators sind Testdaten, kein Port-Projekt-Code
+!testdata/golden/java/gen/
 
 # Build-Ausgaben
 target/
