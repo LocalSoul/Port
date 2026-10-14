@@ -38,6 +38,7 @@
     <archunit.version>1.5.0</archunit.version>
     <picocli.version>4.7.7</picocli.version>
     <tomlj.version>1.1.1</tomlj.version>
+    <sqlite-jdbc.version>3.53.4.0</sqlite-jdbc.version>
 
     <!-- Plugins -->
     <maven-clean-plugin.version>3.5.0</maven-clean-plugin.version>
@@ -76,6 +77,11 @@
         <groupId>org.tomlj</groupId>
         <artifactId>tomlj</artifactId>
         <version>${tomlj.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.xerial</groupId>
+        <artifactId>sqlite-jdbc</artifactId>
+        <version>${sqlite-jdbc.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
