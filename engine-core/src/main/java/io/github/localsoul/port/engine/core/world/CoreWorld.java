@@ -173,6 +173,9 @@ public final class CoreWorld implements World {
     checkWritable(type);
     SparseSetStore<?> store = storeFor(type);
     if (!store.contains(entity)) {
+      if (deferring && buffer.replacePendingAdd(entity, component)) {
+        return;
+      }
       throw new MissingComponentException(
           "Entity " + entity + " hat kein " + type.getSimpleName() + " (set ersetzt nur)");
     }

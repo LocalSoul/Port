@@ -47,7 +47,7 @@ class MoverEndToEndTest {
     MonoBehaviour mover =
         (MonoBehaviour)
             classes.loadClass("gen.fixtures.Mover").getDeclaredConstructor().newInstance();
-    player.addComponent(mover);
+    player.attachScript(mover);
     engine.step(FRAMES);
     return new Run(player.transform().position(), engine.world().dump());
   }

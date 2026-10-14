@@ -44,6 +44,24 @@ class CoreWorldTest {
   }
 
   @Test
+  void setReplacesAPendingAddDuringAPhase() {
+    CoreWorld world = new CoreWorld();
+    world.registerComponent(Health.class);
+    world.beginPhase();
+    Entity entity = world.create();
+    world.add(entity, new Health(1));
+    world.set(entity, new Health(2));
+    assertFalse(world.has(entity, Health.class));
+    world.endPhase();
+    assertEquals(new Health(2), world.get(entity, Health.class));
+    world.beginPhase();
+    world.remove(entity, Health.class);
+    Entity other = world.create();
+    assertThrows(MissingComponentException.class, () -> world.set(other, new Health(3)));
+    world.endPhase();
+  }
+
+  @Test
   void registersCustomComponentAttachesAndQueries() {
     CoreWorld world = new CoreWorld();
     world.registerComponent(Health.class);

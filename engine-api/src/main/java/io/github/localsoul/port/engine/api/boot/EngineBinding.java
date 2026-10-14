@@ -20,6 +20,14 @@ public interface EngineBinding {
   String adapter();
 
   /**
+   * Übernimmt Einstellungen des Starts vor {@link #install}, z. B. {@code seed} für Zufallszahlen.
+   * Unbekannte Schlüssel werden ignoriert.
+   *
+   * @param settings Schlüssel und Werte
+   */
+  default void configure(java.util.Map<String, String> settings) {}
+
+  /**
    * Bindet den Adapter an die Engine (Komponenten, Callbacks).
    *
    * @param engine Engine vor dem ersten Frame

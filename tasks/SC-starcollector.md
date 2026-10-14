@@ -14,9 +14,9 @@
 - [x] Golden-/Unit-Tests je Regel, google-java-format grün.
 
 ## S2 Adapter (Repo `engines/unity`)
-- [ ] Alle von StarCollector genutzten Unity-APIs in Adapter, Mapping und Metadaten.
-- [ ] `port -C games/starcollector lint` ohne SH001.
-- [ ] Tests je Bereich (Structs, Input, Object/Destroy, Texturen/Sprites, GUI).
+- [x] Alle von StarCollector genutzten Unity-APIs in Adapter, Mapping und Metadaten.
+- [x] `port -C games/starcollector lint` ohne SH001.
+- [x] Tests je Bereich (Structs, Input, Object/Destroy, Texturen/Sprites, GUI).
 
 ## S3 Engine (neutral)
 - [x] Komponenten für Textur, Sprite, Kamera, UI; Schnittstelle `RenderBackend`; Tasten-/Fenster-Ereignisse.

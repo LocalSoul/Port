@@ -1,5 +1,6 @@
 package gen.fixtures;
 
+import io.github.localsoul.adapter.unity.Mathf;
 import io.github.localsoul.adapter.unity.MonoBehaviour;
 
 /** Generiert aus dem IR-Typ {@code Holder}. Nicht bearbeiten, Handarbeit in der Unterklasse. */
@@ -19,8 +20,7 @@ public abstract class HolderBase extends MonoBehaviour {
   }
 
   public void level(int value) {
-    throw new UnsupportedOperationException(
-        "PORT-TODO: Holder::Level:set: externer Typ UnityEngine.Mathf ohne Mapping");
+    this.level = Mathf.clamp(value, 0, 10);
   }
 
   @Override

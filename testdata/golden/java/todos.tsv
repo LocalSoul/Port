@@ -1,5 +1,4 @@
 Counter::Update#	externes Symbol UnityEngine.Input::GetKey#string ohne Mapping (static-method/operator)
 Edges::producer	Initialisierer entfällt: raw cs
-Holder::Level:set	externer Typ UnityEngine.Mathf ohne Mapping
 UnsafeBits	Klasse braucht Handarbeit: manual/UnsafeBits.java extends UnsafeBitsBase
 UnsafeBits::First#i32[]	Handarbeit in manual/: raw cs

@@ -74,12 +74,14 @@ public interface World {
   <T> void add(Entity entity, T component);
 
   /**
-   * Ersetzt den Wert einer vorhandenen Komponente. Wirkt sofort und ist keine Strukturänderung.
+   * Ersetzt den Wert einer vorhandenen Komponente. Wirkt sofort und ist keine Strukturänderung. Ist
+   * die Komponente in dieser Phase hinzugefügt worden und noch ausstehend, ersetzt {@code set} den
+   * ausstehenden Wert (er wird am Phasenende sichtbar).
    *
    * @param <T> Komponententyp
    * @param entity Entity
    * @param component neuer Wert, nicht {@code null}
-   * @throws MissingComponentException wenn die Entity keine Komponente dieses Typs hat
+   * @throws MissingComponentException wenn die Entity keine Komponente dieses Typs hat oder bekommt
    */
   <T> void set(Entity entity, T component);
 
