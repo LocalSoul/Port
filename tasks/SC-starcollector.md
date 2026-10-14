@@ -29,7 +29,7 @@
 - [x] `launcher-boot`: `--render`, `--realtime`, `--seed`, `--screenshot`; Profil `starcollector-unity` im Fenster.
 
 ## S6 End-to-End
-- [ ] Headless-Test über die echte Pipeline (Offscreen, fester Seed, Eingabeskript): Sterne, Einsammeln, Zeitablauf, Neustart, Screenshot-Prüfung.
+- [x] Headless-Test über die echte Pipeline (Offscreen, fester Seed, Eingabeskript): Sterne, Einsammeln, Zeitablauf, Neustart, Screenshot-Prüfung.
 - [ ] Von Hand spielbar über `port launch run starcollector-unity`.
 
 ## S7 Abschluss
