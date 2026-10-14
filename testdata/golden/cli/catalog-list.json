@@ -1,0 +1,42 @@
+{
+  "schema": "port/1",
+  "command": "catalog list",
+  "ok": true,
+  "exitCode": 0,
+  "data": {
+    "items": [
+      {
+        "name": "demo",
+        "kind": "game",
+        "path": "games/demo"
+      },
+      {
+        "name": "godot",
+        "kind": "engine",
+        "path": "engines/godot"
+      },
+      {
+        "name": "unity",
+        "kind": "engine",
+        "path": "engines/unity"
+      },
+      {
+        "name": "input-godot-like",
+        "kind": "provider",
+        "path": "engines/godot/providers/input-godot-like"
+      }
+    ],
+    "total": 4,
+    "next": null
+  },
+  "diagnostics": [
+    {
+      "id": "PORT-CATALOG",
+      "severity": "warn",
+      "symbol": null,
+      "message": "Pflichtfeld fehlt: project.name",
+      "location": "games/kaputt/port.toml",
+      "hint": "siehe docs/projects.md, Manifeste"
+    }
+  ]
+}

@@ -15,6 +15,8 @@ final class Commands {
         new LifecycleCommand(Phase.IR, "IR mit dem Frontend erzeugen (ir/)."),
         new LifecycleCommand(Phase.GEN, "Java aus der IR erzeugen (gen/)."),
         new LifecycleCommand(Phase.BUILD, "gen/ und manual/ kompilieren (.port/classes)."),
-        new StatusCommand());
+        new StatusCommand(),
+        new CatalogListCommand(),
+        new CatalogShowCommand());
   }
 }

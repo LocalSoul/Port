@@ -20,9 +20,9 @@
 2. `port catalog list` und `port catalog show`.
 
 **Abnahme:**
-- [ ] Katalog gegen ein synthetisches Mini-Repo mit einem Spiel und zwei Engines (`@TempDir`), Ausgabe deterministisch sortiert.
-- [ ] `--json` mit Golden File, Paginierung funktioniert.
-- [ ] Ein defektes Unterprojekt erscheint als Diagnose, bricht den Katalog nicht ab.
+- [x] Katalog gegen ein synthetisches Mini-Repo mit einem Spiel und zwei Engines (`@TempDir`), Ausgabe deterministisch sortiert.
+- [x] `--json` mit Golden File, Paginierung funktioniert.
+- [x] Ein defektes Unterprojekt erscheint als Diagnose, bricht den Katalog nicht ab.
 
 ## M4a.3 Profile und Prüfung
 1. Profilformat laut `docs/projects.md`, Lesen und Schreiben (`port launch new`, `list`).

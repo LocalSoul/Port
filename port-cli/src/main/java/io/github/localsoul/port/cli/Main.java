@@ -84,17 +84,22 @@ public final class Main {
       commandLine.usage(out);
       return ExitCode.SUCCESS.code();
     }
-    ParseResult sub = parsed.subcommand();
-    if (sub == null) {
-      return failArgs("port", "Befehl fehlt", flag(parsed, null, JSON), out, err);
+    List<ParseResult> chain = chain(parsed);
+    ParseResult sub = chain.get(chain.size() - 1);
+    if (chain.size() == 1) {
+      return failArgs("port", "Befehl fehlt", flag(chain, JSON), out, err);
     }
     if (sub.isUsageHelpRequested()) {
       sub.commandSpec().commandLine().usage(out);
       return ExitCode.SUCCESS.code();
     }
-    boolean json = flag(parsed, sub, JSON);
-    CommandContext context = context(parsed, sub, workingDir, err, platformHome);
-    PortCommand command = command(sub.commandSpec().name());
+    String commandName = commandName(chain);
+    if (!hasCommand(commandName)) {
+      return failArgs(commandName, "Unterbefehl fehlt", flag(chain, JSON), out, err);
+    }
+    boolean json = flag(chain, JSON);
+    CommandContext context = context(chain, workingDir, err, platformHome);
+    PortCommand command = command(commandName);
     CommandResult result;
     try {
       result = command.run(sub, context);
@@ -139,9 +144,28 @@ public final class Main {
     root.addOption(flag(OFFLINE, "keine Netzwerkzugriffe (in M4 ohne Wirkung)"));
     root.addOption(flag(STRICT, "offene Handarbeit als Fehler (Exit 5)"));
     for (PortCommand command : commands) {
-      root.addSubcommand(command.name(), command.spec());
+      String name = command.name();
+      int space = name.indexOf(' ');
+      if (space < 0) {
+        root.addSubcommand(name, command.spec());
+        continue;
+      }
+      String group = name.substring(0, space);
+      CommandSpec groupSpec =
+          root.subcommands().containsKey(group)
+              ? root.subcommands().get(group).getCommandSpec()
+              : addGroup(root, group);
+      groupSpec.addSubcommand(name.substring(space + 1), command.spec());
     }
     return root;
+  }
+
+  /** Gruppe wie {@code catalog} ohne eigene Ausführung, nur mit Unterbefehlen. */
+  private static CommandSpec addGroup(CommandSpec root, String group) {
+    CommandSpec spec = CommandSpec.create().name(group);
+    spec.usageMessage().description("Befehle unter " + group + " (port " + group + " --help)");
+    root.addSubcommand(group, spec);
+    return root.subcommands().get(group).getCommandSpec();
   }
 
   private static OptionSpec flag(String name, String description) {
@@ -153,30 +177,64 @@ public final class Main {
         .build();
   }
 
-  /** Globale Flags dürfen vor oder nach dem Unterbefehl stehen. */
-  private static boolean flag(ParseResult root, ParseResult sub, String name) {
-    if (root.hasMatchedOption(name)) {
-      return true;
+  /** Wurzel, ggf. Gruppe und Befehl in Aufrufreihenfolge. */
+  private static List<ParseResult> chain(ParseResult root) {
+    List<ParseResult> chain = new ArrayList<>();
+    ParseResult current = root;
+    while (current != null) {
+      chain.add(current);
+      current = current.subcommand();
     }
-    return sub != null && sub.hasMatchedOption(name);
+    return chain;
+  }
+
+  /** Befehlsname ohne {@code port}, z. B. {@code catalog list}. */
+  private static String commandName(List<ParseResult> chain) {
+    StringBuilder name = new StringBuilder();
+    for (int i = 1; i < chain.size(); i++) {
+      name.append(i == 1 ? "" : " ").append(chain.get(i).commandSpec().name());
+    }
+    return name.toString();
+  }
+
+  /** Globale Flags dürfen vor, zwischen oder nach den Befehlswörtern stehen. */
+  private static boolean flag(List<ParseResult> chain, String name) {
+    for (ParseResult result : chain) {
+      if (result.hasMatchedOption(name)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static CommandContext context(
-      ParseResult root, ParseResult sub, Path workingDir, PrintStream err, Path platformHome) {
-    String directory = sub.matchedOptionValue(DIRECTORY, null);
-    if (directory == null) {
-      directory = root.matchedOptionValue(DIRECTORY, null);
+      List<ParseResult> chain, Path workingDir, PrintStream err, Path platformHome) {
+    String directory = null;
+    for (ParseResult result : chain) {
+      String value = result.matchedOptionValue(DIRECTORY, null);
+      if (value != null) {
+        directory = value;
+      }
     }
     Path projectDir = directory == null ? workingDir : workingDir.resolve(directory);
     return new CommandContext(
         workingDir,
         projectDir.toAbsolutePath().normalize(),
-        flag(root, sub, STRICT),
-        flag(root, sub, VERBOSE),
-        flag(root, sub, QUIET),
-        flag(root, sub, OFFLINE),
+        flag(chain, STRICT),
+        flag(chain, VERBOSE),
+        flag(chain, QUIET),
+        flag(chain, OFFLINE),
         err,
         platformHome);
+  }
+
+  private boolean hasCommand(String name) {
+    for (PortCommand command : commands) {
+      if (command.name().equals(name)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private PortCommand command(String name) {
@@ -190,7 +248,13 @@ public final class Main {
 
   private static String commandName(ParameterException e) {
     CommandSpec spec = e.getCommandLine().getCommandSpec();
-    return spec.parent() == null ? "port" : spec.name();
+    if (spec.parent() == null) {
+      return "port";
+    }
+    if (spec.parent().parent() == null) {
+      return spec.name();
+    }
+    return spec.parent().name() + " " + spec.name();
   }
 
   private static boolean contains(String[] args, String name) {

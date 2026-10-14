@@ -1,0 +1,23 @@
+{
+  "schema": "port/1",
+  "command": "catalog show",
+  "ok": true,
+  "exitCode": 0,
+  "data": {
+    "name": "unity",
+    "kind": "engine",
+    "path": "engines/unity",
+    "provides": {
+      "adapter": "unity",
+      "api": "2022.3",
+      "coreApi": ">=0.1 <0.2",
+      "providers": []
+    },
+    "module": "adapter-unity",
+    "coverage": {
+      "full": 2,
+      "stub": 1
+    }
+  },
+  "diagnostics": []
+}
