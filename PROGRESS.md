@@ -4,8 +4,8 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 
 ## Aktueller Stand
 
-- Phase: **M4a abgeschlossen** auf Branch `task/M4a-launcher` (alle Abnahmekriterien in `tasks/M4a-launcher.md` erfüllt; `scripts/build-dotnet.sh` und `./mvnw -q verify` grün). Spiele und Engines sind eigene Repos (Submodule), `port catalog` und `port launch` stellen Profile zusammen, `port launch run demo-unity` startet das Testspiel in eigener JVM. Merge nach `main` steht aus (Nutzer entscheidet).
-- M0 bis M4, ADR-019 und ADR-025 sind auf `main` (lokal, kein Remote).
+- Phase: **M4a abgeschlossen** und nach `main` gemergt (alle Abnahmekriterien in `tasks/M4a-launcher.md` erfüllt; `scripts/build-dotnet.sh` und `./mvnw -q verify` grün). Spiele und Engines sind eigene Repos (Submodule), `port catalog` und `port launch` stellen Profile zusammen, `port launch run demo-unity` startet das Testspiel in eigener JVM.
+- M0 bis M4a, ADR-019, ADR-025 und ADR-026 sind auf `main` (lokal, kein Remote).
 - Nächste Aufgabe laut Roadmap: M5 (Index und Suchbefehle).
 - Letzte Session: 2026-10-14, M0.2 bis M4a.5, ADR-019, ADR-024, ADR-025, ADR-026
 
@@ -133,6 +133,7 @@ Alle erscheinen als `raw` + `:manual` bzw. als gemeldeter, übersprungener Typ, 
 ## M4a: Lücken und Beobachtungen
 
 - **Klonen:** Lokale Submodul-URLs verlangt Git ausdrücklich: `git -c protocol.file.allow=always clone --recurse-submodules`. Bei einem späteren Remote braucht jedes Projekt ein eigenes Repo an derselben relativen Stelle (ADR-026).
+- **Branchwechsel über die Umstellung hinweg:** Auf Ständen vor M4a liegt `adapter-unity` als normale Dateien im Monorepo; ein `git checkout` dorthin scheitert, solange das Submodul ausgecheckt ist. Merge nach `main` erfolgte deshalb per `git push . task/M4a-launcher:main` (Fast-Forward ohne Checkout).
 - **Arbeiten mit Submodulen:** Änderungen an `engines/unity` (Adapter) werden zuerst im Engine-Repo committet, danach der Submodul-Stand im Monorepo. Das gilt auch für Agents.
 - **`games/demo`** hat kein `sha256` im Manifest (Hash der Fixture-Assembly hängt an der Compiler-Version); die `ir/` enthält dennoch `:sha256` im Kopf. `RepositoryLayoutTest` vergleicht sie mit den Golden Files ohne Hash. Ändern sich die Fixtures, muss `games/demo/ir` mit `port -C games/demo ir --only` nachgezogen und im Demo-Repo committet werden.
 - **StarCollector** startet bis zur ersten Lücke (`UnityEngine.Screen` in `Start`) und endet mit Exit 1; `input/` (Unity-DLLs) liegt nur lokal.
@@ -210,5 +211,5 @@ Alle erscheinen als `raw` + `:manual` bzw. als gemeldeter, übersprungener Typ, 
 
 - Vor dem Start die Checkliste in `docs/setup.md` prüfen.
 - Layout und Projektarten: `docs/projects.md` lesen (Spiele in `games/`, Engines in `engines/`, ADR-020 PROPOSED).
-- Branch `task/M4a-launcher` nach `main` mergen (Nutzer entscheidet), dann M5 mit dem Nutzer planen. Vor dem Generator-/Golden-Test `scripts/build-dotnet.sh` laufen lassen.
+- M5 (Index und Suchbefehle) mit dem Nutzer planen. Vor dem Generator-/Golden-Test `scripts/build-dotnet.sh` laufen lassen.
 - Ressourcenpfad der Mappings: für die Toolchain über `engines/<e>/port.toml` gelöst (Dateien); Auslieferung als Jar (eindeutige Ressourcenpfade) ist offen, sobald es ein Paket von `port` gibt.
