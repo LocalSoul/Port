@@ -32,9 +32,9 @@
 2. Regeln IR001–IR005, PT001–PT003, SM001, SH001/SH002, MN001–MN004.
 
 **Abnahme**
-- [ ] Je Regel Tests für Treffer und Nicht-Treffer.
-- [ ] Konfiguration: abschalten und Stufe ändern.
-- [ ] ArchUnit: nur `ir` und JDK.
+- [x] Je Regel Tests für Treffer und Nicht-Treffer.
+- [x] Konfiguration: abschalten und Stufe ändern.
+- [x] ArchUnit: nur `ir` und JDK.
 
 ## M6.3 CLI
 
