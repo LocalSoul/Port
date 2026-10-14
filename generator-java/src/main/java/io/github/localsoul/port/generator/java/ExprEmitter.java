@@ -65,6 +65,12 @@ final class ExprEmitter {
   static final int POSTFIX = 14;
   static final int PRIMARY = 15;
 
+  /** Standardwert eines Werttyps (ADR-009): {@code Typ.DEFAULT}. */
+  static final String STRUCT_DEFAULT = "DEFAULT";
+
+  /** Hilfe im Mapping, die ein Array mit einem Wert füllt und zurückgibt. */
+  static final String ARRAY_FILL = "System.Array::Fill#T[],T";
+
   private final TypeContext types;
 
   ExprEmitter(TypeContext types) {
@@ -188,7 +194,11 @@ final class ExprEmitter {
     if (types.isOwnType(ref.declaringType())) {
       return primary(owner + "." + JavaNames.ident(ref.name()));
     }
-    MappingEntry entry = external(ref, MappingForm.STATIC_GETTER);
+    MappingEntry entry = types.mapping().member(ref);
+    if (entry != null && entry.form() == MappingForm.CONSTANT) {
+      return primary(owner + "." + entry.javaSymbol());
+    }
+    entry = external(ref, MappingForm.STATIC_GETTER);
     return primary(owner + "." + entry.javaSymbol() + "()");
   }
 
@@ -231,9 +241,16 @@ final class ExprEmitter {
       String name = JavaNames.member(ref.name());
       return member(receiver, new Doc.Call("." + name, argumentDocs(call.arguments())));
     }
-    MappingEntry entry = types.mapping().entry(ref.symbolId());
+    MappingEntry entry = types.mapping().member(ref);
     if (entry != null && entry.form() == MappingForm.HELPER) {
       return helperCall(ref, entry, call);
+    }
+    if (entry != null && entry.form() == MappingForm.FACTORY) {
+      return factoryCall(ref, entry, call);
+    }
+    if (entry != null && entry.form() == MappingForm.MUTATOR) {
+      throw new TodoException(
+          "mutierende Methode " + ref.symbolId() + " eines Werttyps nur als Statement (ADR-009)");
     }
     JExpr receiver = target(call.target());
     String name = external(ref, MappingForm.METHOD).javaSymbol();
@@ -248,13 +265,23 @@ final class ExprEmitter {
     return new JExpr(new Doc.Call(owner(ref) + "." + entry.javaSymbol(), args), PRIMARY);
   }
 
+  /** Form {@code factory}: {@code ziel.name(Arg::new)} für das eine Methoden-Typargument. */
+  private JExpr factoryCall(MemberRef ref, MappingEntry entry, CallExpr call) {
+    if (ref.genericArguments().size() != 1 || !call.arguments().isEmpty()) {
+      throw new TodoException("factory " + ref.symbolId() + " braucht genau ein Typargument");
+    }
+    String type = types.javaType(ref.genericArguments().get(0));
+    List<Doc> args = List.of(new Doc.Text(type + "::new"));
+    return member(target(call.target()), new Doc.Call("." + entry.javaSymbol(), args));
+  }
+
   private JExpr staticCall(MemberRef ref, List<Expr> args) {
     String owner = owner(ref);
     String name;
     if (types.isOwnType(ref.declaringType())) {
       name = JavaNames.member(ref.name());
     } else {
-      MappingEntry entry = types.mapping().entry(ref.symbolId());
+      MappingEntry entry = types.mapping().member(ref);
       boolean usable =
           entry != null
               && (entry.form() == MappingForm.STATIC_METHOD
@@ -279,8 +306,8 @@ final class ExprEmitter {
     return new JExpr(call, PRIMARY);
   }
 
-  private MappingEntry external(MemberRef ref, MappingForm form) {
-    MappingEntry entry = types.mapping().entry(ref.symbolId());
+  MappingEntry external(MemberRef ref, MappingForm form) {
+    MappingEntry entry = types.mapping().member(ref);
     if (entry == null || entry.form() != form) {
       throw new TodoException(
           "externes Symbol " + ref.symbolId() + " ohne Mapping (" + form.spelling() + ")");
@@ -295,7 +322,21 @@ final class ExprEmitter {
       throw new TodoException("mehrdimensionales Array (SM008)");
     }
     String element = types.javaType(array.elementType());
-    return primary("new " + element + "[" + emit(array.lengths().get(0)).text() + "]");
+    String created = "new " + element + "[" + emit(array.lengths().get(0)).text() + "]";
+    if (!types.isStruct(array.elementType())) {
+      return primary(created);
+    }
+    // Werttypen haben keinen null-Zustand (ADR-009): Elemente mit T.DEFAULT füllen.
+    MappingEntry fill = types.mapping().entry(ARRAY_FILL);
+    if (fill == null || fill.form() != MappingForm.STATIC_METHOD) {
+      throw new TodoException("Array eines Werttyps braucht " + ARRAY_FILL + " im Mapping");
+    }
+    String owner = types.className("System.Array", 0);
+    Doc call =
+        new Doc.Call(
+            owner + "." + fill.javaSymbol(),
+            List.of(new Doc.Text(created), new Doc.Text(element + "." + STRUCT_DEFAULT)));
+    return new JExpr(call, PRIMARY);
   }
 
   private JExpr arrayLiteral(ArrayLitExpr array) {
@@ -428,7 +469,10 @@ final class ExprEmitter {
     return new JExpr(c + " ? " + t + " : " + f, TERNARY);
   }
 
-  private JExpr defaultValue(TypeRef type) {
+  JExpr defaultValue(TypeRef type) {
+    if (types.isStruct(type)) {
+      return primary(types.javaType(type) + "." + STRUCT_DEFAULT);
+    }
     if (!(type instanceof PrimitiveType primitive)) {
       return primary("null");
     }

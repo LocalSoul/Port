@@ -41,6 +41,48 @@ public final class Coverage {
    * @return {@link #FULL}, {@link #STUB} oder {@code null}, wenn es fehlt
    */
   public String status(String symbol) {
-    return status.get(symbol);
+    String exact = status.get(symbol);
+    if (exact != null) {
+      return exact;
+    }
+    return status.get(genericKey(symbol));
+  }
+
+  /**
+   * Methoden-Typargumente durch Platzhalter ersetzt ({@code AddComponent<UnityEngine.X>#} → {@code
+   * AddComponent<T>#}, mehrere: {@code <T1,T2>}), wie der Generator das Mapping sucht.
+   */
+  static String genericKey(String symbol) {
+    int member = symbol.indexOf("::");
+    if (member < 0) {
+      return symbol;
+    }
+    int open = symbol.indexOf('<', member + 2);
+    int hash = symbol.indexOf('#', member + 2);
+    if (open < 0 || (hash >= 0 && open > hash)) {
+      return symbol;
+    }
+    int depth = 0;
+    int count = 1;
+    int close = open;
+    for (int i = open; i < symbol.length(); i++) {
+      char c = symbol.charAt(i);
+      if (c == '<') {
+        depth++;
+      } else if (c == '>') {
+        depth--;
+        if (depth == 0) {
+          close = i;
+          break;
+        }
+      } else if (c == ',' && depth == 1) {
+        count++;
+      }
+    }
+    StringBuilder placeholders = new StringBuilder();
+    for (int i = 1; i <= count; i++) {
+      placeholders.append(i == 1 ? "" : ",").append(count == 1 ? "T" : "T" + i);
+    }
+    return symbol.substring(0, open + 1) + placeholders + symbol.substring(close);
   }
 }

@@ -27,7 +27,22 @@ class JavaGeneratorTest {
           + "System.Exception\tx.sys.SystemException\ttype\n"
           + "System.InvalidOperationException\tx.sys.InvalidOperationException\ttype\n"
           + "System.InvalidOperationException::.ctor#string\tInvalidOperationException\tconstructor\n"
-          + "System.NullReferenceException\tx.sys.NullReferenceException\ttype\n";
+          + "System.NullReferenceException\tx.sys.NullReferenceException\ttype\n"
+          + "Ext.V2\tx.ext.V2\tstruct\n"
+          + "Ext.V2::x\tx\tgetter\n"
+          + "Ext.V2::Normalize#\tnormalized\tmutator\n"
+          + "Ext.T\tx.ext.T\ttype\n"
+          + "Ext.T::pos\tpos\tgetter\n"
+          + "Ext.T::pos:set\tpos\tsetter\n"
+          + "Ext.Screen\tx.ext.Screen\ttype\n"
+          + "Ext.Screen::size\tsize\tstatic-getter\n"
+          + "Ext.Screen::size:set\tsize\tstatic-setter\n"
+          + "Ext.Key\tx.ext.Key\ttype\n"
+          + "Ext.Key::A\tA\tconstant\n"
+          + "Ext.Go\tx.ext.Go\ttype\n"
+          + "Ext.Go::Add<T>#\tadd\tfactory\n"
+          + "System.Array\tx.rt.RuntimeArrays\ttype\n"
+          + "System.Array::Fill#T[],T\tfilled\tstatic-method\n";
 
   private static GenerationResult generate(String body, Set<String> manual) throws Exception {
     GeneratorConfig config = new GeneratorConfig("p", Mapping.parse(MAPPING), manual);
@@ -267,6 +282,67 @@ class JavaGeneratorTest {
     assertEquals("game.demo.Mover", JavaGenerator.javaClassName("game.demo", "Mover"));
     assertEquals(
         "game.demo.game.logic.Enemy", JavaGenerator.javaClassName("game.demo", "Game.Logic.Enemy"));
+  }
+
+  @Test
+  void valueTypesSettersConstantsAndFactories() throws Exception {
+    String text =
+        file(
+            generate(
+                "(class A (field f Ext.V2)"
+                    + " (method M void ((v Ext.V2) (t Ext.T) (g Ext.Go)) (block"
+                    + " (expr (set (field v Ext.V2::x) 1.0f32))"
+                    + " (expr (set-op * (field v Ext.V2::x) 2.0f32))"
+                    + " (expr (post-inc (field v Ext.V2::x)))"
+                    + " (expr (set (field (field this A::f) Ext.V2::x) 0.0f32))"
+                    + " (expr (call v Ext.V2::Normalize#))"
+                    + " (expr (set (prop t Ext.T::pos) v))"
+                    + " (expr (set (sprop Ext.Screen::size) 3i32))"
+                    + " (expr (set-op + (sprop Ext.Screen::size) 1i32))"
+                    + " (local k Ext.Key (sfield Ext.Key::A))"
+                    + " (local c Ext.T (call g Ext.Go::Add<Ext.T>#))"
+                    + " (local arr Ext.V2[] (new-array Ext.V2 4i32))"
+                    + " (local d Ext.V2 (default Ext.V2))"
+                    + " (local e Ext.V2)"
+                    + " (expr (set (field (index arr 0i32) Ext.V2::x) 3.0f32)))))"),
+            "p/ABase.java");
+    for (String expected :
+        List.of(
+            "v = v.withX(1.0f);",
+            "v = v.withX(v.x() * 2.0f);",
+            "v = v.withX(v.x() + 1);",
+            "this.f = this.f.withX(0.0f);",
+            "v = v.normalized();",
+            "t.pos(v);",
+            "Screen.size(3);",
+            "Screen.size(Screen.size() + 1);",
+            "Key k = Key.A;",
+            "T c = g.add(T::new);",
+            "V2[] arr = RuntimeArrays.filled(new V2[4], V2.DEFAULT);",
+            "V2 d = V2.DEFAULT;",
+            "V2 e = V2.DEFAULT;",
+            "arr[0] = arr[0].withX(3.0f);")) {
+      assertTrue(text.contains(expected), expected + "\n" + text);
+    }
+    assertEquals(text, new com.google.googlejavaformat.java.Formatter().formatSource(text));
+  }
+
+  @Test
+  void genericKeyReplacesMethodTypeArguments() {
+    assertEquals(
+        "UnityEngine.GameObject::AddComponent<T>#",
+        Mapping.genericKey("UnityEngine.GameObject::AddComponent<UnityEngine.SpriteRenderer>#", 1));
+    assertEquals("A<i32>::M<T1,T2>#x", Mapping.genericKey("A<i32>::M<B,C<D,E>>#x", 2));
+    assertEquals("A::M#", Mapping.genericKey("A::M#", 0));
+  }
+
+  @Test
+  void mutatorAsExpressionIsTodo() throws Exception {
+    GenerationResult result =
+        generate(
+            "(class A (method M Ext.V2 ((v Ext.V2)) (block (return (call v Ext.V2::Normalize#)))))");
+    assertTrue(
+        result.todos().get(0).reason().contains("nur als Statement"), result.todos().toString());
   }
 
   @Test

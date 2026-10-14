@@ -127,21 +127,89 @@ public final class Mapping {
    * @return voll qualifizierter Java-Name oder {@code null}
    */
   public String javaType(String irType, int arity) {
+    MappingEntry entry = typeEntry(irType, arity);
+    return entry == null ? null : entry.javaSymbol();
+  }
+
+  /**
+   * {@code true}, wenn der Typ als Werttyp (Form {@code struct}, ADR-009) abgebildet ist.
+   *
+   * @param irType qualifizierter IR-Typname ohne Typargumente
+   * @param arity Anzahl der Typargumente
+   * @return Werttyp
+   */
+  public boolean isStruct(String irType, int arity) {
+    MappingEntry entry = typeEntry(irType, arity);
+    return entry != null && entry.form() == MappingForm.STRUCT;
+  }
+
+  /**
+   * Eintrag eines Members: zuerst die genaue Symbol-ID, bei generischen Methoden danach die Form
+   * mit Platzhaltern ({@code AddComponent<T>#}, mehrere: {@code <T1,T2>}).
+   *
+   * @param ref Member-Referenz
+   * @return Eintrag oder {@code null}
+   */
+  public MappingEntry member(io.github.localsoul.port.ir.atom.MemberRef ref) {
+    MappingEntry exact = entries.get(ref.symbolId());
+    if (exact != null || ref.genericArguments().isEmpty()) {
+      return exact;
+    }
+    return entries.get(genericKey(ref.symbolId(), ref.genericArguments().size()));
+  }
+
+  /**
+   * Symbol-ID mit Platzhaltern statt Methoden-Typargumenten: {@code T} bei einem, {@code T1,T2,...}
+   * bei mehreren.
+   *
+   * @param symbolId Symbol-ID mit konkreten Typargumenten
+   * @param count Anzahl der Methoden-Typargumente
+   * @return z. B. {@code UnityEngine.GameObject::AddComponent<T>#}
+   */
+  public static String genericKey(String symbolId, int count) {
+    int member = symbolId.indexOf("::") + 2;
+    int open = symbolId.indexOf('<', member);
+    int hash = symbolId.indexOf('#', member);
+    if (open < 0 || (hash >= 0 && open > hash)) {
+      return symbolId;
+    }
+    int depth = 0;
+    int close = open;
+    for (int i = open; i < symbolId.length(); i++) {
+      char c = symbolId.charAt(i);
+      if (c == '<') {
+        depth++;
+      } else if (c == '>') {
+        depth--;
+        if (depth == 0) {
+          close = i;
+          break;
+        }
+      }
+    }
+    StringBuilder placeholders = new StringBuilder();
+    for (int i = 1; i <= count; i++) {
+      placeholders.append(i == 1 ? "" : ",").append(count == 1 ? "T" : "T" + i);
+    }
+    return symbolId.substring(0, open + 1) + placeholders + symbolId.substring(close);
+  }
+
+  private MappingEntry typeEntry(String irType, int arity) {
     if (arity > 0) {
-      String withArity = typeSymbol(irType + "/" + arity);
+      MappingEntry withArity = typeRow(irType + "/" + arity);
       if (withArity != null) {
         return withArity;
       }
     }
-    return typeSymbol(irType);
+    return typeRow(irType);
   }
 
-  private String typeSymbol(String key) {
+  private MappingEntry typeRow(String key) {
     MappingEntry entry = entries.get(key);
-    if (entry == null || entry.form() != MappingForm.TYPE) {
+    if (entry == null || (entry.form() != MappingForm.TYPE && entry.form() != MappingForm.STRUCT)) {
       return null;
     }
-    return entry.javaSymbol();
+    return entry;
   }
 
   /**

@@ -2,6 +2,7 @@
 # Spalten: IR-Symbol (Symbol-ID nach ADR-025, Typzeilen optional mit /Stelligkeit), Java-Symbol, Form
 # Form helper: Instanzmethode als statische Hilfe, Empfänger als erstes Argument.
 # Sortiert nach IR-Symbol. Kommentarzeilen beginnen mit #.
+# System.Array::Fill#T[],T füllt und liefert das Array (Generator: Arrays von Werttypen, ADR-009).
 System.Action	io.github.localsoul.runtime.system.Action0	type
 System.Action/1	io.github.localsoul.runtime.system.Action1	type
 System.Action/2	io.github.localsoul.runtime.system.Action2	type
@@ -24,6 +25,8 @@ System.ArgumentOutOfRangeException	io.github.localsoul.runtime.system.ArgumentOu
 System.ArgumentOutOfRangeException::.ctor#	ArgumentOutOfRangeException	constructor
 System.ArgumentOutOfRangeException::.ctor#string	ArgumentOutOfRangeException	constructor
 System.ArgumentOutOfRangeException::.ctor#string,string	ArgumentOutOfRangeException	constructor
+System.Array	io.github.localsoul.runtime.system.RuntimeArrays	type
+System.Array::Fill#T[],T	filled	static-method
 System.Boolean	io.github.localsoul.runtime.system.Convert	type
 System.Boolean::ToString#	toString	helper
 System.Char	io.github.localsoul.runtime.system.Convert	type

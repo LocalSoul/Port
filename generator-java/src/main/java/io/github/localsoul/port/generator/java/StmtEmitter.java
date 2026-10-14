@@ -1,5 +1,7 @@
 package io.github.localsoul.port.generator.java;
 
+import io.github.localsoul.port.ir.ast.BinaryExpr;
+import io.github.localsoul.port.ir.ast.BinaryOp;
 import io.github.localsoul.port.ir.ast.BlockStmt;
 import io.github.localsoul.port.ir.ast.BreakStmt;
 import io.github.localsoul.port.ir.ast.CallExpr;
@@ -14,10 +16,13 @@ import io.github.localsoul.port.ir.ast.ForeachStmt;
 import io.github.localsoul.port.ir.ast.IdentExpr;
 import io.github.localsoul.port.ir.ast.IfStmt;
 import io.github.localsoul.port.ir.ast.IncDecExpr;
+import io.github.localsoul.port.ir.ast.IncDecOp;
 import io.github.localsoul.port.ir.ast.LocalStmt;
 import io.github.localsoul.port.ir.ast.LockStmt;
 import io.github.localsoul.port.ir.ast.ManualNode;
 import io.github.localsoul.port.ir.ast.NewExpr;
+import io.github.localsoul.port.ir.ast.NodeAttrs;
+import io.github.localsoul.port.ir.ast.NumberLit;
 import io.github.localsoul.port.ir.ast.PropExpr;
 import io.github.localsoul.port.ir.ast.RawNode;
 import io.github.localsoul.port.ir.ast.ReturnStmt;
@@ -35,6 +40,7 @@ import io.github.localsoul.port.ir.ast.WhileStmt;
 import io.github.localsoul.port.ir.atom.MemberRef;
 import io.github.localsoul.port.ir.atom.NamedType;
 import io.github.localsoul.port.ir.atom.TypeRef;
+import io.github.localsoul.port.ir.sexpr.NumberSuffix;
 import java.util.List;
 
 /**
@@ -107,6 +113,11 @@ final class StmtEmitter {
 
   /** Ausdrucks-Statement mit Umbruch, wo das Layout es zulässt. */
   private void expressionStatement(Expr expr, JavaWriter out) {
+    String structUpdate = structUpdate(expr);
+    if (structUpdate != null) {
+      out.line(structUpdate + ";");
+      return;
+    }
     boolean plainCall =
         expr instanceof CallExpr || expr instanceof StaticCallExpr || expr instanceof NewExpr;
     if (plainCall) {
@@ -146,6 +157,10 @@ final class StmtEmitter {
   private void local(LocalStmt local, JavaWriter out) {
     String declaration = types.javaType(local.type()) + " " + JavaNames.ident(local.name());
     if (local.initializer() == null) {
+      if (types.isStruct(local.type())) {
+        out.line(declaration + " = " + expressions.defaultValue(local.type()).text() + ";");
+        return;
+      }
       out.line(declaration + ";");
       return;
     }
@@ -315,6 +330,10 @@ final class StmtEmitter {
    * new}; Property-Zuweisungen werden zu Setter-Aufrufen.
    */
   String expressionStatement(Expr expr) {
+    String structUpdate = structUpdate(expr);
+    if (structUpdate != null) {
+      return structUpdate;
+    }
     return switch (expr) {
       case SetExpr s when isProperty(s.target()) -> setter(s.target(), expressions.text(s.value()));
       case SetOpExpr s when isProperty(s.target()) -> compoundSetter(s);
@@ -343,9 +362,90 @@ final class StmtEmitter {
       receiver = types.className(ref.declaringType(), ref.declaringTypeArguments().size());
     }
     if (!types.isOwnType(ref.declaringType())) {
-      throw new TodoException("Setter von " + ref.symbolId() + " ohne Mapping");
+      MappingForm form =
+          target instanceof PropExpr ? MappingForm.SETTER : MappingForm.STATIC_SETTER;
+      MappingEntry entry = types.mapping().entry(ref.symbolId() + SETTER_SUFFIX);
+      if (entry == null || entry.form() != form) {
+        throw new TodoException(
+            "Setter von " + ref.symbolId() + " ohne Mapping (" + form.spelling() + ")");
+      }
+      return receiver + "." + entry.javaSymbol() + "(" + value + ")";
     }
     return receiver + "." + JavaNames.member(ref.name()) + "(" + value + ")";
+  }
+
+  // --- Werttypen (ADR-009): Mutationen werden Neuzuweisungen ---
+
+  /** Schlüssel des Setters einer externen Property im Mapping: {@code Typ::name:set}. */
+  static final String SETTER_SUFFIX = ":set";
+
+  /**
+   * Feldänderung oder mutierende Methode eines externen Werttyps als Statement, sonst {@code null}:
+   * {@code v.z = 0} → {@code v = v.withZ(0f)}, {@code c.a *= x} → {@code c = c.withA(c.a() * x)},
+   * {@code v.x++} → {@code v = v.withX(v.x() + 1)}, {@code v.Normalize()} → {@code v =
+   * v.normalized()}.
+   */
+  private String structUpdate(Expr expr) {
+    return switch (expr) {
+      case SetExpr s when structField(s.target()) ->
+          assignField((FieldExpr) s.target(), expressions.text(s.value()));
+      case SetOpExpr s when structField(s.target()) ->
+          assignField(
+              (FieldExpr) s.target(),
+              expressions.text(
+                  new BinaryExpr(s.op(), s.target(), s.value(), NodeAttrs.NONE, s.span())));
+      case IncDecExpr i when structField(i.target()) ->
+          assignField((FieldExpr) i.target(), expressions.text(step(i)));
+      case CallExpr c when isMutator(c) -> mutate(c);
+      default -> null;
+    };
+  }
+
+  private boolean structField(Expr target) {
+    return target instanceof FieldExpr field && types.isStructMember(field.field());
+  }
+
+  private static BinaryExpr step(IncDecExpr expr) {
+    boolean increment = expr.op() == IncDecOp.PRE_INC || expr.op() == IncDecOp.POST_INC;
+    return new BinaryExpr(
+        increment ? BinaryOp.ADD : BinaryOp.SUB,
+        expr.target(),
+        new NumberLit("1i32", NumberSuffix.I32, NodeAttrs.NONE, expr.span()),
+        NodeAttrs.NONE,
+        expr.span());
+  }
+
+  /** {@code ziel.f = wert} für ein Feld eines Werttyps; verschachtelte Werttypen rekursiv. */
+  private String assignField(FieldExpr target, String value) {
+    String getter = expressions.external(target.field(), MappingForm.GETTER).javaSymbol();
+    String wither = "with" + Character.toUpperCase(getter.charAt(0)) + getter.substring(1);
+    String updated = expressions.text(target.target()) + "." + wither + "(" + value + ")";
+    return assignTo(target.target(), updated);
+  }
+
+  private String assignTo(Expr receiver, String value) {
+    if (structField(receiver)) {
+      return assignField((FieldExpr) receiver, value);
+    }
+    return expressions.lvalue(receiver) + " = " + value;
+  }
+
+  private boolean isMutator(CallExpr call) {
+    if (types.isOwnType(call.method().declaringType())) {
+      return false;
+    }
+    MappingEntry entry = types.mapping().member(call.method());
+    return entry != null && entry.form() == MappingForm.MUTATOR;
+  }
+
+  private String mutate(CallExpr call) {
+    MappingEntry entry = types.mapping().member(call.method());
+    StringBuilder value = new StringBuilder(expressions.text(call.target()));
+    value.append('.').append(entry.javaSymbol()).append('(');
+    for (int i = 0; i < call.arguments().size(); i++) {
+      value.append(i == 0 ? "" : ", ").append(expressions.text(call.arguments().get(i)));
+    }
+    return assignTo(call.target(), value.append(')').toString());
   }
 
   /**

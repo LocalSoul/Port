@@ -4,12 +4,30 @@ package io.github.localsoul.port.generator.java;
 public enum MappingForm {
   /** Typ: Java-Symbol ist der voll qualifizierte Klassenname. */
   TYPE("type"),
+  /**
+   * Werttyp (struct) als unveränderlicher Record (ADR-009): wie {@link #TYPE}, zusätzlich mit
+   * {@code withFeld(...)} für Feldänderungen und der Konstante {@code DEFAULT}.
+   */
+  STRUCT("struct"),
   /** Instanzmethode: {@code ziel.name(args)}. */
   METHOD("method"),
   /** Statische Methode: {@code Typ.name(args)}. */
   STATIC_METHOD("static-method"),
   /** Instanz-Property oder -Feld lesend: {@code ziel.name()}. */
   GETTER("getter"),
+  /** Instanz-Property schreibend, Schlüssel {@code Typ::name:set}: {@code ziel.name(wert)}. */
+  SETTER("setter"),
+  /** Statische Property schreibend, Schlüssel {@code Typ::name:set}: {@code Typ.name(wert)}. */
+  STATIC_SETTER("static-setter"),
+  /** Statische Konstante oder Enum-Wert ohne Aufruf: {@code Typ.NAME}. */
+  CONSTANT("constant"),
+  /**
+   * Generische Methode mit einem Typargument, das zur Instanzierung dient: {@code
+   * ziel.name(Arg::new)} (z. B. {@code AddComponent<T>}), ohne Reflection.
+   */
+  FACTORY("factory"),
+  /** Mutierende Methode eines Werttyps (ADR-009): als Statement {@code ziel = ziel.name(args)}. */
+  MUTATOR("mutator"),
   /** Statische Property lesend: {@code Typ.name()}. */
   STATIC_GETTER("static-getter"),
   /** Konstruktor: {@code new Typ(args)}. */

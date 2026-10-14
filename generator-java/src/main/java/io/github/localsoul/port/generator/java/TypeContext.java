@@ -88,6 +88,20 @@ final class TypeContext {
     return new TreeSet<>(imports.values());
   }
 
+  /** {@code true} für externe Werttypen (Mapping-Form {@code struct}, ADR-009). */
+  boolean isStruct(TypeRef type) {
+    if (!(type instanceof NamedType named) || ownTypes.containsKey(named.qualifiedName())) {
+      return false;
+    }
+    return config.mapping().isStruct(named.qualifiedName(), named.typeArguments().size());
+  }
+
+  /** {@code true}, wenn das Member zu einem externen Werttyp gehört. */
+  boolean isStructMember(io.github.localsoul.port.ir.atom.MemberRef ref) {
+    return !ownTypes.containsKey(ref.declaringType())
+        && config.mapping().isStruct(ref.declaringType(), ref.declaringTypeArguments().size());
+  }
+
   /** Java-Typ für eine IR-Typreferenz. */
   String javaType(TypeRef type) {
     return javaType(type, false);

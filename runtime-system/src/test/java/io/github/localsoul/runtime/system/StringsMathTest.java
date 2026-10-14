@@ -107,6 +107,12 @@ class StringsMathTest {
   }
 
   @Test
+  void filledArraysHoldTheValueInEveryElement() {
+    String[] array = RuntimeArrays.filled(new String[3], "x");
+    assertEquals(java.util.List.of("x", "x", "x"), java.util.List.of(array));
+  }
+
+  @Test
   void objectHelpersFollowDotNet() {
     assertTrue(SystemObject.equals(0.0f, -0.0f));
     assertTrue(SystemObject.equals(Float.NaN, Float.NaN));

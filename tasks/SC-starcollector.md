@@ -9,9 +9,9 @@
 ---
 
 ## S1 Generator
-- [ ] Mapping-Formen `setter`, `static-setter`, `constant`, `factory`, `mutator`, Typform `struct`.
-- [ ] Struct-Mutationen werden Neuzuweisungen; Struct-Arrays und `default(T)` mit `T.DEFAULT`.
-- [ ] Golden-/Unit-Tests je Regel, google-java-format grün.
+- [x] Mapping-Formen `setter`, `static-setter`, `constant`, `factory`, `mutator`, Typform `struct`.
+- [x] Struct-Mutationen werden Neuzuweisungen; Struct-Arrays und `default(T)` mit `T.DEFAULT`.
+- [x] Golden-/Unit-Tests je Regel, google-java-format grün.
 
 ## S2 Adapter (Repo `engines/unity`)
 - [ ] Alle von StarCollector genutzten Unity-APIs in Adapter, Mapping und Metadaten.
