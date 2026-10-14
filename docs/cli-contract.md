@@ -2,7 +2,7 @@
 
 Verbindliche Spezifikation für Befehle, Flags, Ausgaben und Exit-Codes. Implementierung: `port-cli` (Java, picocli).
 
-**Stand M5:** umgesetzt sind `init`, `extract`, `ir`, `index`, `gen`, `build`, `status`, `find`, `refs`, `callers`, `callees`, `uses`, `show`, `outline`, `catalog list/show`, `launch new/list/check/run` und die globalen Flags `--json`, `-C`, `-q`, `-v`, `--offline` (noch ohne Wirkung), `--strict`. Alles andere ist Vertrag für spätere Meilensteine. JSON als Standard ohne Terminal (ADR-018) kommt mit M6a.
+**Stand M6:** umgesetzt sind `init`, `extract`, `ir`, `index`, `lint`, `gen`, `build`, `status`, `find`, `refs`, `callers`, `callees`, `uses`, `show`, `outline`, `catalog list/show`, `launch new/list/check/run` und die globalen Flags `--json`, `-C`, `-q`, `-v`, `--offline` (noch ohne Wirkung), `--strict`. Alles andere ist Vertrag für spätere Meilensteine. JSON als Standard ohne Terminal (ADR-018) kommt mit M6a.
 
 ## Globale Flags
 
@@ -43,7 +43,7 @@ Bei nicht-interaktiver Ausgabe (kein Terminal) ist JSON der Standard (ADR-018).
 
 `build`, `package` und `run` brauchen eine Engine zum Kompilieren bzw. Starten: `--profile <name>` oder `--adapter <engines/pfad>`; ohne Angabe gilt `launch.toml` im Spielordner. `port launch run` ist der übliche Weg für den Start (siehe unten).
 
-**Stand M4 (bis Katalog und Profile in M4a):** Jeder Lifecycle-Befehl führt seine Phase und alle Folgephasen aus (`extract → ir → index → gen → build`; Lint kommt mit M6, `index --rebuild` baut den Index neu auf), `--only` nur die Phase, `--from <phase>` ab einer anderen Phase. `gen` und `build` nehmen `--adapter <pfad>`; ohne Angabe gilt `engines/<a>/adapter-<a>` mit `a = game.requires.adapter`. Plattformwurzel (Adapter, `runtime-system`, gebautes Frontend) ist das Monorepo, in dem das Projekt liegt, sonst `PORT_HOME` (bzw. Systemeigenschaft `port.home`). `gen --class <muster>` erzeugt nur passende Typen (`*`, `?`).
+**Stand M4 (bis Katalog und Profile in M4a):** Jeder Lifecycle-Befehl führt seine Phase und alle Folgephasen aus (`extract → ir → index → lint → gen → build`; `index --rebuild` baut den Index neu auf). Die Phase `lint` meldet nur: Exit 9 gibt es bei `port lint` selbst (Fehler) und in der Kette nur mit `--strict` (dann zählen auch Warnungen); `gen` und `build` laufen weiter (Nutzerentscheidung M6). `port lint [--rule ID]... [--class muster] [--fix-hint]`: `--fix-hint` gibt Hinweise aus (sonst `hint: null`), Regeln und Erkennung in `docs/modules/lint.md`, `--only` nur die Phase, `--from <phase>` ab einer anderen Phase. `gen` und `build` nehmen `--adapter <pfad>`; ohne Angabe gilt `engines/<a>/adapter-<a>` mit `a = game.requires.adapter`. Plattformwurzel (Adapter, `runtime-system`, gebautes Frontend) ist das Monorepo, in dem das Projekt liegt, sonst `PORT_HOME` (bzw. Systemeigenschaft `port.home`). `gen --class <muster>` erzeugt nur passende Typen (`*`, `?`).
 
 Dateien eines Spiel-Projekts in M4:
 - `init --source <dll>` kopiert die Assembly **und alle `*.dll` aus ihrem Ordner** (bei Unity `Managed/`) nach `input/`, damit das Frontend Referenzen auflöst; `sha256` gilt der Assembly. Jedes Projekt bekommt ein eigenes Git-Repo, im Monorepo zusätzlich ein Submodul (ADR-026, `data.git` = `created`/`exists`/`unavailable`/`failed`, `data.submodule`).
@@ -173,7 +173,7 @@ Regeln:
 | Befehl | `data` |
 |---|---|
 | `status` | `{ "phase": "...", "classes": n, "manualOpen": n, "irChanged": n }` |
-| `lint` | `{ "errors": n, "warnings": n, "infos": n }` |
+| `lint` | `{ "errors": n, "warnings": n, "infos": n }` (in der Kette unter `data.lint`) |
 | `todo` | `{ "items": [ { "symbol": "...", "reason": "...", "location": "..." } ] }` |
 | `find` | `{ "matches": [ { "symbol": "...", "kind": "class\|method\|field\|prop\|...", "location": "..." } ], "total": n, "next": "c" \| null }` |
 | `deps check` | `{ "adapter": "...", "missing": [ "..." ], "stub": [ "..." ] }` |
@@ -190,9 +190,9 @@ Regeln:
 | `launch new` | `{ "path": "profiles/x.toml", "created": bool }` |
 | `launch check` | `{ "profile", "game", "engine", "compatible": bool, "checks": [ { "check", "ok", "message" } ] }` |
 | `launch run` | `{ "profile", "built": bool, "gameExitCode": n }` |
-| Lifecycle (M4) | `{ "phases": [ "extract", ... ], "<phase>": { ... } }` je ausgeführter Phase: `extract` `{source, size, sha256}`, `ir` `{types, written, removed}`, `index` `{added, changed, removed, symbols, symbolChanges}`, `gen` `{files, todoCount, written, removed}`, `build` `{sources, classes, output}` |
+| Lifecycle (M4) | `{ "phases": [ "extract", ... ], "<phase>": { ... } }` je ausgeführter Phase: `extract` `{source, size, sha256}`, `ir` `{types, written, removed}`, `index` `{added, changed, removed, symbols, symbolChanges}`, `lint` `{errors, warnings, infos}`, `gen` `{files, todoCount, written, removed}`, `build` `{sources, classes, output}` |
 
-Diagnose-IDs der CLI selbst (M4): `PORT-ARGS`, `PORT-MANIFEST`, `PORT-EXISTS`, `PORT-GIT`, `PORT-INPUT`, `PORT-HASH`, `PORT-FRONTEND`, `PORT-UNRESOLVED` (nicht aufgelöste Typen, meist fehlende Referenz-Assemblies), `PORT-IR`, `PORT-TODO` (Generator-Todo), `PORT-MANUAL` (offene Handarbeit, mit `--strict` Exit 5), `PORT-COMPILE`, `PORT-PLATFORM`, `PORT-LATER` (braucht späteren Meilenstein), `PORT-IO`; ab M4a `PORT-CATALOG`, `PORT-PROFILE`, `PORT-RUN`; ab M5 `PORT-INDEX` (Index nicht nutzbar), `PORT-SYMBOL` (Symbol nicht im Projekt).
+Diagnose-IDs der CLI selbst (M4): `PORT-ARGS`, `PORT-MANIFEST`, `PORT-EXISTS`, `PORT-GIT`, `PORT-INPUT`, `PORT-HASH`, `PORT-FRONTEND`, `PORT-UNRESOLVED` (nicht aufgelöste Typen, meist fehlende Referenz-Assemblies), `PORT-IR`, `PORT-TODO` (Generator-Todo), `PORT-MANUAL` (offene Handarbeit, mit `--strict` Exit 5), `PORT-COMPILE`, `PORT-PLATFORM`, `PORT-LATER` (braucht späteren Meilenstein), `PORT-IO`; ab M4a `PORT-CATALOG`, `PORT-PROFILE`, `PORT-RUN`; ab M5 `PORT-INDEX` (Index nicht nutzbar), `PORT-SYMBOL` (Symbol nicht im Projekt). Lint-Befunde tragen die Regel-ID (`SH001`, ...).
 
 ## Designregeln
 

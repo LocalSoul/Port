@@ -4,7 +4,7 @@
 Das zentrale, headless Kommandozeilenwerkzeug `port`. Orchestriert Pipeline, Index, Lint, Git und Abhängigkeiten. Vertrag: `docs/cli-contract.md`.
 
 ## Abhängigkeiten
-`ir`, `generator-java`, `frontend-*`, `launcher-core` (ab M4a), `index` (ab M5). Adapter, Engine und `runtime-system` nur über Dateien (Mapping, kompilierte Klassen als Klassenpfad für `build`), nie über Code (Maven Enforcer, ArchUnit). Bibliotheken: picocli, tomlj.
+`ir`, `generator-java`, `frontend-*`, `launcher-core` (ab M4a), `index` (ab M5), `lint` (ab M6). Adapter, Engine und `runtime-system` nur über Dateien (Mapping, kompilierte Klassen als Klassenpfad für `build`), nie über Code (Maven Enforcer, ArchUnit). Bibliotheken: picocli, tomlj.
 
 ## Technik
 - picocli für Befehle und Flags. Optional später GraalVM Native Image (M10).
@@ -21,6 +21,7 @@ Das zentrale, headless Kommandozeilenwerkzeug `port`. Orchestriert Pipeline, Ind
 - `status`: `manualOpen` zählt `raw`-/`manual`-Knoten bzw. Knoten mit `:manual` in `ir/` (über den S-Expression-Leser), Typen mit Klasse in `manual/` gelten als erledigt.
 - Start von Hand: Klassenpfad aus `port-cli`, `ir`, `generator-java`, `frontend-unity`, `launcher-core`, `engine-api`, `index`, picocli, tomlj, antlr4-runtime, sqlite-jdbc; JVM-Option `--enable-native-access=ALL-UNNAMED`. Ein ausführbares Paket kommt später (M10 Native Image).
 - M5: Phase `index`, Suchbefehle in `SearchService` (`core`), Paginierung über `Page`; die Textausgabe zeigt Listen eine Zeile je Eintrag.
+- M6: Phase `lint` (`LintStep`: IR, Markierungen, Abdeckung aus `mapping.tsv` und `adapter-metadata.json`), Exit 9 setzt die `Pipeline` am Ende aus `data.lint`.
 
 ## Aufbau (Pakete)
 ```

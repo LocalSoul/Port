@@ -4,10 +4,10 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 
 ## Aktueller Stand
 
-- Phase: **M5 abgeschlossen** und nach `main` gemergt (alle Abnahmekriterien in `tasks/M5-index.md` erfüllt; `./mvnw -q verify` grün). Index über die IR (`.port/index.db`, SQLite) mit `port index` und den Suchbefehlen `find`, `refs`, `callers`, `callees`, `uses`, `show`, `outline`; `status` liefert `irChanged`.
-- M0 bis M5, ADR-019, ADR-025 und ADR-026 sind auf `main` (lokal, kein Remote).
-- Nächste Aufgabe laut Roadmap: M6 (Linter mit Kernregeln und Adapter-Metadaten).
-- Letzte Session: 2026-10-14, M0.2 bis M5.4, ADR-019, ADR-024, ADR-025, ADR-026
+- Phase: **M6 abgeschlossen** auf Branch `task/M6-lint` (alle Abnahmekriterien in `tasks/M6-lint.md` erfüllt; `./mvnw -q verify` grün). `port lint` prüft IR001–IR005, PT001–PT003, SM001, SH001/SH002, MN001–MN004, konfigurierbar über `[lint]`; Phase `lint` in der Kette meldet, blockiert nicht. Merge nach `main` steht aus (Nutzer entscheidet).
+- M0 bis M5, ADR-019, ADR-025 und ADR-026 sind auf `main` (lokal, kein Remote); ADR-027 auf dem M6-Branch.
+- Nächste Aufgabe laut Roadmap: M6a (Agent-first Tooling, ADR-018).
+- Letzte Session: 2026-10-14, M0.2 bis M6.4, ADR-019, ADR-024 bis ADR-027
 
 ## Erledigt
 
@@ -137,6 +137,22 @@ Alle erscheinen als `raw` + `:manual` bzw. als gemeldeter, übersprungener Typ, 
   - M5.3: Phase `index`, `port index [--rebuild]`, Suchbefehle mit Paginierung, `status` mit `irChanged`, Textausgabe für Listen.
   - M5.4: Doku `docs/modules/index.md`, `cli-contract.md`, `port-cli.md`, `ir.md`.
 
+- M6 Linter (Plan mit Nutzer abgestimmt; Umsetzung ohne Zwischenabnahme, Abnahme am Meilensteinende):
+  - M6.0: Aufgabe `tasks/M6-lint.md`, ADR-027 (Markierung `// port:override <Symbol-ID> ir=<Hash>`).
+  - M6.1: `ir.refs.SymbolSource` (aus `index`), `irHash` in `port show`, `[lint]` im Spiel-Manifest.
+  - M6.2: `ir.refs.NodeWalker` (Durchlauf aus `References` verallgemeinert), Modul `lint` mit allen Regeln, Tests je Regel und über die Fixtures.
+  - M6.3: Phase `lint`, `port lint [--rule] [--class] [--fix-hint]`, Exit 9 nach Nutzerentscheidung; Markierung in `games/demo`.
+  - M6.4: Doku `docs/modules/lint.md`, `cli-contract.md`, `ir-spec.md` (Abschnitt 9), `port-cli.md`, `ir.md`.
+
+## M6: Lücken und Beobachtungen
+
+- **Adapter-Arbeitsliste:** `port -C games/starcollector lint` meldet 126 × SH001 (je verwendendem Member und fehlender Unity-API), `games/demo` 4 × SH001 (`Input.GetKey`, `Debug.Log`, `Mathf.Clamp`, Attribut `SerializeField`) und 1 × SH002 (`Input.GetAxis`, Stub). Attribute zählen als API-Verwendung.
+- **`--strict` in der Kette** liefert jetzt Exit 9 (Lint-Warnungen wie MN003) vor Exit 5 (offene Handarbeit); `gen --strict` ohne Lint liefert weiterhin 5.
+- **PT002** meldet `ptr` überall; die Ausnahme für nativen Code (M10b) fehlt noch. Das Frontend macht `unsafe`/`fixed` heute schon zu `raw` + `:manual` (MN003).
+- **SM001** erkennt Kopien nur aus Variablen, Parametern und Feldern, nicht aus Methodenergebnissen oder Argumentübergaben; ADR-009 bleibt OPEN.
+- **IR002 für externe Typen** entfällt im Lint (Katalog akzeptiert alles), weil SH001 sie gegen die Abdeckung prüft; falsch geschriebene eigene Typnamen erscheinen deshalb als SH001.
+- **Markierungen schreibt noch niemand automatisch**; `port lint --fix-hint` nennt bei MN003 den fertigen Kommentar.
+
 ## M5: Lücken und Beobachtungen
 
 - **Native Bibliothek:** sqlite-jdbc lädt eine native Bibliothek; unter Java 25 braucht die JVM `--enable-native-access=ALL-UNNAMED` (Surefire von `index` und `port-cli` setzt es), sonst Warnung auf stderr. Für ein späteres Native Image (M10) ist das zu bedenken.
@@ -227,5 +243,5 @@ Alle erscheinen als `raw` + `:manual` bzw. als gemeldeter, übersprungener Typ, 
 
 - Vor dem Start die Checkliste in `docs/setup.md` prüfen.
 - Layout und Projektarten: `docs/projects.md` lesen (Spiele in `games/`, Engines in `engines/`, ADR-020 PROPOSED).
-- M6 (Linter) mit dem Nutzer planen. Vor dem Generator-/Golden-Test `scripts/build-dotnet.sh` laufen lassen.
+- Branch `task/M6-lint` nach `main` mergen (Nutzer entscheidet, Fast-Forward per `git push . task/M6-lint:main`), dann M6a mit dem Nutzer planen. Vor dem Generator-/Golden-Test `scripts/build-dotnet.sh` laufen lassen.
 - Ressourcenpfad der Mappings: für die Toolchain über `engines/<e>/port.toml` gelöst (Dateien); Auslieferung als Jar (eindeutige Ressourcenpfade) ist offen, sobald es ein Paket von `port` gibt.

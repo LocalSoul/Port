@@ -193,6 +193,7 @@ manual-node := "(" "raw" "cs" string ")"           ; Original-C#, nicht überset
 
 - `raw` entsteht, wenn der Dekompiler scheitert. Der Generator erzeugt dafür `todo`-Code und der Lint meldet MN003/PT001.
 - `:manual` am Member bedeutet: Der Generator überspringt den Rumpf, du lieferst ihn in `manual/`.
+- Die Handarbeit in `manual/*.java` trägt über der ersetzenden Methode die Markierung `// port:override <Symbol-ID> ir=<Hash>` (ADR-027); daraus prüft der Lint MN001–MN004.
 
 ## 10. Beispiel
 

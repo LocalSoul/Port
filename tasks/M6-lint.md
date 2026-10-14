@@ -48,8 +48,8 @@
 - [x] Exit 9 (`port lint`, `--strict`), Kette ohne `--strict` Exit 0, Konfiguration über `port.toml`, `--rule`/`--class`.
 
 ## M6.4 Abschluss
-- [ ] Doku `docs/modules/lint.md`, `docs/cli-contract.md`, `docs/ir-spec.md` (Abschnitt 9), `docs/modules/port-cli.md` aktualisiert.
-- [ ] `PROGRESS.md` zeigt den Stand und die Lücken.
+- [x] Doku `docs/modules/lint.md`, `docs/cli-contract.md`, `docs/ir-spec.md` (Abschnitt 9), `docs/modules/port-cli.md` aktualisiert.
+- [x] `PROGRESS.md` zeigt den Stand und die Lücken.
 
 ## Nicht-Ziele
 PT004–PT007, SM002–SM009, SH003, FX*, NT*, `port explain`/`schema` (M6a), automatisches Schreiben der Markierung (M7/M7a).
