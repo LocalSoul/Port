@@ -4,11 +4,11 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 
 ## Aktueller Stand
 
-- Phase: **StarCollector End-to-End (SC) umgesetzt**, Branch `task/starcollector-e2e`, wartet auf Abnahme durch den Nutzer (Handtest im Fenster) und Merge nach Rückfrage. `./mvnw -q verify` grün.
+- Phase: **StarCollector End-to-End (SC) umgesetzt**, Branch `task/starcollector-e2e` (10 Commits vor `main`, Submodul `engines/unity` mit eigenen Commits), wartet auf Abnahme durch den Nutzer (Handtest im Fenster) und Merge nach Rückfrage. `./mvnw -q verify` grün, Arbeitsverzeichnis sauber.
 - StarCollector läuft über die ganze Pipeline (IR → Java → Build → `launcher-boot`): Fenster mit Sprites, HUD, Tastatur, Zeitablauf, Neustart (R), Beenden (ESC). `port -C games/starcollector lint` meldet keine SH001 mehr.
 - M0 bis M6, ADR-019, ADR-025, ADR-026 und ADR-027 sind auf `main` (lokal, kein Remote).
 - Danach laut Roadmap: M6a (Agent-first Tooling, ADR-018).
-- Letzte Session: 2026-10-14, M0.2 bis M6.4, ADR-019, ADR-024 bis ADR-027, SC S0–S7
+- Letzte Session: 2026-10-14, M0.2 bis M6.4, ADR-019, ADR-024 bis ADR-027, SC S0–S7, `port.jar`, Kamera-Hintergrund per Profil-Einstellung (Nutzerrückmeldung „Farben viel heller“).
 
 ## Erledigt
 
@@ -270,5 +270,11 @@ Alle erscheinen als `raw` + `:manual` bzw. als gemeldeter, übersprungener Typ, 
 
 - Vor dem Start die Checkliste in `docs/setup.md` prüfen.
 - Layout und Projektarten: `docs/projects.md` lesen (Spiele in `games/`, Engines in `engines/`, ADR-020 PROPOSED).
-- StarCollector (SC) ist umgesetzt auf `task/starcollector-e2e`; offen sind der Handtest durch den Nutzer (`port launch run starcollector-unity`) und der Merge nach `main`. Vor dem Generator-/Golden-Test `scripts/build-dotnet.sh` laufen lassen.
+- StarCollector (SC) ist umgesetzt auf `task/starcollector-e2e`. Offen:
+  1. Handtest durch den Nutzer: `java -jar port.jar launch run starcollector-unity` (Fenster, Pfeile/WASD, R, ESC). Danach in `tasks/SC-starcollector.md` „Von Hand spielbar“ und S7 abhaken.
+  2. Merge nach `main` erst nach Rückfrage: `git push -q . task/starcollector-e2e:main`, dann `git checkout -q main` (Checkout alter Stände scheitert am Submodul), PROGRESS „Stand nach Merge“.
+  3. Danach M6a (Agent-first Tooling) laut Roadmap.
+- `port.jar` im Hauptverzeichnis ist von Hand gebaut und nach Codeänderungen an CLI, Lint, Index, Generator oder Launcher veraltet; neu erzeugen wie in `docs/setup.md` (Maven-Schritt fehlt, Vorschlag Shade-Plugin in PROGRESS „SC: Lücken“).
+- Vergleich mit dem Original: `testdata/Builds/Linux/StarCollector.x86_64` läuft unter `xvfb-run` (Bild mit `import -window root`); Port-Bilder über `launch run … --headless -- --render offscreen --screenshot Frame:Datei`.
+- Vor dem Generator-/Golden-Test `scripts/build-dotnet.sh` laufen lassen.
 - Ressourcenpfad der Mappings: für die Toolchain über `engines/<e>/port.toml` gelöst (Dateien); Auslieferung als Jar (eindeutige Ressourcenpfade) ist offen, sobald es ein Paket von `port` gibt.
