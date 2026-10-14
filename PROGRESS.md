@@ -4,8 +4,8 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 
 ## Aktueller Stand
 
-- Phase: **M5 abgeschlossen** auf Branch `task/M5-index` (alle Abnahmekriterien in `tasks/M5-index.md` erfüllt; `./mvnw -q verify` grün). Index über die IR (`.port/index.db`, SQLite) mit `port index` und den Suchbefehlen `find`, `refs`, `callers`, `callees`, `uses`, `show`, `outline`; `status` liefert `irChanged`. Merge nach `main` steht aus (Nutzer entscheidet).
-- M0 bis M4a, ADR-019, ADR-025 und ADR-026 sind auf `main` (lokal, kein Remote).
+- Phase: **M5 abgeschlossen** und nach `main` gemergt (alle Abnahmekriterien in `tasks/M5-index.md` erfüllt; `./mvnw -q verify` grün). Index über die IR (`.port/index.db`, SQLite) mit `port index` und den Suchbefehlen `find`, `refs`, `callers`, `callees`, `uses`, `show`, `outline`; `status` liefert `irChanged`.
+- M0 bis M5, ADR-019, ADR-025 und ADR-026 sind auf `main` (lokal, kein Remote).
 - Nächste Aufgabe laut Roadmap: M6 (Linter mit Kernregeln und Adapter-Metadaten).
 - Letzte Session: 2026-10-14, M0.2 bis M5.4, ADR-019, ADR-024, ADR-025, ADR-026
 
@@ -227,5 +227,5 @@ Alle erscheinen als `raw` + `:manual` bzw. als gemeldeter, übersprungener Typ, 
 
 - Vor dem Start die Checkliste in `docs/setup.md` prüfen.
 - Layout und Projektarten: `docs/projects.md` lesen (Spiele in `games/`, Engines in `engines/`, ADR-020 PROPOSED).
-- Branch `task/M5-index` nach `main` mergen (Nutzer entscheidet, Fast-Forward per `git push . task/M5-index:main`), dann M6 mit dem Nutzer planen. Vor dem Generator-/Golden-Test `scripts/build-dotnet.sh` laufen lassen.
+- M6 (Linter) mit dem Nutzer planen. Vor dem Generator-/Golden-Test `scripts/build-dotnet.sh` laufen lassen.
 - Ressourcenpfad der Mappings: für die Toolchain über `engines/<e>/port.toml` gelöst (Dateien); Auslieferung als Jar (eindeutige Ressourcenpfade) ist offen, sobald es ein Paket von `port` gibt.
