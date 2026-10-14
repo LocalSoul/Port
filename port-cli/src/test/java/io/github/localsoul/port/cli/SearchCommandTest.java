@@ -60,6 +60,7 @@ class SearchCommandTest {
     Cli.Run show = run("show", "Box::Put#T");
     assertTrue(show.out().contains("\"ir\": \"(method Put void"), show.out());
     assertTrue(show.out().contains("\"javaFile\": null"), show.out());
+    assertTrue(show.out().matches("(?s).*\"irHash\": \"[0-9a-f]{64}\".*"), show.out());
     Cli.Run java = run("show", "Box::Put#T", "--java");
     assertTrue(java.out().contains("noch kein Java erzeugt"), java.out());
     Cli.Run src = run("show", "Box::Put#T", "--src");

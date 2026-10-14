@@ -1,13 +1,46 @@
-package io.github.localsoul.port.index;
+package io.github.localsoul.port.ir.refs;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 
 /**
- * Schneidet den Quelltext einer S-Expression aus einer IR-Datei: ab Zeile und Spalte der öffnenden
- * Klammer bis zur passenden schließenden, Klammern in Strings und Kommentaren ({@code ;}) zählen
- * nicht.
+ * Quelltext und Hash der S-Expression eines Symbols in einer IR-Datei: ab Zeile und Spalte der
+ * öffnenden Klammer bis zur passenden schließenden, Klammern in Strings und Kommentaren ({@code ;})
+ * zählen nicht. Der Hash identifiziert den Stand eines Symbols (Index, Override-Markierung nach
+ * ADR-027).
  */
-final class SymbolText {
+public final class SymbolSource {
 
-  private SymbolText() {}
+  private SymbolSource() {}
+
+  /**
+   * SHA-256 des Ausschnitts als Hex.
+   *
+   * @param text Inhalt der Datei
+   * @param line Zeile ab 1
+   * @param column Spalte ab 1
+   * @return 64 Hex-Zeichen in Kleinbuchstaben
+   */
+  public static String hash(String text, int line, int column) {
+    return sha256(slice(text, line, column));
+  }
+
+  /**
+   * SHA-256 eines Textes als Hex (UTF-8).
+   *
+   * @param text Text
+   * @return 64 Hex-Zeichen in Kleinbuchstaben
+   */
+  public static String sha256(String text) {
+    try {
+      MessageDigest digest = MessageDigest.getInstance("SHA-256");
+      return HexFormat.of().formatHex(digest.digest(text.getBytes(StandardCharsets.UTF_8)));
+    } catch (NoSuchAlgorithmException e) {
+      throw new IllegalStateException("SHA-256 fehlt in der JVM", e);
+    }
+  }
 
   /**
    * Liefert den Ausschnitt.
@@ -17,7 +50,7 @@ final class SymbolText {
    * @param column Spalte ab 1
    * @return Ausschnitt; bei ungültiger Position oder ohne Klammer der Rest der Zeile
    */
-  static String slice(String text, int line, int column) {
+  public static String slice(String text, int line, int column) {
     int start = offset(text, line, column);
     if (start < 0 || start >= text.length()) {
       return "";

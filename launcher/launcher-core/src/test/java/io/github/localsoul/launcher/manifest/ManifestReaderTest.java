@@ -102,6 +102,21 @@ class ManifestReaderTest {
   }
 
   @Test
+  void lintSectionIsReadAndChecked() throws Exception {
+    String text = GAME + "\n[lint.severity]\nSM001 = \"error\"\nPT004 = \"info\"\n";
+    GameManifest game =
+        assertInstanceOf(GameManifest.class, ManifestReader.parse(text, "port.toml"));
+    assertEquals(List.of("SM007"), game.lint().disable());
+    assertEquals(java.util.Map.of("PT004", "info", "SM001", "error"), game.lint().severity());
+    assertEquals(game, ManifestReader.parse(game.toToml(), "port.toml"));
+    failure(GAME.replace("disable = [\"SM007\"]", "disable = [\"sm7\"]"));
+    failure(GAME + "\n[lint.severity]\nSM001 = \"laut\"\n");
+    failure(GAME + "\n[lint.severity]\nXYZ = \"warn\"\n");
+    failure("lint = 3\n" + GAME.replace("[lint]\ndisable = [\"SM007\"]", ""));
+    assertEquals(LintSettings.NONE, GameManifest.newGame("a", "unity", "input/a.dll", null).lint());
+  }
+
+  @Test
   void engineErrors() {
     failure(ENGINE.replace("kind = \"engine\"", "kind = \"plugin\""));
     failure(ENGINE.replace("api = \"2022.3\"", "api = \"neu\""));

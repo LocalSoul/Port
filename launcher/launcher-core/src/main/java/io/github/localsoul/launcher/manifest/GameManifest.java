@@ -1,6 +1,7 @@
 package io.github.localsoul.launcher.manifest;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * {@code port.toml} eines Spiels ({@code docs/cli-contract.md}, Abschnitt Manifest). Abschnitte
@@ -13,6 +14,7 @@ import java.util.List;
  * @param requiresAdapter Name der benötigten Engine-API
  * @param requiresApi Versionsbereich der API ({@link VersionRange})
  * @param subsystems benötigte Subsystem-Arten
+ * @param lint Abschnitt {@code [lint]}
  */
 public record GameManifest(
     String name,
@@ -21,12 +23,46 @@ public record GameManifest(
     String sha256,
     String requiresAdapter,
     String requiresApi,
-    List<String> subsystems)
+    List<String> subsystems,
+    LintSettings lint)
     implements ProjectManifest {
 
   /** Kopiert die Liste. */
   public GameManifest {
     subsystems = List.copyOf(subsystems);
+    if (lint == null) {
+      lint = LintSettings.NONE;
+    }
+  }
+
+  /**
+   * Manifest ohne {@code [lint]}.
+   *
+   * @param name Projektname
+   * @param frontend Frontend
+   * @param source Eingabe
+   * @param sha256 Hash oder {@code null}
+   * @param requiresAdapter benötigte API
+   * @param requiresApi Versionsbereich
+   * @param subsystems Subsystem-Arten
+   */
+  public GameManifest(
+      String name,
+      String frontend,
+      String source,
+      String sha256,
+      String requiresAdapter,
+      String requiresApi,
+      List<String> subsystems) {
+    this(
+        name,
+        frontend,
+        source,
+        sha256,
+        requiresAdapter,
+        requiresApi,
+        subsystems,
+        LintSettings.NONE);
   }
 
   /**
@@ -57,6 +93,15 @@ public record GameManifest(
     }
     out.table("game.requires").entry("adapter", requiresAdapter).entry("api", requiresApi);
     out.entry("subsystems", subsystems);
+    if (!lint.isEmpty()) {
+      out.table("lint").entry("disable", lint.disable());
+      if (!lint.severity().isEmpty()) {
+        out.table("lint.severity");
+        for (Map.Entry<String, String> entry : lint.severity().entrySet()) {
+          out.entry(entry.getKey(), entry.getValue());
+        }
+      }
+    }
     return out.text();
   }
 }

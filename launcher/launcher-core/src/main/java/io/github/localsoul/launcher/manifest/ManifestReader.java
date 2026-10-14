@@ -15,6 +15,8 @@ public final class ManifestReader {
 
   private static final String HEX64 = "[0-9a-f]{64}";
   private static final String NAME = "[a-z0-9][a-z0-9_-]*";
+  private static final String RULE = "[A-Z]{2}\\d{3}";
+  private static final List<String> LEVELS = List.of("error", "warn", "info");
 
   private ManifestReader() {}
 
@@ -84,7 +86,31 @@ public final class ManifestReader {
     String api = toml.required("game.requires.api");
     checkRange(toml, "game.requires.api", api);
     List<String> subsystems = toml.strings("game.requires.subsystems");
-    return new GameManifest(name, frontend, source, sha256, adapter, api, subsystems);
+    LintSettings lint = lint(toml);
+    return new GameManifest(name, frontend, source, sha256, adapter, api, subsystems, lint);
+  }
+
+  /** {@code [lint] disable} und {@code [lint.severity]}: Regel-IDs wie {@code SM001}. */
+  private static LintSettings lint(TomlFile toml) throws LauncherException {
+    toml.requireTableIfPresent("lint");
+    List<String> disable = toml.strings("lint.disable");
+    for (String rule : disable) {
+      if (!rule.matches(RULE)) {
+        throw toml.invalidAt("lint.disable", "keine Regel-ID: '" + rule + "' (z. B. SM001)");
+      }
+    }
+    java.util.Map<String, String> severity = toml.stringTable("lint.severity");
+    for (java.util.Map.Entry<String, String> entry : severity.entrySet()) {
+      String key = "lint.severity." + entry.getKey();
+      if (!entry.getKey().matches(RULE)) {
+        throw toml.invalidAt(key, "keine Regel-ID: '" + entry.getKey() + "' (z. B. SM001)");
+      }
+      if (!LEVELS.contains(entry.getValue())) {
+        throw toml.invalidAt(
+            key, "Stufe muss error, warn oder info sein: '" + entry.getValue() + "'");
+      }
+    }
+    return new LintSettings(disable, severity);
   }
 
   private static EngineManifest engine(TomlFile toml, String name) throws LauncherException {

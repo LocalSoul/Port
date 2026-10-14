@@ -138,6 +138,39 @@ public final class TomlFile {
   }
 
   /**
+   * Prüft, dass ein vorhandener Schlüssel eine Tabelle ist.
+   *
+   * @param key Schlüssel
+   * @throws LauncherException Exit 2, wenn er existiert und keine Tabelle ist
+   */
+  public void requireTableIfPresent(String key) throws LauncherException {
+    if (toml.contains(key) && !toml.isTable(key)) {
+      throw invalid(key + " muss eine Tabelle sein", toml.inputPositionOf(key), null);
+    }
+  }
+
+  /**
+   * Schlüssel einer Tabelle mit Textwerten, z. B. {@code [lint.severity]}.
+   *
+   * @param table Tabellenname
+   * @return Schlüssel und Werte in Dateireihenfolge, leer wenn die Tabelle fehlt
+   * @throws LauncherException Exit 2, wenn es keine Tabelle ist oder ein Wert kein Text ist
+   */
+  public java.util.Map<String, String> stringTable(String table) throws LauncherException {
+    java.util.Map<String, String> values = new java.util.LinkedHashMap<>();
+    if (!toml.contains(table)) {
+      return values;
+    }
+    if (!toml.isTable(table)) {
+      throw invalid(table + " muss eine Tabelle sein", toml.inputPositionOf(table), null);
+    }
+    for (String key : toml.getTable(table).keySet()) {
+      values.put(key, required(table + "." + key));
+    }
+    return values;
+  }
+
+  /**
    * Fehler zu einem Schlüssel.
    *
    * @param key Schlüssel

@@ -5,6 +5,7 @@ import io.github.localsoul.port.index.IndexException;
 import io.github.localsoul.port.index.IrIndex;
 import io.github.localsoul.port.index.RefRow;
 import io.github.localsoul.port.index.SymbolRow;
+import io.github.localsoul.port.ir.refs.SymbolSource;
 import io.github.localsoul.port.json.JsonObject;
 import io.github.localsoul.port.json.JsonValue;
 import java.nio.file.Files;
@@ -157,7 +158,7 @@ public final class SearchService {
    * @param id Symbol-ID
    * @param view {@code ir}, {@code java} oder {@code src}
    * @return {@code symbol}, {@code kind}, {@code name}, {@code type}, {@code location}, {@code ir},
-   *     {@code javaFile}
+   *     {@code irHash} (für {@code // port:override}, ADR-027), {@code javaFile}
    * @throws PortException Exit 2, wenn das Symbol nicht im Projekt deklariert ist
    */
   public static CommandResult show(CommandContext context, String id, String view)
@@ -166,6 +167,7 @@ public final class SearchService {
         context,
         index -> {
           SymbolRow row = require(index, id);
+          String ir = index.irText(row);
           List<Diagnostic> diagnostics = new ArrayList<>();
           String javaFile = null;
           if (view.equals("java")) {
@@ -186,7 +188,8 @@ public final class SearchService {
                   .put("name", row.name())
                   .put("type", row.type())
                   .put("location", row.location())
-                  .put("ir", index.irText(row))
+                  .put("ir", ir)
+                  .put("irHash", SymbolSource.sha256(ir))
                   .put("javaFile", javaFile)
                   .build();
           return CommandResult.ok("show", data, diagnostics);

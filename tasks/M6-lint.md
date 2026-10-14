@@ -22,8 +22,8 @@
 3. `[lint] disable` und `[lint.severity]` im Spiel-Manifest (Validierung mit Ort).
 
 **Abnahme**
-- [ ] Index-Tests unverändert grün, `show` zeigt `irHash`.
-- [ ] Manifest-Tests für gültige und ungültige `[lint]`-Abschnitte.
+- [x] Index-Tests unverändert grün, `show` zeigt `irHash`.
+- [x] Manifest-Tests für gültige und ungültige `[lint]`-Abschnitte.
 
 ## M6.2 Modul `lint`
 

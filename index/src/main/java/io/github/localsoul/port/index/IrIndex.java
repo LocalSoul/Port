@@ -14,13 +14,12 @@ import io.github.localsoul.port.ir.refs.Declaration;
 import io.github.localsoul.port.ir.refs.Declarations;
 import io.github.localsoul.port.ir.refs.Reference;
 import io.github.localsoul.port.ir.refs.References;
+import io.github.localsoul.port.ir.refs.SymbolSource;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -28,7 +27,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -272,7 +270,7 @@ public final class IrIndex implements AutoCloseable {
                 "INSERT INTO symbols_fts(id, name, file) VALUES (?, ?, ?)")) {
       for (Declaration declaration : declarations) {
         SourceSpan span = declaration.span();
-        String slice = SymbolText.slice(text, span.line(), span.column());
+        String slice = SymbolSource.slice(text, span.line(), span.column());
         symbols.setString(1, declaration.symbol());
         symbols.setString(2, declaration.kind());
         symbols.setString(3, declaration.name());
@@ -280,7 +278,7 @@ public final class IrIndex implements AutoCloseable {
         symbols.setString(5, path);
         symbols.setInt(6, span.line());
         symbols.setInt(7, span.column());
-        symbols.setString(8, sha256(slice));
+        symbols.setString(8, SymbolSource.sha256(slice));
         symbols.executeUpdate();
         fts.setString(1, declaration.symbol());
         fts.setString(2, declaration.name());
@@ -347,7 +345,7 @@ public final class IrIndex implements AutoCloseable {
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.ir")) {
       for (Path path : stream) {
         String relative = IR_DIR + "/" + path.getFileName();
-        files.put(relative, sha256(Files.readString(path, StandardCharsets.UTF_8)));
+        files.put(relative, SymbolSource.sha256(Files.readString(path, StandardCharsets.UTF_8)));
       }
     } catch (IOException e) {
       throw new IndexException(IndexException.GENERAL, e.getMessage(), IR_DIR, e);
@@ -540,7 +538,7 @@ public final class IrIndex implements AutoCloseable {
     String file = location.substring(0, lineStart);
     int line = Integer.parseInt(location.substring(lineStart + 1, columnStart));
     int column = Integer.parseInt(location.substring(columnStart + 1));
-    return SymbolText.slice(read(file), line, column);
+    return SymbolSource.slice(read(file), line, column);
   }
 
   private static String escapeLike(String text) {
@@ -624,14 +622,5 @@ public final class IrIndex implements AutoCloseable {
 
   private static IndexException error(SQLException e) {
     return new IndexException(IndexException.GENERAL, "Indexfehler: " + e.getMessage(), FILE, e);
-  }
-
-  private static String sha256(String text) {
-    try {
-      MessageDigest digest = MessageDigest.getInstance("SHA-256");
-      return HexFormat.of().formatHex(digest.digest(text.getBytes(StandardCharsets.UTF_8)));
-    } catch (NoSuchAlgorithmException e) {
-      throw new IllegalStateException("SHA-256 fehlt in der JVM", e);
-    }
   }
 }
