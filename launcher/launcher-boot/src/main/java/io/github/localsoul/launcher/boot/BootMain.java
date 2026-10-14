@@ -24,8 +24,9 @@ import java.util.ServiceLoader;
  *
  * <p>Aufruf: {@code --adapter <name> [--frames n] [--fixed-delta s] [--frame-delta s] [--axis
  * Name=Wert]... [--press Frame:Taste]... [--release Frame:Taste]... [--render
- * null|offscreen|window] [--size BxH] [--realtime] [--seed n] [--screenshot Frame:Datei]... [--]
- * Klasse...}.
+ * null|offscreen|window] [--size BxH] [--realtime] [--seed n] [--setting Schlüssel=Wert]...
+ * [--screenshot Frame:Datei]... [--] Klasse...}. {@code --seed} und {@code --setting} gehen an
+ * {@link EngineBinding#configure}; ein vom Adapter abgelehnter Wert ergibt Exit 2.
  *
  * <p>Ausgabe (ADR-014): {@code null} zeichnet nicht, {@code offscreen} zeichnet in ein Bild (für
  * Tests und {@code --screenshot}), {@code window} öffnet ein Fenster mit Tastatureingabe. Ohne
@@ -88,6 +89,15 @@ public final class BootMain {
     if (options.seed() != null) {
       settings.put("seed", options.seed());
     }
+    for (BootOptions.Setting setting : options.settings()) {
+      settings.put(setting.key(), setting.value());
+    }
+    try {
+      binding.configure(settings);
+    } catch (IllegalArgumentException e) {
+      err.println("launcher-boot: ungültige Einstellung: " + e.getMessage());
+      return USAGE;
+    }
     CoreEngine.Builder builder =
         CoreEngine.builder().fixedDelta(options.fixedDelta()).frameDelta(options.frameDelta());
     OffscreenBackend offscreen = null;
@@ -112,7 +122,6 @@ public final class BootMain {
     }
     CoreEngine engine = builder.build();
     try {
-      binding.configure(settings);
       binding.install(engine);
       for (String className : options.classes()) {
         Object script = instantiate(className, loader);

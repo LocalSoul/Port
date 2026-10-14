@@ -25,7 +25,7 @@ Keine zu anderen Projektmodulen (Maven Enforcer). Nur JDK, keine Reflection, kei
 | `engine.api.component` (SC) | 2D: `Texture` (Breite, Höhe, ARGB von oben links, `smooth`), `Sprite` (Textur-Entity, Pivot, Pixel je Einheit, `order`, Tint, sichtbar), `Camera2D` (orthografische Halbhöhe, Hintergrund), `Viewport` (Ausgabegröße, vom Renderer geschrieben), `UiCanvas` (Liste aus `Text` und `Box` in Bildschirmpixeln, je Frame neu) |
 | `engine.api.input` (SC) | `KeyEvent` (`input.key`@1: neutraler Tastenname, gedrückt/losgelassen; Namen `A`–`Z`, `0`–`9`, `LEFT`, `RIGHT`, `UP`, `DOWN`, `SPACE`, `ENTER`, `ESCAPE`, `TAB`, `BACKSPACE`, `SHIFT`, `CONTROL`, `ALT`) |
 | `engine.api` (M4a) | `EngineApiVersion.VERSION` (geprüft gegen `[engine.provides] core-api`) |
-| `engine.api.boot` (M4a) | `EngineBinding` (`adapter`, `configure(Map)` für Starteinstellungen wie `seed` (SC), `install(Engine)`, `spawn(name, script)`): ein Adapter meldet sich per `ServiceLoader` bei `launcher-boot` an; so setzt der Launcher Core und Adapter zusammen, ohne dass einer den anderen kennt. `spawn` ist Übergang bis zum Szenenformat (ADR-010). |
+| `engine.api.boot` (M4a) | `EngineBinding` (`adapter`, `configure(Map)` für Starteinstellungen wie `seed` oder `camera.background` (SC; ungültige Werte: `IllegalArgumentException`), `install(Engine)`, `spawn(name, script)`): ein Adapter meldet sich per `ServiceLoader` bei `launcher-boot` an; so setzt der Launcher Core und Adapter zusammen, ohne dass einer den anderen kennt. `spawn` ist Übergang bis zum Szenenformat (ADR-010). |
 | `engine.api.subsystem` | `Subsystem` (`info`, `init`, `run`, `shutdown`), `SubsystemInfo`, `ComponentType`, `EventType`, `Event`, `EventBus`, `SubsystemConfigurationException` |
 
 ## Welt (ADR-016, ACCEPTED)

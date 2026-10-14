@@ -26,8 +26,8 @@ class StarCollectorRunTest {
 
   private static final Path GAME = Golden.ROOT.resolve("games/starcollector");
 
-  /** Hintergrund der Unity-Standardkamera (Adapter). */
-  private static final int BACKGROUND = 0xFF314D79;
+  /** Hintergrund der Kamera, im Profil gesetzt wie in der Szene des Originals. */
+  private static final int BACKGROUND = 0xFF0D0F19;
 
   private static final int CENTER_X = 480;
   private static final int CENTER_Y = 300;
@@ -100,6 +100,7 @@ class StarCollectorRunTest {
     BufferedImage gameOver = ImageIO.read(over.toFile());
     int panel = gameOver.getRGB(PANEL_X, PANEL_Y);
     assertTrue(isDark(panel), Integer.toHexString(panel));
+    assertNotEquals(BACKGROUND, panel, "Ende-Fenster sichtbar");
 
     BufferedImage again = ImageIO.read(restarted.toFile());
     assertEquals(player, again.getRGB(CENTER_X, CENTER_Y), "Spieler wieder in der Mitte");

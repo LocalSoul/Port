@@ -31,6 +31,9 @@ public final class TestBinding implements EngineBinding {
   @Override
   public void configure(Map<String, String> settings) {
     LOG.clear();
+    if (settings.containsKey("kaputt")) {
+      throw new IllegalArgumentException("kaputt");
+    }
     for (Map.Entry<String, String> entry : settings.entrySet()) {
       LOG.add("setting " + entry.getKey() + "=" + entry.getValue());
     }

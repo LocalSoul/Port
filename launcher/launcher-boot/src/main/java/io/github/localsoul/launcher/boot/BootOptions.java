@@ -17,6 +17,8 @@ import java.util.List;
  * @param height Höhe der Ausgabe in Pixeln
  * @param realtime Frames mit gemessener Dauer bis zum Beenden oder Fenster-Schließen
  * @param seed Startwert für Zufallszahlen des Adapters oder {@code null}
+ * @param settings weitere Einstellungen für den Adapter ({@code --setting Schlüssel=Wert}), in
+ *     Reihenfolge, spätere gewinnen
  * @param screenshots Bilder nach bestimmten Frames (nur {@code offscreen})
  * @param classes voll qualifizierte Spielklassen
  */
@@ -32,6 +34,7 @@ record BootOptions(
     int height,
     boolean realtime,
     String seed,
+    List<Setting> settings,
     List<Screenshot> screenshots,
     List<String> classes) {
 
@@ -53,6 +56,14 @@ record BootOptions(
   record Key(long frame, String key, boolean down) {}
 
   /**
+   * Einstellung für {@code EngineBinding.configure}.
+   *
+   * @param key Schlüssel (z. B. {@code camera.background})
+   * @param value Wert
+   */
+  record Setting(String key, String value) {}
+
+  /**
    * Bild nach einem Frame.
    *
    * @param frame Anzahl der fertigen Frames, nach denen das Bild entsteht
@@ -72,6 +83,7 @@ record BootOptions(
   BootOptions {
     axes = List.copyOf(axes);
     keys = List.copyOf(keys);
+    settings = List.copyOf(settings);
     screenshots = List.copyOf(screenshots);
     classes = List.copyOf(classes);
   }
@@ -94,6 +106,7 @@ record BootOptions(
     int height = DEFAULT_HEIGHT;
     boolean realtime = false;
     String seed = null;
+    List<Setting> settings = new ArrayList<>();
     List<Screenshot> screenshots = new ArrayList<>();
     List<String> classes = new ArrayList<>();
     boolean onlyClasses = false;
@@ -120,6 +133,7 @@ record BootOptions(
         }
         case "--realtime" -> realtime = true;
         case "--seed" -> seed = Long.toString((long) number(value(args, ++i, arg), arg));
+        case "--setting" -> settings.add(setting(value(args, ++i, arg)));
         case "--screenshot" -> screenshots.add(screenshot(value(args, ++i, arg)));
         default -> throw new IllegalArgumentException("unbekannte Option " + arg);
       }
@@ -148,6 +162,7 @@ record BootOptions(
         height,
         realtime,
         seed,
+        settings,
         screenshots,
         classes);
   }
@@ -174,6 +189,14 @@ record BootOptions(
     }
     return new Axis(
         text.substring(0, equals), (float) number(text.substring(equals + 1), "--axis"));
+  }
+
+  private static Setting setting(String text) {
+    int equals = text.indexOf('=');
+    if (equals <= 0) {
+      throw new IllegalArgumentException("--setting erwartet Schlüssel=Wert: " + text);
+    }
+    return new Setting(text.substring(0, equals), text.substring(equals + 1));
   }
 
   private static Key key(String text, boolean down, String option) {

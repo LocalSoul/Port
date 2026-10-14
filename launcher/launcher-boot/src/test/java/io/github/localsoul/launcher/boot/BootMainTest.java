@@ -54,6 +54,8 @@ class BootMainTest {
             "10",
             "--seed",
             "7",
+            "--setting",
+            "a.b=#1",
             "--press",
             "1:R",
             "--release",
@@ -67,6 +69,7 @@ class BootMainTest {
     assertEquals(
         List.of(
             "setting seed=7",
+            "setting a.b=#1",
             "spawn TestBinding$Script",
             "frame 0 axis 0.0",
             "frame 1 axis 0.0 R",
@@ -125,6 +128,8 @@ class BootMainTest {
     assertEquals(2, run("--adapter", "test", "--screenshot", "1:a.png").code());
     assertEquals(2, run("--adapter", "test", "--render", "window", "--press", "1:R").code());
     assertEquals(2, run("--adapter", "test", "--press", "R").code());
+    assertEquals(2, run("--adapter", "test", "--setting", "ohneWert").code());
+    assertEquals(2, run("--adapter", "test", "--setting", "kaputt=1").code());
     assertEquals(2, run("--adapter", "test", "--size", "0x10").code());
     assertEquals(2, run("--frames", "1").code());
     assertEquals(2, run("--adapter", "gibtsnicht").code());

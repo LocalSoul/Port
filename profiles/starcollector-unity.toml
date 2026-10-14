@@ -10,4 +10,4 @@ core = "engine-core"
 headless = false
 frames = 0
 spawn = ["StarCollectorGame"]
-args = []
+args = ["--setting", "camera.background=#0D0F19"]   # Kamera der Szene (ADR-010, noch kein Import)

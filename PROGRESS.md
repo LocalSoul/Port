@@ -159,7 +159,8 @@ Alle erscheinen als `raw` + `:manual` bzw. als gemeldeter, übersprungener Typ, 
 
 ## SC: Lücken und Beobachtungen
 
-- **Hintergrund weicht ab:** Original `#0D0F19` aus der Szene-Kamera, der Port nutzt Unitys Standard `#314D79`, weil Szenen nicht importiert werden (ADR-010 OPEN, M8). Möglicher Zwischenschritt: Kamera-Einstellungen über `EngineBinding.configure`/Profil – nicht umgesetzt, Entscheidung beim Nutzer.
+- **Hintergrund (behoben 2026-10-14):** Der Nutzer fand die Farben „viel heller“. Ursache war nur der Hintergrund (Original `#0D0F19` aus der Szene-Kamera, Port Unitys Standard `#314D79`); Sprites waren pixelgleich. Nutzerentscheidung: Profil-Einstellung statt Szenenimport. `launcher-boot --setting camera.background=#0D0F19` → `EngineBinding.configure` → Adapter-Kamera; im Profil `starcollector-unity` gesetzt. Andere Kamera-Werte (Größe, Position) kommen erst mit dem Szenenimport (ADR-010).
+- HUD-Text: Original misst 242 statt 255 bei weißer Schrift (vermutlich Kantenglättung/IMGUI-Darstellung), nicht angepasst.
 - `Random` liefert eine andere Folge als Unity (eigener Generator mit festem Startwert). Für dieses Spiel unerheblich, für Wiederholungen gegen Unity-Aufnahmen nicht.
 - Eltern-Transformen im Adapter nicht unterstützt (Transform hält Werte lokal = Welt).
 - UI von `OnGUI` erscheint einen Frame später, Tasten wirken einen Frame nach dem Abholen (Event-Bus k → k+1). Bei 60 fps nicht spürbar.
