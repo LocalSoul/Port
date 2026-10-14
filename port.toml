@@ -9,5 +9,5 @@ sha256 = "b26b1eb73e9ef2d0e4e909ddcaa21c130394fb0442025f708f8348444e443dbb"
 
 [game.requires]
 adapter = "unity"
-api = "*"
+api = ">=2022.3"
 subsystems = []

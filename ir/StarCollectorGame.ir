@@ -1,0 +1,605 @@
+(ir :version 1 :assembly "Assembly-CSharp"
+  :sha256 "b26b1eb73e9ef2d0e4e909ddcaa21c130394fb0442025f708f8348444e443dbb")
+
+(class StarCollectorGame :base UnityEngine.MonoBehaviour :mods (public)
+  (field CollectDistance f32 :mods (private const) :init 0.75f32)
+  (field HalfHeight f32 :mods (private const) :init 5.0f32)
+  (field PlayerRadius f32 :mods (private const) :init 0.4f32)
+  (field StarRadius f32 :mods (private const) :init 0.35f32)
+  (field bestScore i32 :mods (private))
+  (field bigStyle UnityEngine.GUIStyle :mods (private))
+  (field circleSprite UnityEngine.Sprite :mods (private))
+  (field elapsed f32 :mods (private))
+  (field gameOver bool :mods (private))
+  (field halfWidth f32 :mods (private))
+  (field hudStyle UnityEngine.GUIStyle :mods (private))
+  (field midStyle UnityEngine.GUIStyle :mods (private))
+  (field moveSpeed f32 :mods (private) :init 7.0f32)
+  (field player UnityEngine.Transform :mods (private))
+  (field playerRenderer UnityEngine.SpriteRenderer :mods (private))
+  (field score i32 :mods (private))
+  (field spawnTimer f32 :mods (private))
+  (field squareSprite UnityEngine.Sprite :mods (private))
+  (field starSprite UnityEngine.Sprite :mods (private))
+  (field stars System.Collections.Generic.List<UnityEngine.Transform> :mods (private readonly)
+    :init (new System.Collections.Generic.List<UnityEngine.Transform>::.ctor#))
+  (field timeLeft f32 :mods (private))
+  (field timeLimit f32 :mods (private) :init 30.0f32)
+  (method BuildBorder void () :mods (private)
+    (block
+      (local num f32 0.2f32)
+      (expr
+        (call this
+          StarCollectorGame::CreateBorderPiece#string,UnityEngine.Vector3,UnityEngine.Vector3
+          "WallTop"
+          (new UnityEngine.Vector3::.ctor#f32,f32,f32 0.0f32 (+ 5.0f32 (* num 0.5f32)) 0.0f32)
+          (new UnityEngine.Vector3::.ctor#f32,f32,f32
+            (+ (* (field this StarCollectorGame::halfWidth) 2.0f32) num)
+            num
+            1.0f32)))
+      (expr
+        (call this
+          StarCollectorGame::CreateBorderPiece#string,UnityEngine.Vector3,UnityEngine.Vector3
+          "WallBottom"
+          (new UnityEngine.Vector3::.ctor#f32,f32,f32 0.0f32 (- -5.0f32 (* num 0.5f32)) 0.0f32)
+          (new UnityEngine.Vector3::.ctor#f32,f32,f32
+            (+ (* (field this StarCollectorGame::halfWidth) 2.0f32) num)
+            num
+            1.0f32)))
+      (expr
+        (call this
+          StarCollectorGame::CreateBorderPiece#string,UnityEngine.Vector3,UnityEngine.Vector3
+          "WallLeft"
+          (new UnityEngine.Vector3::.ctor#f32,f32,f32
+            (- (- 0.0f32 (field this StarCollectorGame::halfWidth)) (* num 0.5f32))
+            0.0f32
+            0.0f32)
+          (new UnityEngine.Vector3::.ctor#f32,f32,f32 num (+ 10.0f32 num) 1.0f32)))
+      (expr
+        (call this
+          StarCollectorGame::CreateBorderPiece#string,UnityEngine.Vector3,UnityEngine.Vector3
+          "WallRight"
+          (new UnityEngine.Vector3::.ctor#f32,f32,f32
+            (+ (field this StarCollectorGame::halfWidth) (* num 0.5f32))
+            0.0f32
+            0.0f32)
+          (new UnityEngine.Vector3::.ctor#f32,f32,f32 num (+ 10.0f32 num) 1.0f32)))))
+  (method CheckCollect void () :mods (private)
+    (block
+      (local position UnityEngine.Vector3
+        (prop (field this StarCollectorGame::player) UnityEngine.Transform::position))
+      (for
+        (
+          (local num i32
+            (-
+              (prop (field this StarCollectorGame::stars)
+                System.Collections.Generic.List<UnityEngine.Transform>::Count)
+              1i32)))
+        (>= num 0i32)
+        ((post-dec num))
+        (block
+          (local transform UnityEngine.Transform
+            (call (field this StarCollectorGame::stars)
+              System.Collections.Generic.List<UnityEngine.Transform>::get_Item#i32
+              num))
+          (if
+            (scall UnityEngine.Object::op_Equality#UnityEngine.Object,UnityEngine.Object transform
+              null)
+            (block
+              (expr
+                (call (field this StarCollectorGame::stars)
+                  System.Collections.Generic.List<UnityEngine.Transform>::RemoveAt#i32
+                  num)))
+            (block
+              (local vector UnityEngine.Vector3
+                (scall UnityEngine.Vector3::op_Subtraction#UnityEngine.Vector3,UnityEngine.Vector3
+                  (prop transform UnityEngine.Transform::position)
+                  position))
+              (expr (set (field vector UnityEngine.Vector3::z) 0.0f32))
+              (if (<= (prop vector UnityEngine.Vector3::sqrMagnitude) 0.5625f32)
+                (block
+                  (expr
+                    (scall UnityEngine.Object::Destroy#UnityEngine.Object
+                      (prop transform UnityEngine.Component::gameObject)))
+                  (expr
+                    (call (field this StarCollectorGame::stars)
+                      System.Collections.Generic.List<UnityEngine.Transform>::RemoveAt#i32
+                      num))
+                  (expr (post-inc (field this StarCollectorGame::score)))
+                  (if
+                    (> (field this StarCollectorGame::score)
+                      (field this StarCollectorGame::bestScore))
+                    (block
+                      (expr
+                        (set (field this StarCollectorGame::bestScore)
+                          (field this StarCollectorGame::score)))))))))))))
+  (method CreateBorderPiece void
+    ((name string) (position UnityEngine.Vector3) (scale UnityEngine.Vector3))
+    :mods (private)
+    (block
+      (local gameObject UnityEngine.GameObject (new UnityEngine.GameObject::.ctor#string name))
+      (expr
+        (set
+          (prop (prop gameObject UnityEngine.GameObject::transform) UnityEngine.Transform::position)
+          position))
+      (local spriteRenderer UnityEngine.SpriteRenderer
+        (call gameObject UnityEngine.GameObject::AddComponent<UnityEngine.SpriteRenderer>#))
+      (expr
+        (set (prop spriteRenderer UnityEngine.SpriteRenderer::sprite)
+          (field this StarCollectorGame::squareSprite)))
+      (expr (set (prop spriteRenderer UnityEngine.Renderer::sortingOrder) 0i32))
+      (expr
+        (set
+          (prop (prop gameObject UnityEngine.GameObject::transform)
+            UnityEngine.Transform::localScale)
+          scale))))
+  (method CreateCircleSprite UnityEngine.Sprite ((color UnityEngine.Color)) :mods (private static)
+    (block
+      (local texture2D UnityEngine.Texture2D
+        (scall StarCollectorGame::NewTexture#string,i32 "circle" 128i32))
+      (local array UnityEngine.Color[] (new-array UnityEngine.Color 16384i32))
+      (local num f32 64.0f32)
+      (for ((local i i32 0i32)) (< i 128i32) ((post-inc i))
+        (block
+          (for ((local j i32 0i32)) (< j 128i32) ((post-inc j))
+            (block
+              (local num2 f32 (- (+ (conv f32 j) 0.5f32) num))
+              (local num3 f32 (- (+ (conv f32 i) 0.5f32) num))
+              (local num4 f32 (scall UnityEngine.Mathf::Sqrt#f32 (+ (* num2 num2) (* num3 num3))))
+              (local num5 f32 (scall UnityEngine.Mathf::Clamp01#f32 (- (- num 1.0f32) num4)))
+              (local color2 UnityEngine.Color color)
+              (expr (set-op * (field color2 UnityEngine.Color::a) num5))
+              (expr (set (index array (+ (* i 128i32) j)) color2))))))
+      (expr (call texture2D UnityEngine.Texture2D::SetPixels#UnityEngine.Color[] array))
+      (expr (call texture2D UnityEngine.Texture2D::Apply#))
+      (return (scall StarCollectorGame::MakeSprite#UnityEngine.Texture2D,i32 texture2D 128i32))))
+  (method CreateSquareSprite UnityEngine.Sprite ((color UnityEngine.Color)) :mods (private static)
+    (block
+      (local texture2D UnityEngine.Texture2D
+        (scall StarCollectorGame::NewTexture#string,i32 "square" 32i32))
+      (local array UnityEngine.Color[] (new-array UnityEngine.Color 1024i32))
+      (for ((local i i32 0i32)) (< i (prop array System.Array::Length)) ((post-inc i))
+        (block
+          (expr (set (index array i) color))))
+      (expr (call texture2D UnityEngine.Texture2D::SetPixels#UnityEngine.Color[] array))
+      (expr (call texture2D UnityEngine.Texture2D::Apply#))
+      (return (scall StarCollectorGame::MakeSprite#UnityEngine.Texture2D,i32 texture2D 32i32))))
+  (method CreateStarSprite UnityEngine.Sprite ((color UnityEngine.Color)) :mods (private static)
+    (block
+      (local texture2D UnityEngine.Texture2D
+        (scall StarCollectorGame::NewTexture#string,i32 "star" 128i32))
+      (local array UnityEngine.Color[] (new-array UnityEngine.Color 16384i32))
+      (local num i32 5i32)
+      (local num2 f32 0.42f32)
+      (local array2 UnityEngine.Vector2[] (new-array UnityEngine.Vector2 (* num 2i32)))
+      (for ((local i i32 0i32)) (< i (* num 2i32)) ((post-inc i))
+        (block
+          (local num3 f32 (cond (== (% i 2i32) 0i32) 1.0f32 num2))
+          (local f f32
+            (+ (/ (sfield System.MathF::PI) 2.0f32)
+              (/ (* (conv f32 i) (sfield System.MathF::PI)) (conv f32 num))))
+          (expr
+            (set (index array2 i)
+              (new UnityEngine.Vector2::.ctor#f32,f32 (* (scall UnityEngine.Mathf::Cos#f32 f) num3)
+                (* (scall UnityEngine.Mathf::Sin#f32 f) num3))))))
+      (local num4 f32 64.0f32)
+      (for ((local j i32 0i32)) (< j 128i32) ((post-inc j))
+        (block
+          (for ((local k i32 0i32)) (< k 128i32) ((post-inc k))
+            (block
+              (local num5 f32 (/ (- (+ (conv f32 k) 0.5f32) num4) num4))
+              (local num6 f32 (/ (- (+ (conv f32 j) 0.5f32) num4) num4))
+              (local flag bool
+                (scall StarCollectorGame::PointInPolygon#UnityEngine.Vector2[],UnityEngine.Vector2
+                  array2
+                  (new UnityEngine.Vector2::.ctor#f32,f32 (* num5 0.96f32) (* num6 0.96f32))))
+              (expr
+                (set (index array (+ (* j 128i32) k))
+                  (cond flag color
+                    (new UnityEngine.Color::.ctor#f32,f32,f32,f32 0.0f32 0.0f32 0.0f32 0.0f32))))))))
+      (expr (call texture2D UnityEngine.Texture2D::SetPixels#UnityEngine.Color[] array))
+      (expr (call texture2D UnityEngine.Texture2D::Apply#))
+      (return (scall StarCollectorGame::MakeSprite#UnityEngine.Texture2D,i32 texture2D 128i32))))
+  (method EnsureStyles void () :mods (private)
+    (block
+      (if
+        (scall System.Object::ReferenceEquals#object,object (field this StarCollectorGame::hudStyle)
+          null)
+        (block
+          (expr
+            (set (field this StarCollectorGame::hudStyle)
+              (new UnityEngine.GUIStyle::.ctor#UnityEngine.GUIStyle
+                (prop (sprop UnityEngine.GUI::skin) UnityEngine.GUISkin::label))))
+          (expr
+            (set (prop (field this StarCollectorGame::hudStyle) UnityEngine.GUIStyle::fontSize)
+              28i32))
+          (expr
+            (set (prop (field this StarCollectorGame::hudStyle) UnityEngine.GUIStyle::fontStyle)
+              (sfield UnityEngine.FontStyle::Bold)))
+          (expr
+            (set
+              (prop (prop (field this StarCollectorGame::hudStyle) UnityEngine.GUIStyle::normal)
+                UnityEngine.GUIStyleState::textColor)
+              (sprop UnityEngine.Color::white)))
+          (expr
+            (set (field this StarCollectorGame::bigStyle)
+              (new UnityEngine.GUIStyle::.ctor#UnityEngine.GUIStyle
+                (prop (sprop UnityEngine.GUI::skin) UnityEngine.GUISkin::label))))
+          (expr
+            (set (prop (field this StarCollectorGame::bigStyle) UnityEngine.GUIStyle::fontSize)
+              32i32))
+          (expr
+            (set (prop (field this StarCollectorGame::bigStyle) UnityEngine.GUIStyle::fontStyle)
+              (sfield UnityEngine.FontStyle::Bold)))
+          (expr
+            (set (prop (field this StarCollectorGame::bigStyle) UnityEngine.GUIStyle::alignment)
+              (sfield UnityEngine.TextAnchor::MiddleCenter)))
+          (expr
+            (set
+              (prop (prop (field this StarCollectorGame::bigStyle) UnityEngine.GUIStyle::normal)
+                UnityEngine.GUIStyleState::textColor)
+              (new UnityEngine.Color::.ctor#f32,f32,f32 1.0f32 0.9f32 0.4f32)))
+          (expr
+            (set (field this StarCollectorGame::midStyle)
+              (new UnityEngine.GUIStyle::.ctor#UnityEngine.GUIStyle
+                (prop (sprop UnityEngine.GUI::skin) UnityEngine.GUISkin::label))))
+          (expr
+            (set (prop (field this StarCollectorGame::midStyle) UnityEngine.GUIStyle::fontSize)
+              22i32))
+          (expr
+            (set (prop (field this StarCollectorGame::midStyle) UnityEngine.GUIStyle::alignment)
+              (sfield UnityEngine.TextAnchor::MiddleCenter)))
+          (expr
+            (set
+              (prop (prop (field this StarCollectorGame::midStyle) UnityEngine.GUIStyle::normal)
+                UnityEngine.GUIStyleState::textColor)
+              (sprop UnityEngine.Color::white)))))))
+  (method MakeSprite UnityEngine.Sprite ((tex UnityEngine.Texture2D) (size i32))
+    :mods (private static)
+    (block
+      (expr
+        (set (prop tex UnityEngine.Texture::filterMode) (sfield UnityEngine.FilterMode::Bilinear)))
+      (expr
+        (set (prop tex UnityEngine.Texture::wrapMode) (sfield UnityEngine.TextureWrapMode::Clamp)))
+      (return
+        (scall
+          UnityEngine.Sprite::Create#UnityEngine.Texture2D,UnityEngine.Rect,UnityEngine.Vector2,f32
+          tex
+          (new UnityEngine.Rect::.ctor#f32,f32,f32,f32 0.0f32 0.0f32 size size)
+          (new UnityEngine.Vector2::.ctor#f32,f32 0.5f32 0.5f32)
+          size))))
+  (method MovePlayer void () :mods (private)
+    (block
+      (local vector UnityEngine.Vector2
+        (new UnityEngine.Vector2::.ctor#f32,f32
+          (scall UnityEngine.Input::GetAxisRaw#string "Horizontal")
+          (scall UnityEngine.Input::GetAxisRaw#string "Vertical")))
+      (if
+        (scall UnityEngine.Vector2::op_Equality#UnityEngine.Vector2,UnityEngine.Vector2 vector
+          (sprop UnityEngine.Vector2::zero))
+        (block
+          (if
+            (||
+              (scall UnityEngine.Input::GetKey#UnityEngine.KeyCode (sfield UnityEngine.KeyCode::A))
+              (scall UnityEngine.Input::GetKey#UnityEngine.KeyCode
+                (sfield UnityEngine.KeyCode::LeftArrow)))
+            (block
+              (expr (post-dec (field vector UnityEngine.Vector2::x)))))
+          (if
+            (||
+              (scall UnityEngine.Input::GetKey#UnityEngine.KeyCode (sfield UnityEngine.KeyCode::D))
+              (scall UnityEngine.Input::GetKey#UnityEngine.KeyCode
+                (sfield UnityEngine.KeyCode::RightArrow)))
+            (block
+              (expr (post-inc (field vector UnityEngine.Vector2::x)))))
+          (if
+            (||
+              (scall UnityEngine.Input::GetKey#UnityEngine.KeyCode (sfield UnityEngine.KeyCode::S))
+              (scall UnityEngine.Input::GetKey#UnityEngine.KeyCode
+                (sfield UnityEngine.KeyCode::DownArrow)))
+            (block
+              (expr (post-dec (field vector UnityEngine.Vector2::y)))))
+          (if
+            (||
+              (scall UnityEngine.Input::GetKey#UnityEngine.KeyCode (sfield UnityEngine.KeyCode::W))
+              (scall UnityEngine.Input::GetKey#UnityEngine.KeyCode
+                (sfield UnityEngine.KeyCode::UpArrow)))
+            (block
+              (expr (post-inc (field vector UnityEngine.Vector2::y)))))))
+      (if (> (prop vector UnityEngine.Vector2::sqrMagnitude) 1.0f32)
+        (block
+          (expr (call vector UnityEngine.Vector2::Normalize#))))
+      (local position UnityEngine.Vector3
+        (scall UnityEngine.Vector3::op_Addition#UnityEngine.Vector3,UnityEngine.Vector3
+          (prop (field this StarCollectorGame::player) UnityEngine.Transform::position)
+          (scall UnityEngine.Vector2::op_Implicit#UnityEngine.Vector2
+            (scall UnityEngine.Vector2::op_Multiply#UnityEngine.Vector2,f32 vector
+              (* (field this StarCollectorGame::moveSpeed) (sprop UnityEngine.Time::deltaTime))))))
+      (expr
+        (set (field position UnityEngine.Vector3::x)
+          (scall UnityEngine.Mathf::Clamp#f32,f32,f32 (field position UnityEngine.Vector3::x)
+            (+ (- 0.0f32 (field this StarCollectorGame::halfWidth)) 0.4f32)
+            (- (field this StarCollectorGame::halfWidth) 0.4f32))))
+      (expr
+        (set (field position UnityEngine.Vector3::y)
+          (scall UnityEngine.Mathf::Clamp#f32,f32,f32 (field position UnityEngine.Vector3::y)
+            -4.6f32
+            4.6f32)))
+      (expr
+        (set (prop (field this StarCollectorGame::player) UnityEngine.Transform::position) position))))
+  (method NewTexture UnityEngine.Texture2D ((name string) (size i32)) :mods (private static)
+    (block
+      (local texture2D UnityEngine.Texture2D
+        (new UnityEngine.Texture2D::.ctor#i32,i32,UnityEngine.TextureFormat,bool size size
+          (sfield UnityEngine.TextureFormat::RGBA32)
+          false))
+      (expr (set (prop texture2D UnityEngine.Object::name) name))
+      (return texture2D)))
+  (method OnGUI void () :mods (private)
+    (block
+      (expr (call this StarCollectorGame::EnsureStyles#))
+      (expr
+        (scall UnityEngine.GUI::Label#UnityEngine.Rect,string,UnityEngine.GUIStyle
+          (new UnityEngine.Rect::.ctor#f32,f32,f32,f32 20.0f32 16.0f32 400.0f32 40.0f32)
+          (scall System.String::Concat#object,object "Sterne: "
+            (field this StarCollectorGame::score))
+          (field this StarCollectorGame::hudStyle)))
+      (expr
+        (scall UnityEngine.GUI::Label#UnityEngine.Rect,string,UnityEngine.GUIStyle
+          (new UnityEngine.Rect::.ctor#f32,f32,f32,f32
+            (- (- (sprop UnityEngine.Screen::width) 260i32) 20i32)
+            16.0f32
+            260.0f32
+            40.0f32)
+          (scall System.String::Concat#string,string
+            (scall System.String::Concat#object,object "Zeit: "
+              (scall UnityEngine.Mathf::CeilToInt#f32 (field this StarCollectorGame::timeLeft)))
+            "s")
+          (field this StarCollectorGame::hudStyle)))
+      (if (field this StarCollectorGame::gameOver)
+        (block
+          (local position UnityEngine.Rect
+            (new UnityEngine.Rect::.ctor#f32,f32,f32,f32
+              (- (* (conv f32 (sprop UnityEngine.Screen::width)) 0.5f32) 230.0f32)
+              (- (* (conv f32 (sprop UnityEngine.Screen::height)) 0.5f32) 120.0f32)
+              460.0f32
+              240.0f32))
+          (expr
+            (scall UnityEngine.GUI::Box#UnityEngine.Rect,UnityEngine.GUIContent position
+              (sfield UnityEngine.GUIContent::none)))
+          (expr
+            (scall UnityEngine.GUI::Label#UnityEngine.Rect,string,UnityEngine.GUIStyle
+              (new UnityEngine.Rect::.ctor#f32,f32,f32,f32 (prop position UnityEngine.Rect::x)
+                (+ (prop position UnityEngine.Rect::y) 24.0f32)
+                (prop position UnityEngine.Rect::width)
+                50.0f32)
+              "Zeit abgelaufen!"
+              (field this StarCollectorGame::bigStyle)))
+          (expr
+            (scall UnityEngine.GUI::Label#UnityEngine.Rect,string,UnityEngine.GUIStyle
+              (new UnityEngine.Rect::.ctor#f32,f32,f32,f32 (prop position UnityEngine.Rect::x)
+                (+ (prop position UnityEngine.Rect::y) 84.0f32)
+                (prop position UnityEngine.Rect::width)
+                40.0f32)
+              (scall System.String::Concat#object,object "Punkte: "
+                (field this StarCollectorGame::score))
+              (field this StarCollectorGame::midStyle)))
+          (expr
+            (scall UnityEngine.GUI::Label#UnityEngine.Rect,string,UnityEngine.GUIStyle
+              (new UnityEngine.Rect::.ctor#f32,f32,f32,f32 (prop position UnityEngine.Rect::x)
+                (+ (prop position UnityEngine.Rect::y) 124.0f32)
+                (prop position UnityEngine.Rect::width)
+                40.0f32)
+              (scall System.String::Concat#object,object "Bester Wert: "
+                (field this StarCollectorGame::bestScore))
+              (field this StarCollectorGame::midStyle)))
+          (expr
+            (scall UnityEngine.GUI::Label#UnityEngine.Rect,string,UnityEngine.GUIStyle
+              (new UnityEngine.Rect::.ctor#f32,f32,f32,f32 (prop position UnityEngine.Rect::x)
+                (+ (prop position UnityEngine.Rect::y) 170.0f32)
+                (prop position UnityEngine.Rect::width)
+                40.0f32)
+              "R = Neustart   ESC = Beenden"
+              (field this StarCollectorGame::midStyle)))))))
+  (method PointInPolygon bool ((verts UnityEngine.Vector2[]) (p UnityEngine.Vector2))
+    :mods (private static)
+    (block
+      (local flag bool false)
+      (local num i32 0i32)
+      (local num2 i32 (- (prop verts System.Array::Length) 1i32))
+      (while (< num (prop verts System.Array::Length))
+        (block
+          (if
+            (&&
+              (!=
+                (> (field (index verts num) UnityEngine.Vector2::y) (field p UnityEngine.Vector2::y))
+                (> (field (index verts num2) UnityEngine.Vector2::y)
+                  (field p UnityEngine.Vector2::y)))
+              (< (field p UnityEngine.Vector2::x)
+                (+
+                  (/
+                    (*
+                      (- (field (index verts num2) UnityEngine.Vector2::x)
+                        (field (index verts num) UnityEngine.Vector2::x))
+                      (- (field p UnityEngine.Vector2::y)
+                        (field (index verts num) UnityEngine.Vector2::y)))
+                    (- (field (index verts num2) UnityEngine.Vector2::y)
+                      (field (index verts num) UnityEngine.Vector2::y)))
+                  (field (index verts num) UnityEngine.Vector2::x))))
+            (block
+              (expr (set flag (not flag)))))
+          (expr (set num2 (post-inc num)))))
+      (return flag)))
+  (method ResetGame void () :mods (private)
+    (block
+      (foreach star UnityEngine.Transform (field this StarCollectorGame::stars)
+        (block
+          (if
+            (scall UnityEngine.Object::op_Inequality#UnityEngine.Object,UnityEngine.Object star null)
+            (block
+              (expr
+                (scall UnityEngine.Object::Destroy#UnityEngine.Object
+                  (prop star UnityEngine.Component::gameObject)))))))
+      (expr
+        (call (field this StarCollectorGame::stars)
+          System.Collections.Generic.List<UnityEngine.Transform>::Clear#))
+      (expr
+        (set (prop (field this StarCollectorGame::player) UnityEngine.Transform::position)
+          (sprop UnityEngine.Vector3::zero)))
+      (expr (set (field this StarCollectorGame::score) 0i32))
+      (expr (set (field this StarCollectorGame::elapsed) 0.0f32))
+      (expr (set (field this StarCollectorGame::timeLeft) (field this StarCollectorGame::timeLimit)))
+      (expr (set (field this StarCollectorGame::spawnTimer) 0.4f32))
+      (expr (set (field this StarCollectorGame::gameOver) false))))
+  (method SpawnStar void () :mods (private)
+    (block
+      (local gameObject UnityEngine.GameObject (new UnityEngine.GameObject::.ctor#string "Star"))
+      (local transform UnityEngine.Transform (prop gameObject UnityEngine.GameObject::transform))
+      (local num f32 0.55f32)
+      (expr
+        (set (prop transform UnityEngine.Transform::position)
+          (new UnityEngine.Vector3::.ctor#f32,f32,f32
+            (scall UnityEngine.Random::Range#f32,f32
+              (+ (- 0.0f32 (field this StarCollectorGame::halfWidth)) num)
+              (- (field this StarCollectorGame::halfWidth) num))
+            (scall UnityEngine.Random::Range#f32,f32 (+ -5.0f32 num) (- 5.0f32 num))
+            0.0f32)))
+      (local spriteRenderer UnityEngine.SpriteRenderer
+        (call gameObject UnityEngine.GameObject::AddComponent<UnityEngine.SpriteRenderer>#))
+      (expr
+        (set (prop spriteRenderer UnityEngine.SpriteRenderer::sprite)
+          (field this StarCollectorGame::starSprite)))
+      (expr (set (prop spriteRenderer UnityEngine.Renderer::sortingOrder) 5i32))
+      (local num2 f32 0.7f32)
+      (expr
+        (set (prop transform UnityEngine.Transform::localScale)
+          (new UnityEngine.Vector3::.ctor#f32,f32,f32 num2 num2 1.0f32)))
+      (expr
+        (call (field this StarCollectorGame::stars)
+          System.Collections.Generic.List<UnityEngine.Transform>::Add#T
+          transform))))
+  (method Start void () :mods (private)
+    (block
+      (local num f32
+        (cond (> (sprop UnityEngine.Screen::height) 0i32)
+          (/ (conv f32 (sprop UnityEngine.Screen::width))
+            (conv f32 (sprop UnityEngine.Screen::height)))
+          1.7777778f32))
+      (if (<= num 0.01f32)
+        (block
+          (expr (set num 1.7777778f32))))
+      (expr (set (field this StarCollectorGame::halfWidth) (* 5.0f32 num)))
+      (expr
+        (set (field this StarCollectorGame::circleSprite)
+          (scall StarCollectorGame::CreateCircleSprite#UnityEngine.Color
+            (new UnityEngine.Color::.ctor#f32,f32,f32 0.36f32 0.78f32 1.0f32))))
+      (expr
+        (set (field this StarCollectorGame::starSprite)
+          (scall StarCollectorGame::CreateStarSprite#UnityEngine.Color
+            (new UnityEngine.Color::.ctor#f32,f32,f32 1.0f32 0.84f32 0.22f32))))
+      (expr
+        (set (field this StarCollectorGame::squareSprite)
+          (scall StarCollectorGame::CreateSquareSprite#UnityEngine.Color
+            (new UnityEngine.Color::.ctor#f32,f32,f32 0.22f32 0.26f32 0.36f32))))
+      (expr (call this StarCollectorGame::BuildBorder#))
+      (local gameObject UnityEngine.GameObject (new UnityEngine.GameObject::.ctor#string "Player"))
+      (expr
+        (set (field this StarCollectorGame::player)
+          (prop gameObject UnityEngine.GameObject::transform)))
+      (expr
+        (set (field this StarCollectorGame::playerRenderer)
+          (call gameObject UnityEngine.GameObject::AddComponent<UnityEngine.SpriteRenderer>#)))
+      (expr
+        (set
+          (prop (field this StarCollectorGame::playerRenderer) UnityEngine.SpriteRenderer::sprite)
+          (field this StarCollectorGame::circleSprite)))
+      (expr
+        (set
+          (prop (field this StarCollectorGame::playerRenderer) UnityEngine.Renderer::sortingOrder)
+          10i32))
+      (expr
+        (set (prop (field this StarCollectorGame::player) UnityEngine.Transform::localScale)
+          (scall UnityEngine.Vector3::op_Multiply#UnityEngine.Vector3,f32
+            (sprop UnityEngine.Vector3::one)
+            0.8f32)))
+      (expr (call this StarCollectorGame::ResetGame#))))
+  (method Update void () :mods (private)
+    (block
+      (if (field this StarCollectorGame::gameOver)
+        (block
+          (if
+            (scall UnityEngine.Input::GetKeyDown#UnityEngine.KeyCode (sfield UnityEngine.KeyCode::R))
+            (block
+              (expr (call this StarCollectorGame::ResetGame#))))
+          (if
+            (scall UnityEngine.Input::GetKeyDown#UnityEngine.KeyCode
+              (sfield UnityEngine.KeyCode::Escape))
+            (block
+              (expr (scall UnityEngine.Application::Quit#)))))
+        (block
+          (expr (call this StarCollectorGame::MovePlayer#))
+          (expr (call this StarCollectorGame::UpdateTimer#))
+          (expr (call this StarCollectorGame::UpdateSpawning#))
+          (expr (call this StarCollectorGame::UpdateStars#))
+          (expr (call this StarCollectorGame::CheckCollect#))))))
+  (method UpdateSpawning void () :mods (private)
+    (block
+      (expr
+        (set-op - (field this StarCollectorGame::spawnTimer) (sprop UnityEngine.Time::deltaTime)))
+      (local num i32 10i32)
+      (if
+        (&& (<= (field this StarCollectorGame::spawnTimer) 0.0f32)
+          (<
+            (prop (field this StarCollectorGame::stars)
+              System.Collections.Generic.List<UnityEngine.Transform>::Count)
+            num))
+        (block
+          (expr (call this StarCollectorGame::SpawnStar#))
+          (local t f32
+            (scall UnityEngine.Mathf::Clamp01#f32
+              (/ (field this StarCollectorGame::elapsed) (field this StarCollectorGame::timeLimit))))
+          (expr
+            (set (field this StarCollectorGame::spawnTimer)
+              (scall UnityEngine.Mathf::Lerp#f32,f32,f32 0.85f32 0.35f32 t)))))))
+  (method UpdateStars void () :mods (private)
+    (block
+      (for ((local i i32 0i32))
+        (< i
+          (prop (field this StarCollectorGame::stars)
+            System.Collections.Generic.List<UnityEngine.Transform>::Count))
+        ((post-inc i))
+        (block
+          (local transform UnityEngine.Transform
+            (call (field this StarCollectorGame::stars)
+              System.Collections.Generic.List<UnityEngine.Transform>::get_Item#i32
+              i))
+          (if
+            (not
+              (scall UnityEngine.Object::op_Equality#UnityEngine.Object,UnityEngine.Object transform
+                null))
+            (block
+              (expr
+                (call transform UnityEngine.Transform::Rotate#f32,f32,f32 0.0f32 0.0f32
+                  (* 90.0f32 (sprop UnityEngine.Time::deltaTime))))
+              (local num f32
+                (+ 1.0f32
+                  (*
+                    (scall UnityEngine.Mathf::Sin#f32
+                      (* (+ (sprop UnityEngine.Time::time) (conv f32 i)) 4.0f32))
+                    0.06f32)))
+              (local num2 f32 (* 0.7f32 num))
+              (expr
+                (set (prop transform UnityEngine.Transform::localScale)
+                  (new UnityEngine.Vector3::.ctor#f32,f32,f32 num2 num2 1.0f32)))))))))
+  (method UpdateTimer void () :mods (private)
+    (block
+      (expr (set-op + (field this StarCollectorGame::elapsed) (sprop UnityEngine.Time::deltaTime)))
+      (expr (set-op - (field this StarCollectorGame::timeLeft) (sprop UnityEngine.Time::deltaTime)))
+      (if (<= (field this StarCollectorGame::timeLeft) 0.0f32)
+        (block
+          (expr (set (field this StarCollectorGame::timeLeft) 0.0f32))
+          (expr (set (field this StarCollectorGame::gameOver) true))
+          (if (> (field this StarCollectorGame::score) (field this StarCollectorGame::bestScore))
+            (block
+              (expr
+                (set (field this StarCollectorGame::bestScore) (field this StarCollectorGame::score))))))))))
