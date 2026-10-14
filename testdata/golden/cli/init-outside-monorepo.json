@@ -5,6 +5,7 @@
   "exitCode": 0,
   "data": {
     "path": "demo",
+    "kind": "game",
     "monorepo": false,
     "created": [
       ".gitignore",
@@ -15,16 +16,9 @@
       "ir/",
       "manual/",
       "port.toml"
-    ]
+    ],
+    "git": "created",
+    "submodule": false
   },
-  "diagnostics": [
-    {
-      "id": "PORT-GIT",
-      "severity": "info",
-      "symbol": null,
-      "message": "kein Git-Repo angelegt (außerhalb des Monorepos, Git-Init kommt mit den Git-Befehlen)",
-      "location": null,
-      "hint": null
-    }
-  ]
+  "diagnostics": []
 }

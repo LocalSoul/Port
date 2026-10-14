@@ -21,6 +21,7 @@
     <module>engines/unity/adapter-unity</module>
     <module>generator-java</module>
     <module>integration-tests</module>
+    <module>launcher/launcher-core</module>
     <module>port-cli</module>
   </modules>
 

@@ -1,0 +1,28 @@
+{
+  "schema": "port/1",
+  "command": "init",
+  "ok": true,
+  "exitCode": 0,
+  "data": {
+    "path": "engines/godot",
+    "kind": "engine",
+    "monorepo": true,
+    "created": [
+      ".gitignore",
+      "port.toml",
+      "providers/"
+    ],
+    "git": "created",
+    "submodule": true
+  },
+  "diagnostics": [
+    {
+      "id": "PORT-MANIFEST",
+      "severity": "info",
+      "symbol": null,
+      "message": "api = \"0.0\" in port.toml durch die nachgebildete Version ersetzen, Maven-Modul adapter-godot anlegen",
+      "location": null,
+      "hint": null
+    }
+  ]
+}

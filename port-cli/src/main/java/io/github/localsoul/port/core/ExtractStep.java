@@ -1,5 +1,6 @@
 package io.github.localsoul.port.core;
 
+import io.github.localsoul.launcher.manifest.ProjectManifest;
 import io.github.localsoul.port.json.JsonObject;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -51,7 +52,7 @@ final class ExtractStep implements PhaseStep {
               Severity.INFO,
               null,
               "kein sha256 in port.toml, Eingabe wird nicht geprüft",
-              Manifest.FILE,
+              ProjectManifest.FILE,
               "sha256 = \"" + sha256 + "\" unter [game] eintragen"));
     } else if (!expected.equals(sha256)) {
       throw new PortException(

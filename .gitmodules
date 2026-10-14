@@ -1,0 +1,9 @@
+[submodule "engines/unity"]
+	path = engines/unity
+	url = ./engines/unity
+[submodule "games/demo"]
+	path = games/demo
+	url = ./games/demo
+[submodule "games/starcollector"]
+	path = games/starcollector
+	url = ./games/starcollector

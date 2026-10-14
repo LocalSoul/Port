@@ -59,7 +59,8 @@ Regeln:
 - Jede Engine-Recomp liegt in `engines/<name>/`. Ihre Maven-Module hängen im Root-Reactor. Der Maven-Modulname bleibt `adapter-unity` (Pfad `engines/unity/adapter-unity`).
 - Spiele sind **keine** Module des Root-Reactors. Sie werden mit `port build` gebaut, damit ein defektes Spiel nie den Build der Plattform bricht.
 - Unterprojekte werden vom Katalog (`port catalog`) über ihr `port.toml` gefunden, nicht über feste Listen.
-- Welche Dateien committet werden, regelt je Projekt `.gitignore` (siehe AGENTS.md, Regel 5). Große Spiele können später als Git-Submodule eingebunden werden (ADR-020).
+- Jedes Spiel und jede Engine ist ein **eigenes Git-Repo** und im Monorepo als Submodul mit relativer URL eingetragen (ADR-026). `port init` legt beides an. Klonen mit `git clone --recurse-submodules`; Änderungen zuerst im Projekt-Repo committen, dann den Submodul-Stand im Monorepo.
+- Welche Dateien committet werden, regelt je Projekt `.gitignore` (siehe AGENTS.md, Regel 5).
 
 ## 3. Manifeste
 

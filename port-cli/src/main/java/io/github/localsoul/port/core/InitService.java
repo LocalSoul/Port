@@ -1,5 +1,9 @@
 package io.github.localsoul.port.core;
 
+import io.github.localsoul.launcher.manifest.CoreApi;
+import io.github.localsoul.launcher.manifest.EngineManifest;
+import io.github.localsoul.launcher.manifest.GameManifest;
+import io.github.localsoul.launcher.manifest.ProjectManifest;
 import io.github.localsoul.port.json.JsonObject;
 import io.github.localsoul.port.json.JsonValue;
 import java.io.IOException;
@@ -10,10 +14,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * {@code port init}: legt ein Spiel-Projekt an ({@code docs/cli-contract.md}). Im Monorepo unter
- * {@code games/<name>/}, sonst unter {@code <projektordner>/<name>/}. Kein Git-Init in M4
- * (Nutzerentscheidung). {@code --source} kopiert die Assembly samt der {@code *.dll} aus ihrem
- * Ordner nach {@code input/}.
+ * {@code port init --kind game|engine}: legt ein Spiel- oder Engine-Projekt an ({@code
+ * docs/cli-contract.md}). Im Monorepo unter {@code games/<name>/} bzw. {@code engines/<name>/},
+ * sonst unter {@code <projektordner>/<name>/}. Jedes Projekt bekommt ein eigenes Git-Repo mit
+ * erstem Commit, im Monorepo zusätzlich ein Submodul mit relativer URL (ADR-026). {@code --source}
+ * kopiert die Assembly samt der {@code *.dll} aus ihrem Ordner nach {@code input/}.
  */
 public final class InitService {
 
@@ -22,12 +27,17 @@ public final class InitService {
 
   static final String GITIGNORE = "# Port-Projekt (AGENTS.md, Regel 5)\ninput/\ngen/\n.port/\n";
 
-  private static final List<String> DIRECTORIES = List.of("data", "input", "ir", "manual");
+  static final String ENGINE_GITIGNORE =
+      "# Engine-Recomp (AGENTS.md, Regel 5)\ninput/\n.port/\ntarget/\n";
+
+  private static final List<String> GAME_DIRECTORIES = List.of("data", "input", "ir", "manual");
+
+  private static final List<String> ENGINE_DIRECTORIES = List.of("providers");
 
   private InitService() {}
 
   /**
-   * Legt das Projekt an oder bestätigt ein identisches vorhandenes.
+   * Legt ein Spiel-Projekt an oder bestätigt ein identisches vorhandenes.
    *
    * @param context globale Einstellungen
    * @param name Projektname ({@code [a-z0-9][a-z0-9_-]*})
@@ -38,13 +48,9 @@ public final class InitService {
    * @throws PortException Exit 2 bei ungültigen Argumenten oder abweichendem Manifest, Exit 3 bei
    *     fehlender Quelle, Exit 1 bei Schreibfehlern
    */
-  public static CommandResult init(
+  public static CommandResult initGame(
       CommandContext context, String name, String frontend, Path source) throws PortException {
     checkArguments(name, frontend);
-    Path root = Platform.monorepoRoot(context.projectDir());
-    Path project =
-        root == null ? context.projectDir().resolve(name) : root.resolve("games").resolve(name);
-    List<Diagnostic> diagnostics = new ArrayList<>();
     String sourcePath = DEFAULT_SOURCE;
     String sha256 = null;
     if (source != null) {
@@ -56,11 +62,60 @@ public final class InitService {
       sourcePath = "input/" + source.getFileName();
       sha256 = hash(source);
     }
-    Manifest manifest = Manifest.newGame(name, frontend, sourcePath, sha256);
+    GameManifest manifest = GameManifest.newGame(name, frontend, sourcePath, sha256);
+    return create(context, "games", manifest, GAME_DIRECTORIES, GITIGNORE, source);
+  }
+
+  /**
+   * Legt ein Engine-Projekt an ({@code engines/<name>/}): Manifest mit {@code [engine.provides]}
+   * und {@code [engine.build]}, Ordner {@code providers/}. Das Maven-Modul legt man selbst an.
+   *
+   * @param context globale Einstellungen
+   * @param name Projektname, zugleich Name der bereitgestellten API
+   * @return Ergebnis mit {@code path} und {@code created}
+   * @throws PortException Exit 2 bei ungültigem Namen oder abweichendem Manifest
+   */
+  public static CommandResult initEngine(CommandContext context, String name) throws PortException {
+    checkArguments(name, "unity");
+    EngineManifest manifest =
+        new EngineManifest(
+            name,
+            name,
+            "0.0",
+            CoreApi.defaultRange(),
+            List.of(),
+            "adapter-" + name,
+            "io.github.localsoul.adapter." + name.replace('-', '_') + ".HeadlessMain");
+    CommandResult result =
+        create(context, "engines", manifest, ENGINE_DIRECTORIES, ENGINE_GITIGNORE, null);
+    List<Diagnostic> diagnostics = new ArrayList<>(result.diagnostics());
+    diagnostics.add(
+        Diagnostic.info(
+            DiagnosticIds.MANIFEST,
+            "api = \"0.0\" in port.toml durch die nachgebildete Version ersetzen, Maven-Modul "
+                + manifest.module()
+                + " anlegen"));
+    return CommandResult.ok(result.command(), result.data(), diagnostics);
+  }
+
+  private static CommandResult create(
+      CommandContext context,
+      String area,
+      ProjectManifest manifest,
+      List<String> directories,
+      String gitignore,
+      Path source)
+      throws PortException {
+    Path root = Platform.monorepoRoot(context.projectDir());
+    Path project =
+        root == null
+            ? context.projectDir().resolve(manifest.name())
+            : root.resolve(area).resolve(manifest.name());
+    List<Diagnostic> diagnostics = new ArrayList<>();
     checkExisting(project, manifest, diagnostics);
     List<String> created = new ArrayList<>();
     try {
-      for (String directory : DIRECTORIES) {
+      for (String directory : directories) {
         Path dir = project.resolve(directory);
         if (!Files.isDirectory(dir)) {
           Files.createDirectories(dir);
@@ -70,11 +125,11 @@ public final class InitService {
       if (source != null) {
         copyInputs(source, project, created);
       }
-      if (ProjectFiles.writeAtomic(project.resolve(".gitignore"), GITIGNORE)) {
+      if (ProjectFiles.writeAtomic(project.resolve(".gitignore"), gitignore)) {
         created.add(".gitignore");
       }
-      if (ProjectFiles.writeAtomic(project.resolve(Manifest.FILE), manifest.toToml())) {
-        created.add(Manifest.FILE);
+      if (ProjectFiles.writeAtomic(project.resolve(ProjectManifest.FILE), manifest.toToml())) {
+        created.add(ProjectManifest.FILE);
       }
     } catch (IOException e) {
       throw new PortException(
@@ -82,12 +137,12 @@ public final class InitService {
           Diagnostic.error(
               DiagnosticIds.IO, "Schreiben fehlgeschlagen: " + e.getMessage(), null, null));
     }
-    if (root == null) {
-      diagnostics.add(
-          Diagnostic.info(
-              DiagnosticIds.GIT,
-              "kein Git-Repo angelegt (außerhalb des Monorepos, Git-Init kommt mit den Git-Befehlen)"));
-    }
+    GitService.Result git =
+        GitService.setUp(
+            project,
+            "chore: " + manifest.kind() + " " + manifest.name() + " angelegt (port init)",
+            root,
+            diagnostics);
     created.sort(null);
     String base =
         root == null
@@ -96,8 +151,11 @@ public final class InitService {
     JsonObject data =
         JsonObject.builder()
             .put("path", base)
+            .put("kind", manifest.kind())
             .put("monorepo", root != null)
             .put("created", JsonValue.strings(created))
+            .put("git", git.repository().spelling)
+            .put("submodule", git.submodule())
             .build();
     return CommandResult.ok("init", data, diagnostics);
   }
@@ -119,6 +177,7 @@ public final class InitService {
         }
       }
     }
+    files.sort(null);
     for (Path file : files) {
       String target = "input/" + file.getFileName();
       if (ProjectFiles.writeAtomic(project.resolve(target), Files.readAllBytes(file))) {
@@ -149,9 +208,9 @@ public final class InitService {
   }
 
   /** Ein vorhandenes Manifest muss identisch sein, sonst bleibt alles unverändert (Exit 2). */
-  private static void checkExisting(Path project, Manifest manifest, List<Diagnostic> diagnostics)
-      throws PortException {
-    Path file = project.resolve(Manifest.FILE);
+  private static void checkExisting(
+      Path project, ProjectManifest manifest, List<Diagnostic> diagnostics) throws PortException {
+    Path file = project.resolve(ProjectManifest.FILE);
     if (!Files.exists(file)) {
       return;
     }
@@ -167,7 +226,7 @@ public final class InitService {
           Diagnostic.error(
               DiagnosticIds.EXISTS,
               "Projekt existiert bereits mit anderem port.toml",
-              Manifest.FILE,
+              ProjectManifest.FILE,
               "anderen Namen wählen oder port.toml von Hand anpassen"));
     }
     diagnostics.add(

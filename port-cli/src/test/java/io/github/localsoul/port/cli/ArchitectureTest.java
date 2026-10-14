@@ -18,7 +18,11 @@ class ArchitectureTest {
     classes =
         new ClassFileImporter()
             .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
-            .importPackages("io.github.localsoul.port");
+            .importPackages(
+                "io.github.localsoul.port.cli",
+                "io.github.localsoul.port.core",
+                "io.github.localsoul.port.json",
+                "io.github.localsoul.port.output");
   }
 
   @Test

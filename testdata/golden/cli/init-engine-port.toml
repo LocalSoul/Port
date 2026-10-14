@@ -1,0 +1,13 @@
+[project]
+kind = "engine"
+name = "godot"
+
+[engine.provides]
+adapter = "godot"
+api = "0.0"
+core-api = ">=0.1 <0.2"
+providers = []
+
+[engine.build]
+module = "adapter-godot"
+entry = "io.github.localsoul.adapter.godot.HeadlessMain"

@@ -1,5 +1,9 @@
 package io.github.localsoul.port.core;
 
+import io.github.localsoul.launcher.LauncherException;
+import io.github.localsoul.launcher.manifest.EngineManifest;
+import io.github.localsoul.launcher.manifest.ManifestReader;
+import io.github.localsoul.launcher.manifest.ProjectManifest;
 import io.github.localsoul.port.frontend.unity.FrontendConfig;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,6 +20,9 @@ public final class PlatformLocator {
   /** Gebautes Frontend-Programm relativ zur Plattformwurzel ({@code scripts/build-dotnet.sh}). */
   static final String FRONTEND_DLL =
       "frontend-unity/dotnet/src/PortFrontendUnity/bin/Release/net8.0/port-frontend-unity.dll";
+
+  /** Mapping eines Moduls relativ zum Modulordner. */
+  static final String MAPPING = "src/main/resources/mapping.tsv";
 
   private final Path root;
 
@@ -62,22 +69,58 @@ public final class PlatformLocator {
   }
 
   /**
-   * Adapter-Ordner: {@code --adapter}, sonst {@code engines/<name>/adapter-<name>} der Plattform.
+   * Maven-Modul des Adapters. {@code --adapter} darf ein Engine-Ordner (mit {@code port.toml}) oder
+   * direkt das Modul sein; ohne Angabe gilt {@code engines/<name>/port.toml} der Plattform, dessen
+   * {@code [engine.build] module} das Modul nennt.
    *
    * @param override {@code --adapter} oder {@code null}
    * @param adapterName {@code game.requires.adapter}
-   * @return vorhandener Ordner
-   * @throws PortException Exit 8, wenn er nicht existiert
+   * @return vorhandener Modulordner
+   * @throws PortException Exit 8, wenn Engine oder Modul fehlen; Exit 2 bei ungültigem Manifest
    */
   public Path adapter(Path override, String adapterName) throws PortException {
-    Path dir = override;
-    if (dir == null) {
-      dir = requireRoot().resolve("engines").resolve(adapterName).resolve("adapter-" + adapterName);
+    Path engineDir =
+        override != null ? override : requireRoot().resolve("engines").resolve(adapterName);
+    if (Files.isRegularFile(engineDir.resolve(ProjectManifest.FILE))) {
+      return moduleOf(engineDir, adapterName);
     }
-    if (!Files.isDirectory(dir)) {
-      throw missing("Adapter nicht gefunden: " + dir, "--adapter <pfad> angeben");
+    if (override != null && Files.isRegularFile(override.resolve(MAPPING))) {
+      return override;
     }
-    return dir;
+    throw missing(
+        "Engine nicht gefunden: " + engineDir + " (kein port.toml)",
+        "--adapter <engine-ordner> angeben oder port init --kind engine " + adapterName);
+  }
+
+  private static Path moduleOf(Path engineDir, String adapterName) throws PortException {
+    ProjectManifest manifest;
+    try {
+      manifest =
+          ManifestReader.read(engineDir, engineDir.getFileName() + "/" + ProjectManifest.FILE);
+    } catch (LauncherException e) {
+      throw LauncherErrors.toPort(e);
+    }
+    if (!(manifest instanceof EngineManifest engine)) {
+      throw missing("kein Engine-Projekt: " + engineDir, null);
+    }
+    if (!engine.adapter().equals(adapterName)) {
+      throw new PortException(
+          ExitCode.INVALID,
+          Diagnostic.error(
+              DiagnosticIds.MANIFEST,
+              "Engine stellt '"
+                  + engine.adapter()
+                  + "' bereit, das Spiel braucht '"
+                  + adapterName
+                  + "'",
+              null,
+              "passende Engine mit --adapter angeben"));
+    }
+    Path module = engineDir.resolve(engine.module());
+    if (!Files.isDirectory(module)) {
+      throw missing("Modul der Engine fehlt: " + module, null);
+    }
+    return module;
   }
 
   /**
@@ -89,7 +132,7 @@ public final class PlatformLocator {
    */
   public List<Path> mappings(Path adapter) throws PortException {
     List<Path> files = new ArrayList<>();
-    files.add(adapter.resolve("src/main/resources/mapping.tsv"));
+    files.add(adapter.resolve(MAPPING));
     files.add(requireRoot().resolve("runtime-system/src/main/resources/mapping.tsv"));
     for (Path file : files) {
       if (!Files.isRegularFile(file)) {

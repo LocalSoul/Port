@@ -11,9 +11,9 @@
 4. `port init --kind engine|game`.
 
 **Abnahme:**
-- [ ] Beide Manifestarten werden gelesen und validiert (Tests für gültig und jeden Fehlerfall).
-- [ ] `port init --kind engine` und `--kind game` erzeugen das richtige Gerüst (Golden-Test).
-- [ ] Das Spiel baut weiterhin mit `port build`, der Root-Build (`./mvnw -q verify`) enthält die Engine-Module, aber kein Spiel.
+- [x] Beide Manifestarten werden gelesen und validiert (Tests für gültig und jeden Fehlerfall).
+- [x] `port init --kind engine` und `--kind game` erzeugen das richtige Gerüst (Golden-Test).
+- [x] Das Spiel baut weiterhin mit `port build`, der Root-Build (`./mvnw -q verify`) enthält die Engine-Module, aber kein Spiel.
 
 ## M4a.2 Katalog
 1. Modul `launcher/launcher-core`: durchsucht `games/*`, `engines/*` nach `port.toml`, liest Provider aus `engines/*/providers/*`.
@@ -50,4 +50,5 @@ Vom Nutzer entschieden (2026-10-13):
 - **Startpunkt:** Startliste im Profil (`[run] spawn`, `frames`, `args`); ein headless Starter im Adapter legt je Eintrag ein GameObject mit dem Skript an, läuft N Frames und gibt den Welt-Dump aus. Übergang bis ADR-010/M8.
 - **Spiele:** `games/demo` (synthetische Fixtures, startet) und `games/starcollector` (Katalog und Prüfung, startet noch nicht).
 - **Bauen:** `launch run` baut das Spiel bei veraltetem Hash selbst (gen + build); Engine und Plattform werden nur geprüft (fehlend oder älter als die Quellen → Exit 8 mit Befehl). Kein Maven-Aufruf aus dem Launcher.
+- **Git (2026-10-14, ADR-026):** `port init` legt für jedes Spiel und jede Engine ein eigenes Git-Repo mit erstem Commit an (Programm `git`), im Monorepo als Submodul mit relativer URL (nur gestaged). `engines/unity`, `games/demo`, `games/starcollector` werden ebenso umgestellt.
 - **Mapping-Ort:** über `engines/<e>/port.toml`, `[engine.build] module`; Mapping aus `<modul>/src/main/resources/mapping.tsv`, Klassen aus `target/classes`.

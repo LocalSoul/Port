@@ -3,6 +3,7 @@ package io.github.localsoul.port.cli;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.github.localsoul.port.core.ProjectFiles;
 import java.nio.charset.StandardCharsets;
@@ -28,6 +29,7 @@ class InitCommandTest {
 
   @Test
   void createsProjectStructureOutsideTheMonorepo() throws Exception {
+    assumeTrue(Fixtures.gitAvailable(), "git fehlt (Golden File enthält das Git-Ergebnis)");
     assembly();
     Cli.Run run =
         Cli.run(temp, "--json", "init", "demo", "--source", "downloads/Assembly-CSharp.dll");
@@ -46,7 +48,23 @@ class InitCommandTest {
     assertTrue(gitignore.contains("input/\ngen/\n.port/\n"), gitignore);
     assertTrue(Files.isRegularFile(project.resolve("input/UnityEngine.dll")));
     assertFalse(Files.exists(project.resolve("input/readme.txt")));
-    assertFalse(Files.exists(project.resolve(".git")));
+  }
+
+  @Test
+  void createsOwnGitRepositoryWithFirstCommit() throws Exception {
+    assumeTrue(Fixtures.gitAvailable(), "git fehlt");
+    assembly();
+    Cli.Run run =
+        Cli.run(temp, "--json", "init", "demo", "--source", "downloads/Assembly-CSharp.dll");
+    assertTrue(run.out().contains("\"git\": \"created\""), run.out());
+    Path project = temp.resolve("demo");
+    assertTrue(Files.isDirectory(project.resolve(".git")));
+    String files = Fixtures.git(project, "ls-files");
+    assertTrue(files.contains("port.toml"), files);
+    assertFalse(files.contains("input/"), files);
+    assertTrue(
+        Fixtures.git(project, "log", "--format=%s")
+            .contains("chore: game demo angelegt (port init)"));
   }
 
   @Test
@@ -61,6 +79,9 @@ class InitCommandTest {
     assertEquals(0, again.exitCode(), again.out());
     assertTrue(again.out().contains("\"created\": []"), again.out());
     assertTrue(again.out().contains("PORT-EXISTS"), again.out());
+    if (Fixtures.gitAvailable()) {
+      assertTrue(again.out().contains("\"git\": \"exists\""), again.out());
+    }
     assertEquals(FileTime.fromMillis(1_000_000L), Files.getLastModifiedTime(manifest));
     assertTrue(before.toMillis() > 0);
   }
@@ -76,18 +97,49 @@ class InitCommandTest {
     assertEquals(manifest, Files.readString(temp.resolve("demo/port.toml")));
   }
 
-  @Test
-  void insideTheMonorepoProjectsGoToGames() throws Exception {
+  private Path monorepo() throws Exception {
     Path root = temp.resolve("repo");
     Files.createDirectories(root.resolve("docs"));
     Files.writeString(
         root.resolve("pom.xml"),
         "<project><artifactId>recomp-parent</artifactId><modules/></project>");
+    if (Fixtures.gitAvailable()) {
+      Fixtures.git(root, "init", "-q", "-b", "main");
+    }
+    return root;
+  }
+
+  @Test
+  void insideTheMonorepoProjectsGoToGamesAndBecomeSubmodules() throws Exception {
+    assumeTrue(Fixtures.gitAvailable(), "git fehlt");
+    Path root = monorepo();
     Cli.Run run = Cli.run(temp, "--json", "-C", "repo/docs", "init", "demo");
     assertEquals(0, run.exitCode(), run.out());
     assertTrue(Files.isRegularFile(root.resolve("games/demo/port.toml")));
     assertTrue(run.out().contains("\"path\": \"games/demo\""), run.out());
-    assertFalse(run.out().contains("PORT-GIT"), run.out());
+    assertTrue(run.out().contains("\"submodule\": true"), run.out());
+    String modules = Files.readString(root.resolve(".gitmodules"));
+    assertTrue(modules.contains("path = games/demo"), modules);
+    assertTrue(modules.contains("url = ./games/demo"), modules);
+    assertTrue(Fixtures.git(root, "diff", "--cached", "--name-only").contains("games/demo"));
+    Cli.Run again = Cli.run(temp, "--json", "-C", "repo", "init", "demo");
+    assertEquals(0, again.exitCode(), again.out());
+    assertTrue(again.out().contains("\"git\": \"exists\""), again.out());
+  }
+
+  @Test
+  void engineProjectsGoToEngines() throws Exception {
+    assumeTrue(Fixtures.gitAvailable(), "git fehlt");
+    Path root = monorepo();
+    Cli.Run run = Cli.run(temp, "--json", "-C", "repo", "init", "godot", "--kind", "engine");
+    assertEquals(0, run.exitCode(), run.out());
+    Golden.assertMatches("init-engine.json", run.out());
+    Golden.assertMatches(
+        "init-engine-port.toml",
+        Files.readString(root.resolve("engines/godot/port.toml"), StandardCharsets.UTF_8));
+    assertTrue(Files.isDirectory(root.resolve("engines/godot/providers")));
+    assertTrue(Files.readString(root.resolve(".gitmodules")).contains("path = engines/godot"));
+    assertEquals(2, Cli.run(temp, "-C", "repo", "init", "x", "--kind", "plugin").exitCode());
   }
 
   @Test

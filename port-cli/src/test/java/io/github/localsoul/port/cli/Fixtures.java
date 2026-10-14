@@ -24,6 +24,25 @@ final class Fixtures {
     return Files.isRegularFile(ASSEMBLY) && Files.isRegularFile(FRONTEND_DLL) && onPath("dotnet");
   }
 
+  /** {@code true}, wenn {@code git} im {@code PATH} liegt. */
+  static boolean gitAvailable() {
+    return onPath("git");
+  }
+
+  /** Führt {@code git} aus und liefert die Ausgabe (für Prüfungen in Tests). */
+  static String git(Path dir, String... args) throws Exception {
+    java.util.List<String> command = new java.util.ArrayList<>();
+    command.add("git");
+    command.addAll(java.util.List.of(args));
+    Process process =
+        new ProcessBuilder(command).directory(dir.toFile()).redirectErrorStream(true).start();
+    String output =
+        new String(
+            process.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+    process.waitFor();
+    return output;
+  }
+
   static boolean onPath(String program) {
     String path = System.getenv("PATH");
     if (path == null) {

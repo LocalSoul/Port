@@ -24,7 +24,7 @@ Bei nicht-interaktiver Ausgabe (kein Terminal) ist JSON der Standard (ADR-018).
 ### Projekt
 | Befehl | Zweck |
 |---|---|
-| `port init <name> [--kind game\|engine] [--frontend unity] [--source <pfad>]` | Projekt unter `games/<name>/` bzw. `engines/<name>/` mit `port.toml` und `.gitignore` anlegen (im Monorepo kein neues Git-Repo) |
+| `port init <name> [--kind game\|engine] [--frontend unity] [--source <pfad>]` | Projekt unter `games/<name>/` bzw. `engines/<name>/` mit `port.toml` und `.gitignore` anlegen, eigenes Git-Repo mit erstem Commit, im Monorepo als Submodul eingetragen (ADR-026) |
 | `port status` | Phase pro Assembly, geänderte IR-Knoten, offene `@manual` |
 | `port todo [--class X]` | offene `@manual`-Stellen auflisten |
 | `port clean [--all]` | `gen/` und Cache löschen (`--all` auch `.port/`) |
@@ -46,7 +46,7 @@ Bei nicht-interaktiver Ausgabe (kein Terminal) ist JSON der Standard (ADR-018).
 **Stand M4 (bis Katalog und Profile in M4a):** Jeder Lifecycle-Befehl führt seine Phase und alle Folgephasen aus (`extract → ir → gen → build`; Index und Lint kommen mit M5/M6), `--only` nur die Phase, `--from <phase>` ab einer anderen Phase. `gen` und `build` nehmen `--adapter <pfad>`; ohne Angabe gilt `engines/<a>/adapter-<a>` mit `a = game.requires.adapter`. Plattformwurzel (Adapter, `runtime-system`, gebautes Frontend) ist das Monorepo, in dem das Projekt liegt, sonst `PORT_HOME` (bzw. Systemeigenschaft `port.home`). `gen --class <muster>` erzeugt nur passende Typen (`*`, `?`).
 
 Dateien eines Spiel-Projekts in M4:
-- `init --source <dll>` kopiert die Assembly **und alle `*.dll` aus ihrem Ordner** (bei Unity `Managed/`) nach `input/`, damit das Frontend Referenzen auflöst; `sha256` gilt der Assembly. Außerhalb des Monorepos wird (noch) kein Git-Repo angelegt (`info PORT-GIT`).
+- `init --source <dll>` kopiert die Assembly **und alle `*.dll` aus ihrem Ordner** (bei Unity `Managed/`) nach `input/`, damit das Frontend Referenzen auflöst; `sha256` gilt der Assembly. Jedes Projekt bekommt ein eigenes Git-Repo, im Monorepo zusätzlich ein Submodul (ADR-026, `data.git` = `created`/`exists`/`unavailable`/`failed`, `data.submodule`).
 - `extract` schreibt `.port/extract.tsv`, alle Phasen `.port/state.tsv` (zuletzt abgeschlossene Phase).
 - `ir` schreibt `ir/<Typ>.ir` (kanonisch, mit `:sha256`), entfernt veraltete `.ir`.
 - `gen` schreibt `gen/game/<name>/...` (Paket `game.<name>`); Klassen in `manual/` (beliebige Unterordner, Abgleich über den einfachen Klassennamen) ersetzen das dünne `Foo`.
@@ -170,7 +170,7 @@ Regeln:
 | `find` | `{ "matches": [ { "symbol": "...", "kind": "class\|method\|field\|prop", "location": "..." } ] }` |
 | `deps check` | `{ "adapter": "...", "missing": [ "..." ], "stub": [ "..." ] }` |
 | `gen` | `{ "files": [ "gen/Foo.java" ], "todoCount": n }` |
-| `init` (M4) | `{ "path": "games/x", "monorepo": bool, "created": [ ... ] }` |
+| `init` | `{ "path": "games/x", "kind": "game\|engine", "monorepo": bool, "created": [ ... ], "git": "...", "submodule": bool }` |
 | Lifecycle (M4) | `{ "phases": [ "extract", ... ], "<phase>": { ... } }` je ausgeführter Phase: `extract` `{source, size, sha256}`, `ir` `{types, written, removed}`, `gen` `{files, todoCount, written, removed}`, `build` `{sources, classes, output}` |
 
 Diagnose-IDs der CLI selbst (M4): `PORT-ARGS`, `PORT-MANIFEST`, `PORT-EXISTS`, `PORT-GIT`, `PORT-INPUT`, `PORT-HASH`, `PORT-FRONTEND`, `PORT-UNRESOLVED` (nicht aufgelöste Typen, meist fehlende Referenz-Assemblies), `PORT-IR`, `PORT-TODO` (Generator-Todo), `PORT-MANUAL` (offene Handarbeit, mit `--strict` Exit 5), `PORT-COMPILE`, `PORT-PLATFORM`, `PORT-LATER` (braucht späteren Meilenstein), `PORT-IO`.

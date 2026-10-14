@@ -32,6 +32,11 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>io.github.localsoul</groupId>
+      <artifactId>launcher-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>info.picocli</groupId>
       <artifactId>picocli</artifactId>
     </dependency>
@@ -73,6 +78,9 @@
                     <include>io.github.localsoul:ir</include>
                     <include>io.github.localsoul:generator-java</include>
                     <include>io.github.localsoul:frontend-unity</include>
+                    <include>io.github.localsoul:launcher-core</include>
+                    <!-- nur Metadaten (EngineApiVersion), über launcher-core -->
+                    <include>io.github.localsoul:engine-api</include>
                   </includes>
                 </bannedDependencies>
               </rules>

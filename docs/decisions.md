@@ -227,7 +227,7 @@ IL2CPP-Spiele sind vorerst nicht im Scope (kaum sauber dekompilierbar).
 4. Spiele sind keine Module des Root-Reactors, Engine-Module schon.
 5. Der Katalog (`port catalog`) findet Projekte über `port.toml`.
 6. Der Launcher (`launcher-core`) ist headless und enthält die ganze Logik, eine Oberfläche ruft nur diese Bibliothek.
-**Alternativen:** Ein Repo pro Spiel (verworfen, weil Launcher und gemeinsame Werkzeuge sonst verteilt wären); Git-Submodule für große Spiele (bleibt als spätere Option, ohne Layoutänderung möglich).
+**Alternativen:** Ein Repo pro Spiel (verworfen, weil Launcher und gemeinsame Werkzeuge sonst verteilt wären); Git-Submodule für große Spiele (bleibt als spätere Option, ohne Layoutänderung möglich). **Nachtrag 2026-10-14:** Mit ADR-026 ist jedes Projekt ein eigenes Repo und im Monorepo ein Submodul.
 **Folgen:** Neues Modul `launcher`, neue Befehle `port catalog` und `port launch`, neues Dokument `docs/projects.md`. Der Abschnitt `[target]` im Spiel-Manifest entfällt.
 
 ## ADR-021: Technik der Launcher-Oberfläche
@@ -281,3 +281,14 @@ IL2CPP-Spiele sind vorerst nicht im Scope (kaum sauber dekompilierbar).
 **Folgen:**
 - Ein Typ `X` und ein Typ `X<T>` mit gleichnamigem Member gleicher Signatur hätten dieselbe Symbol-ID. In .NET selten; innerhalb einer Datei meldet IR004 bereits gleichnamige Typen.
 - Parser, Printer und Validator in `ir` (`MemberRef` mit Typargumenten am deklarierenden Typ, `symbolId()`), das Unity-Frontend (Member generischer Typen und Delegate-Aufrufe) und die Golden Files werden angepasst. Version bleibt 1 (abwärtskompatible Erweiterung, Spec Abschnitt 11).
+
+## ADR-026: Eigenes Git-Repo je Projekt, im Monorepo als Submodul
+**Status:** ACCEPTED (vom Nutzer entschieden, 2026-10-14)
+**Kontext:** Spiele und Engines sind getrennte Projekte (ADR-020). Der Nutzer möchte, dass jedes neu angelegte Spiel und jede neue Engine sofort ein eigenes Git-Repo bekommt, auch im Monorepo. Bisher galt „im Monorepo kein neues Git-Repo“ (CLI-Vertrag), Submodule waren eine spätere Option.
+**Entscheidung:**
+1. `port init` (beide Projektarten) führt im Projektordner `git init` aus und legt einen ersten Commit mit dem Gerüst an (`input/`, `gen/`, `.port/`, bei Engines `target/` sind per `.gitignore` ausgeschlossen).
+2. Im Monorepo trägt `port init` das Projekt als **Submodul mit relativer URL** ein (`git submodule add ./games/<name> games/<name>`), nur gestaged, ohne Commit im Monorepo.
+3. Werkzeug ist das Programm `git` (kein JGit, das slf4j-api bräuchte). Fehlt `git` oder scheitert ein Schritt, gibt es eine Warnung `PORT-GIT`, das Projekt bleibt angelegt.
+4. Bestehende Projekte werden umgestellt: `engines/unity` (mit `adapter-unity`), `games/demo`, `games/starcollector`. Die Geschichte von `adapter-unity` bleibt im Monorepo erhalten, sie wird nicht umgeschrieben.
+**Folgen:** Klonen mit `git clone --recurse-submodules` (lokal funktionieren die relativen URLs, weil sie gegen den Ursprung des Monorepos aufgelöst werden). Bei einem späteren Remote braucht jedes Projekt ein eigenes Repo an derselben relativen Stelle. Der Root-Build braucht das Submodul `engines/unity`. Änderungen in einem Projekt werden in dessen Repo committet, danach im Monorepo der neue Submodul-Stand. CLI-Vertrag (`init`), `docs/projects.md` und ADR-020 (Punkt Submodule) sind angepasst.
+
