@@ -36,6 +36,18 @@ public final class JavaGenerator {
   }
 
   /**
+   * Voll qualifizierter Name der Java-Klasse, die der Generator für einen IR-Typ erzeugt (das dünne
+   * {@code Foo} bzw. die Klasse in {@code manual/}), z. B. für den Start einer Zusammenstellung.
+   *
+   * @param basePackage Zielpaket der Konfiguration
+   * @param irType qualifizierter IR-Typname, z. B. {@code Game.Logic.Mover}
+   * @return z. B. {@code game.demo.game.logic.Mover}
+   */
+  public static String javaClassName(String basePackage, String irType) {
+    return JavaNames.packageOf(basePackage, irType) + "." + JavaNames.simpleName(irType);
+  }
+
+  /**
    * Erzeugt Java für alle Typen der Dateien. Typen aus allen Dateien gelten als eigene Typen.
    *
    * @param irFiles gelesene IR-Dateien eines Projekts

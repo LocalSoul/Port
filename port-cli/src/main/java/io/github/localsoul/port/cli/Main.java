@@ -98,7 +98,7 @@ public final class Main {
       return failArgs(commandName, "Unterbefehl fehlt", flag(chain, JSON), out, err);
     }
     boolean json = flag(chain, JSON);
-    CommandContext context = context(chain, workingDir, err, platformHome);
+    CommandContext context = context(chain, workingDir, out, err, platformHome);
     PortCommand command = command(commandName);
     CommandResult result;
     try {
@@ -208,7 +208,11 @@ public final class Main {
   }
 
   private static CommandContext context(
-      List<ParseResult> chain, Path workingDir, PrintStream err, Path platformHome) {
+      List<ParseResult> chain,
+      Path workingDir,
+      PrintStream out,
+      PrintStream err,
+      Path platformHome) {
     String directory = null;
     for (ParseResult result : chain) {
       String value = result.matchedOptionValue(DIRECTORY, null);
@@ -225,7 +229,9 @@ public final class Main {
         flag(chain, QUIET),
         flag(chain, OFFLINE),
         err,
-        platformHome);
+        platformHome,
+        out,
+        flag(chain, JSON));
   }
 
   private boolean hasCommand(String name) {

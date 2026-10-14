@@ -263,6 +263,13 @@ class JavaGeneratorTest {
   }
 
   @Test
+  void javaClassNameFollowsThePackageRule() {
+    assertEquals("game.demo.Mover", JavaGenerator.javaClassName("game.demo", "Mover"));
+    assertEquals(
+        "game.demo.game.logic.Enemy", JavaGenerator.javaClassName("game.demo", "Game.Logic.Enemy"));
+  }
+
+  @Test
   void parsesIrSyntaxExceptionFree() throws IrSyntaxException {
     assertEquals(1, new IrReader().read(HEADER, "x.ir").header().version());
   }

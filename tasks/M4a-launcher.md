@@ -36,9 +36,9 @@
 1. `port launch run`: bei Bedarf bauen (Hash der Eingaben), Klassenpfad aus Artefakten zusammensetzen, neue JVM starten, Exit-Code durchreichen.
 
 **Abnahme:**
-- [ ] Das Testspiel startet über ein Profil headless und liefert die erwartete Ausgabe (Integrationstest).
-- [ ] Veraltetes Artefakt löst einen Bau aus, aktuelles nicht (Test).
-- [ ] Der Launcher selbst hat kein Spiel und keinen Adapter im Klassenpfad (ArchUnit).
+- [x] Das Testspiel startet über ein Profil headless und liefert die erwartete Ausgabe (Integrationstest).
+- [x] Veraltetes Artefakt löst einen Bau aus, aktuelles nicht (Test).
+- [x] Der Launcher selbst hat kein Spiel und keinen Adapter im Klassenpfad (ArchUnit).
 
 ## Nicht-Ziele
 Oberfläche (M12a), Provider-Mischung (M12), Download von Spielen, Git-Submodule.
@@ -51,4 +51,5 @@ Vom Nutzer entschieden (2026-10-13):
 - **Spiele:** `games/demo` (synthetische Fixtures, startet) und `games/starcollector` (Katalog und Prüfung, startet noch nicht).
 - **Bauen:** `launch run` baut das Spiel bei veraltetem Hash selbst (gen + build); Engine und Plattform werden nur geprüft (fehlend oder älter als die Quellen → Exit 8 mit Befehl). Kein Maven-Aufruf aus dem Launcher.
 - **Git (2026-10-14, ADR-026):** `port init` legt für jedes Spiel und jede Engine ein eigenes Git-Repo mit erstem Commit an (Programm `git`), im Monorepo als Submodul mit relativer URL (nur gestaged). `engines/unity`, `games/demo`, `games/starcollector` werden ebenso umgestellt.
+- **Starter (2026-10-14):** Ein Starter im Adapter hätte Regel 1 gebrochen (Adapter kennt `engine-core` nicht). Stattdessen setzt `launcher/launcher-boot` Core und Adapter in der Spiel-JVM zusammen; der Adapter meldet sich über die neue Schnittstelle `EngineBinding` (engine-api) per `ServiceLoader`. `[engine.build] entry` entfällt.
 - **Mapping-Ort:** über `engines/<e>/port.toml`, `[engine.build] module`; Mapping aus `<modul>/src/main/resources/mapping.tsv`, Klassen aus `target/classes`.

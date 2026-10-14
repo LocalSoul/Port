@@ -14,6 +14,8 @@ import java.nio.file.Path;
  * @param offline {@code --offline} (in M4 ohne Wirkung)
  * @param log Fortschrittsausgabe (stderr)
  * @param platformHome Plattformwurzel außerhalb des Monorepos ({@code PORT_HOME}) oder {@code null}
+ * @param out stdout (für Ausgaben gestarteter Spiele ohne {@code --json})
+ * @param json {@code --json}: stdout gehört allein der JSON-Hülle
  */
 public record CommandContext(
     Path workingDir,
@@ -23,7 +25,9 @@ public record CommandContext(
     boolean quiet,
     boolean offline,
     PrintStream log,
-    Path platformHome) {
+    Path platformHome,
+    PrintStream out,
+    boolean json) {
 
   /**
    * Fortschrittsmeldung auf stderr, nur mit {@code -v}.

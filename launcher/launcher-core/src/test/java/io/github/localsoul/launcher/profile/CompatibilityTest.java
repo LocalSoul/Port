@@ -31,8 +31,7 @@ class CompatibilityTest {
     Files.createDirectories(root.resolve("games/neu"));
     Files.writeString(root.resolve("games/neu/port.toml"), newer.toToml());
     EngineManifest future =
-        new EngineManifest(
-            "zukunft", "unity", "2022.3", ">=9.0", List.of(), "adapter-unity", "a.Main");
+        new EngineManifest("zukunft", "unity", "2022.3", ">=9.0", List.of(), "adapter-unity");
     Files.createDirectories(root.resolve("engines/zukunft"));
     Files.writeString(root.resolve("engines/zukunft/port.toml"), future.toToml());
     catalog = Catalog.scan(root);

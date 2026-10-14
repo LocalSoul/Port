@@ -44,7 +44,6 @@ class ManifestReaderTest {
 
       [engine.build]
       module = "adapter-unity"
-      entry = "io.github.localsoul.adapter.unity.HeadlessMain"
 
       [conformance]
       scenarios = "conformance/scenarios"
@@ -81,8 +80,7 @@ class ManifestReaderTest {
     GameManifest game = GameManifest.newGame("demo", "unity", "input/a.dll", "0".repeat(64));
     assertEquals(game, ManifestReader.parse(game.toToml(), "port.toml"));
     EngineManifest engine =
-        new EngineManifest(
-            "godot", "godot", "4.2", ">=0.1", List.of("render-x"), "adapter-godot", "a.B");
+        new EngineManifest("godot", "godot", "4.2", ">=0.1", List.of("render-x"), "adapter-godot");
     assertEquals(engine, ManifestReader.parse(engine.toToml(), "port.toml"));
   }
 
@@ -111,7 +109,6 @@ class ManifestReaderTest {
     assertEquals(
         "Pflichtfeld fehlt: engine.build.module",
         failure(ENGINE.replace("module =", "#")).getMessage());
-    failure(ENGINE.replace("entry =", "#"));
     failure(ENGINE.replace("providers = []", "providers = \"x\""));
   }
 }

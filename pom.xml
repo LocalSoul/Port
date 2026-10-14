@@ -22,6 +22,7 @@
     <module>generator-java</module>
     <module>integration-tests</module>
     <module>launcher/launcher-core</module>
+    <module>launcher/launcher-boot</module>
     <module>port-cli</module>
   </modules>
 

@@ -78,14 +78,7 @@ public final class InitService {
   public static CommandResult initEngine(CommandContext context, String name) throws PortException {
     checkArguments(name, "unity");
     EngineManifest manifest =
-        new EngineManifest(
-            name,
-            name,
-            "0.0",
-            CoreApi.defaultRange(),
-            List.of(),
-            "adapter-" + name,
-            "io.github.localsoul.adapter." + name.replace('-', '_') + ".HeadlessMain");
+        new EngineManifest(name, name, "0.0", CoreApi.defaultRange(), List.of(), "adapter-" + name);
     CommandResult result =
         create(context, "engines", manifest, ENGINE_DIRECTORIES, ENGINE_GITIGNORE, null);
     List<Diagnostic> diagnostics = new ArrayList<>(result.diagnostics());

@@ -10,4 +10,3 @@ providers = []
 
 [engine.build]
 module = "adapter-godot"
-entry = "io.github.localsoul.adapter.godot.HeadlessMain"

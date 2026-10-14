@@ -97,8 +97,7 @@ public final class ManifestReader {
     checkRange(toml, "engine.provides.core-api", coreApi);
     List<String> providers = toml.strings("engine.provides.providers");
     String module = toml.required("engine.build.module");
-    String entry = toml.required("engine.build.entry");
-    return new EngineManifest(name, adapter, api, coreApi, providers, module, entry);
+    return new EngineManifest(name, adapter, api, coreApi, providers, module);
   }
 
   private static void checkRange(TomlFile toml, String key, String text) throws LauncherException {

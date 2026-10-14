@@ -3,10 +3,13 @@ package io.github.localsoul.port.core;
 import io.github.localsoul.launcher.LauncherException;
 import io.github.localsoul.launcher.catalog.Catalog;
 import io.github.localsoul.launcher.catalog.CatalogEntry;
+import io.github.localsoul.launcher.launch.LaunchPlan;
+import io.github.localsoul.launcher.launch.Launcher;
 import io.github.localsoul.launcher.profile.Compatibility;
 import io.github.localsoul.launcher.profile.Finding;
 import io.github.localsoul.launcher.profile.Profile;
 import io.github.localsoul.launcher.profile.ProfileStore;
+import io.github.localsoul.port.generator.java.JavaGenerator;
 import io.github.localsoul.port.json.JsonObject;
 import io.github.localsoul.port.json.JsonValue;
 import java.io.IOException;
@@ -16,7 +19,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-/** {@code port launch new/list/check} ({@code docs/cli-contract.md}, Katalog und Launcher). */
+/** {@code port launch new/list/check/run} ({@code docs/cli-contract.md}, Katalog und Launcher). */
 public final class LaunchService {
 
   private LaunchService() {}
@@ -158,6 +161,85 @@ public final class LaunchService {
       return CommandResult.failed("launch check", data, diagnostics, ExitCode.INVALID);
     }
     return CommandResult.ok("launch check", data, diagnostics);
+  }
+
+  /**
+   * Startet ein Profil: prüfen, Spiel bei Bedarf bauen, Engine und Plattform prüfen, Spiel-JVM mit
+   * {@code launcher-boot} starten. Die Ausgabe des Spiels geht auf stdout (mit {@code --json} auf
+   * stderr).
+   *
+   * @param context globale Einstellungen
+   * @param name Profilname
+   * @param forceBuild {@code --build}
+   * @return {@code profile}, {@code built}, {@code gameExitCode}; Exit-Code des Spiels als Ergebnis
+   *     (Codes außerhalb des Vertrags werden 1)
+   * @throws PortException Exit 2 bei unpassendem Profil, Exit 8 bei ungebauter Plattform, Exit des
+   *     Baus bei Baufehlern
+   */
+  public static CommandResult run(CommandContext context, String name, boolean forceBuild)
+      throws PortException {
+    CommandResult check = check(context, name);
+    if (check.failure() != null) {
+      return CommandResult.failed("launch run", check.data(), check.diagnostics(), check.failure());
+    }
+    Path root = CatalogService.root(context);
+    Profile profile = read(root, name);
+    Catalog catalog = scan(root);
+    CatalogEntry game = null;
+    for (CatalogEntry entry : catalog.list("game")) {
+      if (entry.path().equals(profile.game())) {
+        game = entry;
+      }
+    }
+    List<Diagnostic> diagnostics = new ArrayList<>();
+    if (profile.spawn().isEmpty()) {
+      diagnostics.add(
+          Diagnostic.warn(
+              DiagnosticIds.PROFILE,
+              "[run] spawn ist leer, es wird nichts angelegt",
+              profile.path()));
+    }
+    String basePackage = GenStep.basePackage(game.name());
+    List<String> classNames = new ArrayList<>();
+    for (String type : profile.spawn()) {
+      classNames.add(JavaGenerator.javaClassName(basePackage, type));
+    }
+    PortGameBuilder builder = new PortGameBuilder(context);
+    LaunchPlan plan;
+    try {
+      plan = Launcher.prepare(catalog, profile, classNames, forceBuild, builder);
+    } catch (LauncherException e) {
+      diagnostics.addAll(builder.diagnostics());
+      diagnostics.add(Diagnostic.error(e.id(), e.getMessage(), e.location(), e.hint()));
+      return CommandResult.failed(
+          "launch run", JsonObject.empty(), diagnostics, ExitCode.of(e.exitCode()));
+    }
+    diagnostics.addAll(builder.diagnostics());
+    context.progress("port: starte " + String.join(" ", plan.command()));
+    int gameExit;
+    try {
+      gameExit =
+          Launcher.run(
+              plan,
+              root.resolve(profile.game()),
+              context.json() ? context.log() : context.out(),
+              context.log());
+    } catch (LauncherException e) {
+      throw LauncherErrors.toPort(e);
+    }
+    JsonObject data =
+        JsonObject.builder()
+            .put("profile", profile.name())
+            .put("built", plan.built())
+            .put("gameExitCode", gameExit)
+            .build();
+    if (gameExit != 0) {
+      diagnostics.add(
+          Diagnostic.error(
+              DiagnosticIds.RUN, "Spiel endete mit Exit " + gameExit, profile.path(), null));
+      return CommandResult.failed("launch run", data, diagnostics, ExitCode.of(gameExit));
+    }
+    return CommandResult.ok("launch run", data, diagnostics);
   }
 
   static Profile read(Path root, String name) throws PortException {

@@ -16,7 +16,7 @@ final class LaunchCommands {
   private LaunchCommands() {}
 
   static List<PortCommand> all() {
-    return List.of(new ListCommand(), new NewCommand(), new CheckCommand());
+    return List.of(new ListCommand(), new NewCommand(), new CheckCommand(), new RunCommand());
   }
 
   static PositionalParamSpec profileName() {
@@ -114,6 +114,36 @@ final class LaunchCommands {
     @Override
     public CommandResult run(ParseResult args, CommandContext context) throws PortException {
       return LaunchService.check(context, args.matchedPositionalValue(0, ""));
+    }
+  }
+
+  /** {@code port launch run <profil> [--build]}. */
+  static final class RunCommand implements PortCommand {
+
+    @Override
+    public String name() {
+      return "launch run";
+    }
+
+    @Override
+    public CommandSpec spec() {
+      CommandSpec spec = CommandSpec.create().name("run");
+      spec.usageMessage()
+          .description("Bei Bedarf bauen und in eigener JVM starten (Exit-Code des Spiels).");
+      spec.addPositional(profileName());
+      spec.addOption(
+          OptionSpec.builder("--build")
+              .arity("0")
+              .type(boolean.class)
+              .description("Spiel neu bauen, auch wenn es aktuell ist")
+              .build());
+      return spec;
+    }
+
+    @Override
+    public CommandResult run(ParseResult args, CommandContext context) throws PortException {
+      return LaunchService.run(
+          context, args.matchedPositionalValue(0, ""), args.hasMatchedOption("--build"));
     }
   }
 }

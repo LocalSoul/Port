@@ -4,8 +4,9 @@ import java.util.List;
 
 /**
  * {@code port.toml} einer Engine-Recomp ({@code docs/projects.md}). {@code [engine.build]} ist eine
- * Ergänzung aus M4a: Maven-Modul mit Adapter, Mapping und Klassen sowie die Startklasse. {@code
- * [engine.sources]} und {@code [conformance]} kommen später.
+ * Ergänzung aus M4a: das Maven-Modul mit Adapter, Mapping und Klassen. Gestartet wird über {@code
+ * launcher-boot}, der Adapter meldet sich per {@code EngineBinding}. {@code [engine.sources]} und
+ * {@code [conformance]} kommen später.
  *
  * @param name Projektname
  * @param adapter Name der bereitgestellten API, z. B. {@code unity}
@@ -13,16 +14,9 @@ import java.util.List;
  * @param coreApi benötigter Bereich der Engine-API ({@link VersionRange})
  * @param providers bereitgestellte Subsystem-Provider (ab M12)
  * @param module Maven-Modul relativ zum Engine-Ordner, z. B. {@code adapter-unity}
- * @param entry voll qualifizierte Startklasse für {@code port launch run}
  */
 public record EngineManifest(
-    String name,
-    String adapter,
-    String api,
-    String coreApi,
-    List<String> providers,
-    String module,
-    String entry)
+    String name, String adapter, String api, String coreApi, List<String> providers, String module)
     implements ProjectManifest {
 
   /** Kopiert die Liste. */
@@ -44,7 +38,7 @@ public record EngineManifest(
         .entry("api", api)
         .entry("core-api", coreApi)
         .entry("providers", providers);
-    out.table("engine.build").entry("module", module).entry("entry", entry);
+    out.table("engine.build").entry("module", module);
     return out.text();
   }
 }

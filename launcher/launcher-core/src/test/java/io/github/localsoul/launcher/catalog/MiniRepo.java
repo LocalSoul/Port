@@ -25,8 +25,7 @@ public final class MiniRepo {
     write(root.resolve("games/demo/port.toml"), game.toToml());
     write(root.resolve("games/kaputt/port.toml"), "[project]\nkind = \"game\"\n");
     EngineManifest unity =
-        new EngineManifest(
-            "unity", "unity", "2022.3", ">=0.1 <0.2", List.of(), "adapter-unity", "a.Main");
+        new EngineManifest("unity", "unity", "2022.3", ">=0.1 <0.2", List.of(), "adapter-unity");
     write(root.resolve("engines/unity/port.toml"), unity.toToml());
     write(
         root.resolve("engines/unity/adapter-unity/" + Coverage.METADATA),
@@ -34,13 +33,7 @@ public final class MiniRepo {
             + " { \"id\": \"C\", \"status\": \"full\" } ] }");
     EngineManifest godot =
         new EngineManifest(
-            "godot",
-            "godot",
-            "4.2",
-            ">=0.1 <0.2",
-            List.of("input-godot-like"),
-            "adapter-godot",
-            "g.Main");
+            "godot", "godot", "4.2", ">=0.1 <0.2", List.of("input-godot-like"), "adapter-godot");
     write(root.resolve("engines/godot/port.toml"), godot.toToml());
     Files.createDirectories(root.resolve("engines/godot/providers/input-godot-like"));
   }
