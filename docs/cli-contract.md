@@ -2,7 +2,7 @@
 
 Verbindliche Spezifikation für Befehle, Flags, Ausgaben und Exit-Codes. Implementierung: `port-cli` (Java, picocli).
 
-**Stand M4:** umgesetzt sind `init`, `extract`, `ir`, `gen`, `build`, `status` und die globalen Flags `--json`, `-C`, `-q`, `-v`, `--offline` (noch ohne Wirkung), `--strict`. Alles andere ist Vertrag für spätere Meilensteine. JSON als Standard ohne Terminal (ADR-018) kommt mit M6a.
+**Stand M4a:** umgesetzt sind `init`, `extract`, `ir`, `gen`, `build`, `status`, `catalog list/show`, `launch new/list/check/run` und die globalen Flags `--json`, `-C`, `-q`, `-v`, `--offline` (noch ohne Wirkung), `--strict`. Alles andere ist Vertrag für spätere Meilensteine. JSON als Standard ohne Terminal (ADR-018) kommt mit M6a.
 
 ## Globale Flags
 
@@ -88,6 +88,12 @@ Details und Formate: `docs/agent-tooling.md`, `docs/ai-fix-phase.md`.
 
 Ausgabe immer als Ergebnisobjekt (`--json`). Fehlerhafte Kombinationen liefern Diagnosen und Exit-Code 2. Details: `docs/projects.md`, `docs/modules/launcher.md`.
 
+Stand M4a:
+- `catalog list` nimmt `--kind`, `--limit n` (0 = alle) und `--cursor c` (Wert aus `data.next`); defekte Unterprojekte erscheinen als `warn PORT-CATALOG`, der Katalog bricht nicht ab. Wurzel ist das Monorepo des Projektordners, sonst `PORT_HOME`.
+- `launch new` nimmt Namen aus dem Katalog; `--set` wird bis M12 nur mit `PORT-LATER` gemeldet.
+- `launch check` prüft Spiel und Engine im Katalog, Adapter-Name, `provides.api` in `requires.api`, die Engine-API der Plattform in `core-api` und die Core-Implementierung; jeder Fehlschlag ist ein `error PORT-PROFILE` mit dem nächsten Befehl im `hint`, dann Exit 2.
+- `launch run` baut das Spiel nur bei geändertem Hash (oder `--build`), prüft Engine und Plattform (Exit 8), startet `launcher-boot` in eigener JVM. Die Ausgabe des Spiels geht auf stdout, mit `--json` auf stderr. Exit-Code ist der des Spiels (Codes außerhalb dieser Tabelle werden 1).
+
 ### Konformität (ab M11a, ADR-022)
 | Befehl | Zweck |
 |---|---|
@@ -171,9 +177,15 @@ Regeln:
 | `deps check` | `{ "adapter": "...", "missing": [ "..." ], "stub": [ "..." ] }` |
 | `gen` | `{ "files": [ "gen/Foo.java" ], "todoCount": n }` |
 | `init` | `{ "path": "games/x", "kind": "game\|engine", "monorepo": bool, "created": [ ... ], "git": "...", "submodule": bool }` |
+| `catalog list` | `{ "items": [ { "name", "kind", "path" } ], "total": n, "next": "c" \| null }` |
+| `catalog show` | `{ "name", "kind", "path", ... }`, Spiel: `frontend`, `source`, `requires`; Engine: `provides`, `module`, `coverage: { full, stub } \| null` |
+| `launch list` | `{ "items": [ { "name", "game", "engine" } ] }` |
+| `launch new` | `{ "path": "profiles/x.toml", "created": bool }` |
+| `launch check` | `{ "profile", "game", "engine", "compatible": bool, "checks": [ { "check", "ok", "message" } ] }` |
+| `launch run` | `{ "profile", "built": bool, "gameExitCode": n }` |
 | Lifecycle (M4) | `{ "phases": [ "extract", ... ], "<phase>": { ... } }` je ausgeführter Phase: `extract` `{source, size, sha256}`, `ir` `{types, written, removed}`, `gen` `{files, todoCount, written, removed}`, `build` `{sources, classes, output}` |
 
-Diagnose-IDs der CLI selbst (M4): `PORT-ARGS`, `PORT-MANIFEST`, `PORT-EXISTS`, `PORT-GIT`, `PORT-INPUT`, `PORT-HASH`, `PORT-FRONTEND`, `PORT-UNRESOLVED` (nicht aufgelöste Typen, meist fehlende Referenz-Assemblies), `PORT-IR`, `PORT-TODO` (Generator-Todo), `PORT-MANUAL` (offene Handarbeit, mit `--strict` Exit 5), `PORT-COMPILE`, `PORT-PLATFORM`, `PORT-LATER` (braucht späteren Meilenstein), `PORT-IO`.
+Diagnose-IDs der CLI selbst (M4): `PORT-ARGS`, `PORT-MANIFEST`, `PORT-EXISTS`, `PORT-GIT`, `PORT-INPUT`, `PORT-HASH`, `PORT-FRONTEND`, `PORT-UNRESOLVED` (nicht aufgelöste Typen, meist fehlende Referenz-Assemblies), `PORT-IR`, `PORT-TODO` (Generator-Todo), `PORT-MANUAL` (offene Handarbeit, mit `--strict` Exit 5), `PORT-COMPILE`, `PORT-PLATFORM`, `PORT-LATER` (braucht späteren Meilenstein), `PORT-IO`; ab M4a `PORT-CATALOG`, `PORT-PROFILE`, `PORT-RUN`.
 
 ## Designregeln
 

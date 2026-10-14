@@ -229,6 +229,7 @@ IL2CPP-Spiele sind vorerst nicht im Scope (kaum sauber dekompilierbar).
 6. Der Launcher (`launcher-core`) ist headless und enthält die ganze Logik, eine Oberfläche ruft nur diese Bibliothek.
 **Alternativen:** Ein Repo pro Spiel (verworfen, weil Launcher und gemeinsame Werkzeuge sonst verteilt wären); Git-Submodule für große Spiele (bleibt als spätere Option, ohne Layoutänderung möglich). **Nachtrag 2026-10-14:** Mit ADR-026 ist jedes Projekt ein eigenes Repo und im Monorepo ein Submodul.
 **Folgen:** Neues Modul `launcher`, neue Befehle `port catalog` und `port launch`, neues Dokument `docs/projects.md`. Der Abschnitt `[target]` im Spiel-Manifest entfällt.
+**Stand nach M4a (2026-10-14, Status bleibt PROPOSED):** Umgesetzt wie entworfen mit `launcher-core` (Manifeste, Katalog, Profile, Prüfung, Start) und `launcher-boot` (Startklasse der Spiel-JVM). Ergänzungen: `[engine.build] module` im Engine-Manifest, `[run] spawn/frames/args` im Profil als Übergang bis ADR-010, Schnittstelle `EngineBinding` in `engine-api`, eigene Repos je Projekt als Submodule (ADR-026). Engine und Plattform werden beim Start nur geprüft, nicht gebaut.
 
 ## ADR-021: Technik der Launcher-Oberfläche
 **Status:** OPEN

@@ -4,10 +4,10 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 
 ## Aktueller Stand
 
-- Phase: **M4 abgeschlossen** und nach `main` gemergt (alle Abnahmekriterien in `tasks/M4-cli-skeleton.md` erfüllt; `scripts/build-dotnet.sh` und `./mvnw -q verify` grün). Das CLI `port` steuert die Pipeline auf einem Projektordner: `init → extract → ir → gen → build`, `status`, JSON-Hülle und Exit-Codes nach Vertrag.
+- Phase: **M4a abgeschlossen** auf Branch `task/M4a-launcher` (alle Abnahmekriterien in `tasks/M4a-launcher.md` erfüllt; `scripts/build-dotnet.sh` und `./mvnw -q verify` grün). Spiele und Engines sind eigene Repos (Submodule), `port catalog` und `port launch` stellen Profile zusammen, `port launch run demo-unity` startet das Testspiel in eigener JVM. Merge nach `main` steht aus (Nutzer entscheidet).
 - M0 bis M4, ADR-019 und ADR-025 sind auf `main` (lokal, kein Remote).
-- Nächste Aufgabe laut Roadmap: M4a (Monorepo-Layout, Katalog, Launcher headless, ADR-020).
-- Letzte Session: 2026-10-13, M0.2 bis M4.5, ADR-019, ADR-024, ADR-025
+- Nächste Aufgabe laut Roadmap: M5 (Index und Suchbefehle).
+- Letzte Session: 2026-10-14, M0.2 bis M4a.5, ADR-019, ADR-024, ADR-025, ADR-026
 
 ## Erledigt
 
@@ -122,6 +122,25 @@ Alle erscheinen als `raw` + `:manual` bzw. als gemeldeter, übersprungener Typ, 
   - M4.4: `gen`, `build`, `status`; End-to-End auf dem Testspiel (zweiter Lauf ändert nichts, zwei Projekte byte-identisch, Exit 3/4/5/7/8).
   - M4.5: Doku `cli-contract.md`, `port-cli.md`.
 
+- M4a Monorepo-Layout, Katalog und Launcher (Plan mit Nutzer abgestimmt):
+  - M4a.0: Entscheidungen (Startliste im Profil als Übergang bis ADR-010, games/demo und games/starcollector, Spiel bauen/Engine nur prüfen, Mapping-Ort über `engines/<e>/port.toml`).
+  - M4a.1: Modul `launcher/launcher-core` (Manifeste beider Arten, `VersionRange`, `CoreApi`), `EngineApiVersion` in engine-api, `port init --kind`. Unterwegs vom Nutzer entschieden (ADR-026): jedes Projekt ein eigenes Git-Repo mit erstem Commit, im Monorepo als Submodul mit relativer URL; `engines/unity`, `games/demo`, `games/starcollector` umgestellt.
+  - M4a.2: Katalog, `port catalog list/show` (Paginierung, defekte Projekte als Diagnose, Abdeckung).
+  - M4a.3: Profile, `port launch new/list/check`, Profile `demo-unity` und `starcollector-unity`.
+  - M4a.4: Starter im Adapter hätte Regel 1 gebrochen; Nutzerentscheidung: Modul `launcher/launcher-boot` plus Schnittstelle `EngineBinding` (engine-api), `UnityBinding` im Adapter. `port launch run` mit Build-Hash und Plattformprüfung.
+  - M4a.5: Doku (`projects.md`, `launcher.md`, `cli-contract.md`, `port-cli.md`, `engine-api.md`, `setup.md`), ADR-020 Stand nach M4a.
+
+## M4a: Lücken und Beobachtungen
+
+- **Klonen:** Lokale Submodul-URLs verlangt Git ausdrücklich: `git -c protocol.file.allow=always clone --recurse-submodules`. Bei einem späteren Remote braucht jedes Projekt ein eigenes Repo an derselben relativen Stelle (ADR-026).
+- **Arbeiten mit Submodulen:** Änderungen an `engines/unity` (Adapter) werden zuerst im Engine-Repo committet, danach der Submodul-Stand im Monorepo. Das gilt auch für Agents.
+- **`games/demo`** hat kein `sha256` im Manifest (Hash der Fixture-Assembly hängt an der Compiler-Version); die `ir/` enthält dennoch `:sha256` im Kopf. `RepositoryLayoutTest` vergleicht sie mit den Golden Files ohne Hash. Ändern sich die Fixtures, muss `games/demo/ir` mit `port -C games/demo ir --only` nachgezogen und im Demo-Repo committet werden.
+- **StarCollector** startet bis zur ersten Lücke (`UnityEngine.Screen` in `Start`) und endet mit Exit 1; `input/` (Unity-DLLs) liegt nur lokal.
+- **`launch run`** baut Engine und Plattform nicht (Nutzerentscheidung); die Plattform-Prüfung vergleicht nur Änderungszeiten von `src/main` und `target/classes`. `headless = false` hat noch keine Wirkung (kein Rendering). Provider (`--set`) kommen mit M12.
+- **`EngineBinding.spawn`** und `[run] spawn` sind Übergang bis zum Szenenformat (ADR-010, M8); danach lädt der Adapter Szenen.
+- **Reflection:** einzig `launcher-boot/BootMain` lädt Spielklassen per Namen (ArchUnit erlaubt es nur dort).
+- **`LaunchRunTest`** schreibt in die ignorierten Ordner `games/demo/gen` und `games/demo/.port` des echten Repos.
+
 ## M4: Lücken und Beobachtungen
 
 - **Kein ausführbares Paket:** `port` startet nur über `Main` mit Klassenpfad (siehe `docs/modules/port-cli.md`). Ein Startskript oder Fat-Jar wäre für den Alltag nötig (Kandidat für M4a).
@@ -191,5 +210,5 @@ Alle erscheinen als `raw` + `:manual` bzw. als gemeldeter, übersprungener Typ, 
 
 - Vor dem Start die Checkliste in `docs/setup.md` prüfen.
 - Layout und Projektarten: `docs/projects.md` lesen (Spiele in `games/`, Engines in `engines/`, ADR-020 PROPOSED).
-- M4a mit dem Nutzer planen. Vor dem Generator-/Golden-Test `scripts/build-dotnet.sh` laufen lassen.
-- Offene Nutzerfrage aus M3a: Ressourcenpfad der Mappings, jetzt für M4a (M4 liest Dateipfade über `PlatformLocator`).
+- Branch `task/M4a-launcher` nach `main` mergen (Nutzer entscheidet), dann M5 mit dem Nutzer planen. Vor dem Generator-/Golden-Test `scripts/build-dotnet.sh` laufen lassen.
+- Ressourcenpfad der Mappings: für die Toolchain über `engines/<e>/port.toml` gelöst (Dateien); Auslieferung als Jar (eindeutige Ressourcenpfade) ist offen, sobald es ein Paket von `port` gibt.

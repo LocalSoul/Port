@@ -15,8 +15,9 @@ Das zentrale, headless Kommandozeilenwerkzeug `port`. Orchestriert Pipeline, Ind
 ## Stand M4
 - picocli über das **programmatische Modell** (`CommandSpec`/`OptionSpec`, keine Annotationen, keine Reflection im eigenen Code). Globale Flags sind vererbt und stehen vor oder nach dem Befehl. `Main.run(args, out, err, workingDir)` liefert den Exit-Code (Tests), `Main.main` beendet die JVM.
 - TOML lesen mit tomlj (Nutzerentscheidung M4); `port.toml` schreibt `init` als festen Text. JSON über ein eigenes Modell (`json/`) und einen deterministischen Writer.
-- `PlatformLocator` findet Frontend-Programm (Konfiguration, sonst gebaute DLL der Plattform, sonst `PATH`), Mappings und Klassenpfad (`target/classes` von Adapter, `runtime-system`, `engine-api`, `engine-core`). Er wird in M4a durch Katalog und Profile ersetzt. Die Plattform muss gebaut sein (`./mvnw -q install`, `scripts/build-dotnet.sh`).
-- Kein Git (JGit bräuchte slf4j-api, das der Enforcer verbietet; Entscheidung mit ADR, wenn die Git-Befehle drankommen).
+- `PlatformLocator` findet Frontend-Programm (Konfiguration, sonst gebaute DLL der Plattform, sonst `PATH`), Mappings und Klassenpfad für `gen`/`build`. Seit M4a über `engines/<adapter>/port.toml` (`[engine.build] module`); `--adapter` nimmt einen Engine- oder Modulordner. Die Plattform muss gebaut sein (`./mvnw -q install`, `scripts/build-dotnet.sh`).
+- M4a: Manifeste, Katalog, Profile und Start kommen aus `launcher-core`; Befehlsgruppen (`catalog list`) entstehen aus Befehlsnamen mit Leerzeichen; `init` legt per Programm `git` ein eigenes Repo an und trägt es im Monorepo als Submodul ein (ADR-026).
+- Git über das Programm `git` (ADR-026); JGit bräuchte slf4j-api, das der Enforcer verbietet.
 - `status`: `manualOpen` zählt `raw`-/`manual`-Knoten bzw. Knoten mit `:manual` in `ir/` (über den S-Expression-Leser), Typen mit Klasse in `manual/` gelten als erledigt.
 - Start von Hand: Klassenpfad aus `port-cli`, `ir`, `generator-java`, `frontend-unity`, picocli, tomlj, antlr4-runtime; ein ausführbares Paket kommt später (M10 Native Image).
 

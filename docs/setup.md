@@ -29,7 +29,17 @@ engines/<name>/    eine Engine-Recomp pro Engine
 profiles/          Profile für den Launcher
 ```
 
-Lege Spiele und Engines nur über `port init --kind ...` (ab M4a) oder gemäß `docs/projects.md` an.
+Lege Spiele und Engines nur über `port init --kind ...` (ab M4a) oder gemäß `docs/projects.md` an. Jedes Projekt ist ein eigenes Git-Repo und im Monorepo ein Submodul mit relativer URL (ADR-026).
+
+Klonen samt Projekten (Git erlaubt lokale Submodul-URLs nur ausdrücklich):
+
+```
+git -c protocol.file.allow=always clone --recurse-submodules <monorepo> Recomp
+# in einem vorhandenen Klon:
+git -c protocol.file.allow=always submodule update --init
+```
+
+Der Root-Build (`./mvnw -q verify`) braucht das Submodul `engines/unity` (Modul `adapter-unity`).
 
 ## Verzeichnisse für Testdaten
 

@@ -94,6 +94,9 @@ api        = "2022.3"
 core-api   = ">=0.1 <0.2"        # benötigte Engine-API-Version
 providers  = ["render-unity-like", "input-unity-like"]
 
+[engine.build]                   # M4a: Maven-Modul mit Adapter, Mapping (src/main/resources/mapping.tsv) und Klassen
+module     = "adapter-unity"
+
 [engine.sources]                 # optional, siehe Abschnitt 6
 assemblies = ["input/UnityEngine.CoreModule.dll"]   # verwaltete Binärdateien
 sha256     = "..."
@@ -125,7 +128,9 @@ input  = "input-godot-like"      # Provider darf aus einer anderen Engine-Recomp
 
 [run]
 headless = false
-args     = []
+frames   = 60                    # M4a: Anzahl der Frames (Übergang bis zum Szenenformat, ADR-010)
+spawn    = ["Mover"]             # M4a: IR-Typen, die beim Start je ein Objekt bekommen
+args     = ["--axis", "Horizontal=1"]   # an launcher-boot (z. B. Achsenwerte ab Frame 0)
 ```
 
 Die Kompatibilität prüft `port launch check` (siehe unten): Adapter-Name und API-Version passen zu `game.requires`, jede Subsystem-Art hat genau einen Provider, die Provider-Verträge (`SubsystemInfo`) sind kompatibel (ADR-015), die Core-API-Version passt.
@@ -151,8 +156,8 @@ Befehle (Vertrag in `docs/cli-contract.md`):
 
 Ablauf von `launch run`:
 1. Profil lesen und prüfen (`check`).
-2. Fehlende oder veraltete Teile bauen (Spiel: `port build`, Engine: Maven-Modul), `--build` erzwingt das.
-3. Klassenpfad aus Spiel-Artefakt, Adapter, gewählten Providern, `runtime-system`, `engine-core` zusammensetzen. Der Core findet Provider per `ServiceLoader` (ADR-015).
+2. Fehlende oder veraltete Teile bauen (Spiel: `port build`, `--build` erzwingt das). Engine und Plattform werden in M4a nur geprüft (Exit 8 mit `./mvnw -q install`), nicht gebaut.
+3. Klassenpfad aus Spiel-Artefakt, Adapter, gewählten Providern, `runtime-system`, `engine-core` und `launcher-boot` zusammensetzen. Der Core findet Provider per `ServiceLoader` (ADR-015), `launcher-boot` den Adapter über `EngineBinding` (engine-api).
 4. Neue JVM starten, Ausgabe durchreichen, Exit-Code des Spiels zurückgeben.
 
 Der Launcher kennt weder Spiellogik noch Engine-Interna. Er liest nur Manifeste, Metadaten und Profile.

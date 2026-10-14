@@ -22,6 +22,8 @@ Keine zu anderen Projektmodulen (Maven Enforcer). Nur JDK, keine Reflection, kei
 | `engine.api.schedule` | `Phase` (`EARLY`, `FIXED`, `UPDATE`, `LATE`), `Time` (Delta, Fixed-Delta, Frame ab 0), `PhaseCallback`, `FrameContext` (Phase, Zeit, Welt, Input, Event-Bus) |
 | `engine.api.input` | `Input` (`axis`, `isHeld`, `wasPressed`, `wasReleased`) |
 | `engine.api.render` | `Renderer extends Subsystem` (`framesRendered`) |
+| `engine.api` (M4a) | `EngineApiVersion.VERSION` (geprüft gegen `[engine.provides] core-api`) |
+| `engine.api.boot` (M4a) | `EngineBinding` (`adapter`, `install(Engine)`, `spawn(name, script)`): ein Adapter meldet sich per `ServiceLoader` bei `launcher-boot` an; so setzt der Launcher Core und Adapter zusammen, ohne dass einer den anderen kennt. `spawn` ist Übergang bis zum Szenenformat (ADR-010). |
 | `engine.api.subsystem` | `Subsystem` (`info`, `init`, `run`, `shutdown`), `SubsystemInfo`, `ComponentType`, `EventType`, `Event`, `EventBus`, `SubsystemConfigurationException` |
 
 ## Welt (ADR-016, ACCEPTED)
