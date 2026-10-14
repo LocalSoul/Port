@@ -19,8 +19,8 @@
 - [ ] Tests je Bereich (Structs, Input, Object/Destroy, Texturen/Sprites, GUI).
 
 ## S3 Engine (neutral)
-- [ ] Komponenten für Textur, Sprite, Kamera, UI; Schnittstelle `RenderBackend`; Tasten-/Fenster-Ereignisse.
-- [ ] `SpriteRenderSystem`, `KeyboardInput`, Frame mit variabler Dauer, Beenden-Anforderung; Tests mit aufzeichnendem Backend.
+- [x] Komponenten für Textur, Sprite, Kamera, UI; Schnittstelle `RenderBackend`; Tasten-/Fenster-Ereignisse.
+- [x] `SpriteRenderSystem`, `KeyboardInput`, Frame mit variabler Dauer, Beenden-Anforderung; Tests mit aufzeichnendem Backend.
 
 ## S4 Backend Swing
 - [ ] Modul `render-swing` (nur engine-api, JDK): Fenster und Offscreen; Offscreen-Tests.

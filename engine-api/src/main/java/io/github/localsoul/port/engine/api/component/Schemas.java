@@ -30,6 +30,24 @@ public final class Schemas {
       new ComponentType("InputState", InputState.SCHEMA_VERSION);
 
   /** Vom Core geschriebene Komponenten; kein Subsystem darf sie schreiben. */
+  /** {@link Texture}. */
+  public static final ComponentType TEXTURE = new ComponentType("Texture", Texture.SCHEMA_VERSION);
+
+  /** {@link Sprite}. */
+  public static final ComponentType SPRITE = new ComponentType("Sprite", Sprite.SCHEMA_VERSION);
+
+  /** {@link Camera2D}. */
+  public static final ComponentType CAMERA_2D =
+      new ComponentType("Camera2D", Camera2D.SCHEMA_VERSION);
+
+  /** {@link Viewport}. */
+  public static final ComponentType VIEWPORT =
+      new ComponentType("Viewport", Viewport.SCHEMA_VERSION);
+
+  /** {@link UiCanvas}. */
+  public static final ComponentType UI_CANVAS =
+      new ComponentType("UiCanvas", UiCanvas.SCHEMA_VERSION);
+
   public static final Set<ComponentType> CORE_OWNED = Set.of(WORLD_TRANSFORM, PARENT, CHILDREN);
 
   private Schemas() {}

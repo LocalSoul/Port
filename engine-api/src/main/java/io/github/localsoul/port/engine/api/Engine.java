@@ -44,4 +44,17 @@ public interface Engine {
 
   /** Beendet die Engine; weitere {@link #step(int)}-Aufrufe sind nicht erlaubt. */
   void shutdown();
+
+  /**
+   * Fordert das Beenden an (z. B. {@code Application.Quit}); der Start-Code beendet danach die
+   * Spielschleife.
+   */
+  void requestQuit();
+
+  /**
+   * {@code true}, wenn das Beenden angefordert wurde.
+   *
+   * @return angefordert
+   */
+  boolean quitRequested();
 }

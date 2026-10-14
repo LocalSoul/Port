@@ -35,6 +35,7 @@ public final class CoreEngine implements Engine {
   private final List<Subsystem> subsystems;
   private final float frameDelta;
   private boolean shutDown;
+  private boolean quitRequested;
 
   private CoreEngine(Builder builder) {
     this.world = new CoreWorld();
@@ -105,6 +106,30 @@ public final class CoreEngine implements Engine {
     for (int i = 0; i < frames; i++) {
       scheduler.runFrame(frameDelta);
     }
+  }
+
+  /**
+   * Führt einen Frame mit der gemessenen Dauer aus (Echtzeit-Schleife des Starts).
+   *
+   * @param delta Dauer des Frames in Sekunden
+   * @throws IllegalArgumentException bei negativer Dauer
+   * @throws IllegalStateException nach {@link #shutdown()}
+   */
+  public void stepFrame(float delta) {
+    if (shutDown) {
+      throw new IllegalStateException("Engine ist beendet");
+    }
+    scheduler.runFrame(delta);
+  }
+
+  @Override
+  public void requestQuit() {
+    quitRequested = true;
+  }
+
+  @Override
+  public boolean quitRequested() {
+    return quitRequested;
   }
 
   @Override
