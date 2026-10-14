@@ -29,8 +29,8 @@
 2. `port launch check`: Adapter-Name, API-Version (Bereichsprüfung), Core-API-Version. Provider-Prüfung ab M12, vorher gelten die Standard-Provider des Adapters.
 
 **Abnahme:**
-- [ ] Testfälle: passend, falscher Adapter, API-Version außerhalb des Bereichs, fehlendes Spiel, fehlende Engine.
-- [ ] Fehler enthalten einen vorgeschlagenen nächsten Befehl (ADR-018).
+- [x] Testfälle: passend, falscher Adapter, API-Version außerhalb des Bereichs, fehlendes Spiel, fehlende Engine.
+- [x] Fehler enthalten einen vorgeschlagenen nächsten Befehl (ADR-018).
 
 ## M4a.4 Start
 1. `port launch run`: bei Bedarf bauen (Hash der Eingaben), Klassenpfad aus Artefakten zusammensetzen, neue JVM starten, Exit-Code durchreichen.

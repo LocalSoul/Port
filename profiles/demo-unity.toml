@@ -1,0 +1,13 @@
+[profile]
+name = "demo-unity"
+game = "games/demo"
+
+[engine]
+adapter = "engines/unity"
+core = "engine-core"
+
+[run]
+headless = true
+frames = 60
+spawn = ["Mover"]
+args = ["--axis", "Horizontal=1"]

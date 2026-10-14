@@ -1,0 +1,13 @@
+[profile]
+name = "starcollector-unity"
+game = "games/starcollector"
+
+[engine]
+adapter = "engines/unity"
+core = "engine-core"
+
+[run]
+headless = true
+frames = 60
+spawn = ["StarCollectorGame"]
+args = []

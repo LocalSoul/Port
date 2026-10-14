@@ -46,6 +46,18 @@ public final class TomlText {
   }
 
   /**
+   * Schreibt {@code key = true|false}.
+   *
+   * @param key Schlüssel
+   * @param value Wert
+   * @return dieser Schreiber
+   */
+  public TomlText entry(String key, boolean value) {
+    out.append(key).append(" = ").append(value).append('\n');
+    return this;
+  }
+
+  /**
    * Schreibt {@code key = ["a", "b"]}.
    *
    * @param key Schlüssel

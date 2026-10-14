@@ -95,6 +95,24 @@ public final class TomlFile {
   }
 
   /**
+   * Optionaler Wahrheitswert.
+   *
+   * @param key Schlüssel
+   * @param fallback Wert, wenn er fehlt
+   * @return Wert
+   * @throws LauncherException Exit 2, wenn er kein Wahrheitswert ist
+   */
+  public boolean bool(String key, boolean fallback) throws LauncherException {
+    if (!toml.contains(key)) {
+      return fallback;
+    }
+    if (!toml.isBoolean(key)) {
+      throw invalid(key + " muss true oder false sein", toml.inputPositionOf(key), null);
+    }
+    return toml.getBoolean(key);
+  }
+
+  /**
    * Optionale Liste von Texten.
    *
    * @param key Schlüssel

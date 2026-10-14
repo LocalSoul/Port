@@ -9,6 +9,12 @@ public final class DiagnosticIds {
   /** Ungültiges oder fehlendes Manifest. */
   public static final String MANIFEST = "PORT-MANIFEST";
 
+  /** Profilfehler oder fehlgeschlagene Kompatibilitätsprüfung. */
+  public static final String PROFILE = "PORT-PROFILE";
+
+  /** Start des Spiels. */
+  public static final String RUN = "PORT-RUN";
+
   /** Projekt existiert bereits. */
   public static final String EXISTS = "PORT-EXISTS";
 

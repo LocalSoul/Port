@@ -1,0 +1,62 @@
+{
+  "schema": "port/1",
+  "command": "launch check",
+  "ok": false,
+  "exitCode": 2,
+  "data": {
+    "profile": "demo-godot",
+    "game": "games/demo",
+    "engine": "engines/godot",
+    "compatible": false,
+    "checks": [
+      {
+        "check": "game",
+        "ok": true,
+        "message": "Spiel demo"
+      },
+      {
+        "check": "engine",
+        "ok": true,
+        "message": "Engine godot"
+      },
+      {
+        "check": "core",
+        "ok": true,
+        "message": "Core engine-core"
+      },
+      {
+        "check": "adapter",
+        "ok": false,
+        "message": "Spiel braucht Adapter 'unity', Engine stellt 'godot' bereit"
+      },
+      {
+        "check": "api",
+        "ok": false,
+        "message": "API 4.2 der Engine liegt nicht in >=2022.3"
+      },
+      {
+        "check": "core-api",
+        "ok": true,
+        "message": "Engine-API 0.1 erfüllt >=0.1 <0.2"
+      }
+    ]
+  },
+  "diagnostics": [
+    {
+      "id": "PORT-PROFILE",
+      "severity": "error",
+      "symbol": null,
+      "message": "API 4.2 der Engine liegt nicht in >=2022.3",
+      "location": "profiles/demo-godot.toml",
+      "hint": "port catalog list --kind engine"
+    },
+    {
+      "id": "PORT-PROFILE",
+      "severity": "error",
+      "symbol": null,
+      "message": "Spiel braucht Adapter 'unity', Engine stellt 'godot' bereit",
+      "location": "profiles/demo-godot.toml",
+      "hint": "port catalog list --kind engine"
+    }
+  ]
+}

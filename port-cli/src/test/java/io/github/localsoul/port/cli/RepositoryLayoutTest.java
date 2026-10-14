@@ -61,6 +61,16 @@ class RepositoryLayoutTest {
   }
 
   @Test
+  void repositoryProfilesAreCompatible() {
+    requireSubmodules();
+    for (String profile : new String[] {"demo-unity", "starcollector-unity"}) {
+      Cli.Run check =
+          Cli.run(Commands.all(), null, Golden.ROOT, "--json", "launch", "check", profile);
+      assertEquals(0, check.exitCode(), check.out());
+    }
+  }
+
+  @Test
   void demoIrMatchesTheFrontendGoldenFiles() throws Exception {
     requireSubmodules();
     try (DirectoryStream<Path> golden = Files.newDirectoryStream(Fixtures.IR_GOLDEN, "*.ir")) {
