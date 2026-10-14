@@ -19,8 +19,8 @@
 2. `Declarations.collect`: alle Deklarationen mit Symbol-ID, Art, Name, Position.
 
 **Abnahme**
-- [ ] Validator-Tests unverändert grün.
-- [ ] Tests für Referenzen und Deklarationen an den Fixtures.
+- [x] Validator-Tests unverändert grün.
+- [x] Tests für Referenzen und Deklarationen an den Fixtures.
 
 ## M5.2 Modul `index`
 

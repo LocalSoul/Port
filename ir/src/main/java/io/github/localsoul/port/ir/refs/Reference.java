@@ -1,4 +1,4 @@
-package io.github.localsoul.port.ir.validate;
+package io.github.localsoul.port.ir.refs;
 
 import io.github.localsoul.port.ir.SourceSpan;
 import io.github.localsoul.port.ir.atom.MemberRef;
@@ -14,5 +14,5 @@ import java.util.Set;
  * @param symbol ID des umgebenden Typs oder Mitglieds
  * @param genericScope sichtbare generische Typparameter (Typ und Methode)
  */
-record Reference(
+public record Reference(
     TypeRef type, MemberRef member, SourceSpan span, String symbol, Set<String> genericScope) {}

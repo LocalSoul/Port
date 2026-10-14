@@ -3,6 +3,8 @@ package io.github.localsoul.port.ir.validate;
 import io.github.localsoul.port.ir.IrSyntaxException;
 import io.github.localsoul.port.ir.ast.IrFile;
 import io.github.localsoul.port.ir.ast.TypeDecl;
+import io.github.localsoul.port.ir.refs.Reference;
+import io.github.localsoul.port.ir.refs.References;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +59,7 @@ public final class IrValidator {
     Map<String, TypeDecl> declaredTypes = declaredTypes(file);
     DuplicateSymbolRule.check(file, sink);
     InheritanceCycleRule.check(file, declaredTypes, sink);
-    List<Reference> references = ReferenceCollector.collect(file);
+    List<Reference> references = References.collect(file);
     ReferenceRule referenceRule = new ReferenceRule(declaredTypes, catalog, sink);
     referenceRule.check(references);
     return sink.sorted();

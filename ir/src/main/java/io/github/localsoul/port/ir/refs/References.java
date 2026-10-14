@@ -1,4 +1,4 @@
-package io.github.localsoul.port.ir.validate;
+package io.github.localsoul.port.ir.refs;
 
 import io.github.localsoul.port.ir.SourceSpan;
 import io.github.localsoul.port.ir.ast.ArrayLitExpr;
@@ -76,18 +76,25 @@ import java.util.Set;
 
 /**
  * Sammelt alle Typ- und Member-Referenzen einer Datei in Eingabereihenfolge, jeweils mit umgebendem
- * Symbol und sichtbaren generischen Typparametern.
+ * Symbol und sichtbaren generischen Typparametern. Grundlage für den Validator (IR002/IR003) und
+ * den Index (M5).
  */
-final class ReferenceCollector {
+public final class References {
 
   private final List<Reference> references = new ArrayList<>();
   private String symbol = "";
   private Set<String> genericScope = Set.of();
 
-  private ReferenceCollector() {}
+  private References() {}
 
-  static List<Reference> collect(IrFile file) {
-    ReferenceCollector collector = new ReferenceCollector();
+  /**
+   * Sammelt die Referenzen einer Datei.
+   *
+   * @param file gelesene IR-Datei
+   * @return Referenzen in Eingabereihenfolge
+   */
+  public static List<Reference> collect(IrFile file) {
+    References collector = new References();
     for (TypeDecl type : file.types()) {
       collector.walkType(type);
     }

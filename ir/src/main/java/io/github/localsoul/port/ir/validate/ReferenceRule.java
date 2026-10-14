@@ -15,6 +15,7 @@ import io.github.localsoul.port.ir.ast.TypeDecl;
 import io.github.localsoul.port.ir.atom.MemberRef;
 import io.github.localsoul.port.ir.atom.NamedType;
 import io.github.localsoul.port.ir.atom.TypeRef;
+import io.github.localsoul.port.ir.refs.Reference;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;

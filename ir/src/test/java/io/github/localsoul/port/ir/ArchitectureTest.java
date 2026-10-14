@@ -59,7 +59,8 @@ class ArchitectureTest {
             .resideInAnyPackage("..ir.sexpr..", "..ir.atom..", "..ir.ast..")
             .should()
             .dependOnClassesThat()
-            .resideInAnyPackage("..ir.reader..", "..ir.printer..", "..ir.validate..");
+            .resideInAnyPackage(
+                "..ir.reader..", "..ir.printer..", "..ir.validate..", "..ir.refs..");
     sexpr.check(productionClasses);
   }
 }

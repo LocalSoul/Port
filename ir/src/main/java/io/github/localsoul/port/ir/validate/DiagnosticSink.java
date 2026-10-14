@@ -1,6 +1,7 @@
 package io.github.localsoul.port.ir.validate;
 
 import io.github.localsoul.port.ir.SourceSpan;
+import io.github.localsoul.port.ir.refs.Reference;
 import java.util.ArrayList;
 import java.util.List;
 
