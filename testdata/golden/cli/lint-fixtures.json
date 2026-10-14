@@ -1,0 +1,66 @@
+{
+  "schema": "port/1",
+  "command": "lint",
+  "ok": false,
+  "exitCode": 9,
+  "data": {
+    "phases": [
+      "lint"
+    ],
+    "lint": {
+      "errors": 4,
+      "warnings": 2,
+      "infos": 0
+    }
+  },
+  "diagnostics": [
+    {
+      "id": "SH001",
+      "severity": "error",
+      "symbol": "Counter::Update#",
+      "message": "genutzte API fehlt im Adapter: UnityEngine.Input::GetKey#string",
+      "location": "ir/Counter.ir:17:11",
+      "hint": null
+    },
+    {
+      "id": "SH001",
+      "severity": "error",
+      "symbol": "Counter::Update#",
+      "message": "genutzte API fehlt im Adapter: UnityEngine.Debug::Log#object",
+      "location": "ir/Counter.ir:21:9",
+      "hint": null
+    },
+    {
+      "id": "MN003",
+      "severity": "warn",
+      "symbol": "Edges::producer",
+      "message": "@manual ohne Override in manual/",
+      "location": "ir/Edges.ir:4:3",
+      "hint": null
+    },
+    {
+      "id": "SH001",
+      "severity": "error",
+      "symbol": "Holder::health",
+      "message": "genutzte API fehlt im Adapter: UnityEngine.SerializeField",
+      "location": "ir/Holder.ir:5:45",
+      "hint": null
+    },
+    {
+      "id": "SH001",
+      "severity": "error",
+      "symbol": "Holder::Level",
+      "message": "genutzte API fehlt im Adapter: UnityEngine.Mathf::Clamp#i32,i32,i32",
+      "location": "ir/Holder.ir:16:11",
+      "hint": null
+    },
+    {
+      "id": "SH002",
+      "severity": "warn",
+      "symbol": "Mover::Update#",
+      "message": "API nur als Stub vorhanden: UnityEngine.Input::GetAxis#string",
+      "location": "ir/Mover.ir:7:20",
+      "hint": null
+    }
+  ]
+}

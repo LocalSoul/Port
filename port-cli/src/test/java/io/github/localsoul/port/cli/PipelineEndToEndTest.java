@@ -70,7 +70,7 @@ class PipelineEndToEndTest {
     assertTrue(
         run.out()
             .contains(
-                "\"phases\": [\n      \"extract\",\n      \"ir\",\n      \"index\",\n      \"gen\",\n      \"build\"\n    ]"),
+                "\"phases\": [\n      \"extract\",\n      \"ir\",\n      \"index\",\n      \"lint\",\n      \"gen\",\n      \"build\"\n    ]"),
         run.out());
     assertTrue(Files.isRegularFile(project.resolve("gen/game/demo/MoverBase.java")));
     assertTrue(Files.isRegularFile(project.resolve(".port/classes/game/demo/Mover.class")));
@@ -117,11 +117,13 @@ class PipelineEndToEndTest {
   }
 
   @Test
-  void strictTurnsOpenManualWorkIntoExit5() {
+  void strictTurnsLintFindingsIntoExit9AndOpenManualWorkIntoExit5() {
     init("demo");
-    Cli.Run run = Cli.run(temp, "--json", "--strict", "-C", "demo", "extract");
-    assertEquals(5, run.exitCode(), run.out());
-    assertTrue(run.out().contains("\"id\": \"PORT-MANUAL\""), run.out());
+    Cli.Run chain = Cli.run(temp, "--json", "--strict", "-C", "demo", "extract");
+    assertEquals(9, chain.exitCode(), chain.out());
+    assertTrue(chain.out().contains("\"id\": \"PORT-MANUAL\""), chain.out());
+    Cli.Run gen = Cli.run(temp, "--json", "--strict", "-C", "demo", "gen");
+    assertEquals(5, gen.exitCode(), gen.out());
     assertEquals(5, Cli.run(temp, "--strict", "-C", "demo", "status").exitCode());
   }
 

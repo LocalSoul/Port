@@ -16,6 +16,9 @@ final class Commands {
             new LifecycleCommand(Phase.EXTRACT, "Eingabe prüfen (Existenz, SHA-256)."),
             new LifecycleCommand(Phase.IR, "IR mit dem Frontend erzeugen (ir/)."),
             new LifecycleCommand(Phase.INDEX, "Index über ir/ aktualisieren (.port/index.db)."),
+            new LifecycleCommand(
+                Phase.LINT,
+                "Lint-Regeln prüfen (Exit 9 bei Fehlern, in der Kette nur mit --strict)."),
             new LifecycleCommand(Phase.GEN, "Java aus der IR erzeugen (gen/)."),
             new LifecycleCommand(Phase.BUILD, "gen/ und manual/ kompilieren (.port/classes)."),
             new StatusCommand(),

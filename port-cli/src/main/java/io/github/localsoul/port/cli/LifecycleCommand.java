@@ -64,6 +64,26 @@ final class LifecycleCommand implements PortCommand {
               .description("Index verwerfen und neu aufbauen")
               .build());
     }
+    if (phase == Phase.LINT) {
+      spec.addOption(
+          OptionSpec.builder("--rule")
+              .paramLabel("<id>")
+              .type(String[].class)
+              .description("nur diese Regel(n), z. B. SH001")
+              .build());
+      spec.addOption(
+          OptionSpec.builder("--class")
+              .paramLabel("<muster>")
+              .type(String.class)
+              .description("nur Befunde zu Typen, deren Name dem Muster entspricht (*, ?)")
+              .build());
+      spec.addOption(
+          OptionSpec.builder("--fix-hint")
+              .arity("0")
+              .type(boolean.class)
+              .description("Hinweise zur Behebung ausgeben")
+              .build());
+    }
     if (phase == Phase.GEN) {
       spec.addOption(
           OptionSpec.builder("--class")
@@ -73,6 +93,17 @@ final class LifecycleCommand implements PortCommand {
               .build());
     }
     return spec;
+  }
+
+  private PipelineOptions.LintOptions lintOptions(ParseResult args) {
+    if (phase != Phase.LINT) {
+      return PipelineOptions.LintOptions.DEFAULT;
+    }
+    String[] rules = args.matchedOptionValue("--rule", new String[0]);
+    return new PipelineOptions.LintOptions(
+        java.util.List.of(rules),
+        args.matchedOptionValue("--class", null),
+        args.hasMatchedOption("--fix-hint"));
   }
 
   @Override
@@ -88,7 +119,7 @@ final class LifecycleCommand implements PortCommand {
                 DiagnosticIds.ARGS,
                 "unbekannte Phase '" + fromText + "'",
                 null,
-                "extract, ir, index, gen oder build"));
+                "extract, ir, index, lint, gen oder build"));
       }
     }
     String adapter = args.matchedOptionValue("--adapter", null);
@@ -100,7 +131,8 @@ final class LifecycleCommand implements PortCommand {
             args.hasMatchedOption("--only"),
             adapterPath,
             classFilter,
-            phase == Phase.INDEX && args.hasMatchedOption("--rebuild"));
+            phase == Phase.INDEX && args.hasMatchedOption("--rebuild"),
+            lintOptions(args));
     return new Pipeline().run(name(), options, context);
   }
 }

@@ -140,7 +140,7 @@ final class GenStep implements PhaseStep {
     return names;
   }
 
-  private static Pattern glob(String text) {
+  static Pattern glob(String text) {
     StringBuilder regex = new StringBuilder();
     for (int i = 0; i < text.length(); i++) {
       char c = text.charAt(i);

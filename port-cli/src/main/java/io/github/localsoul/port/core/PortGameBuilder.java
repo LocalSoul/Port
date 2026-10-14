@@ -43,7 +43,13 @@ final class PortGameBuilder implements GameBuilder {
           new Pipeline()
               .run(
                   "launch run",
-                  new PipelineOptions(Phase.GEN, false, engineDir, null, false),
+                  new PipelineOptions(
+                      Phase.GEN,
+                      false,
+                      engineDir,
+                      null,
+                      false,
+                      PipelineOptions.LintOptions.DEFAULT),
                   gameContext);
     } catch (PortException e) {
       diagnostics.add(e.diagnostic());

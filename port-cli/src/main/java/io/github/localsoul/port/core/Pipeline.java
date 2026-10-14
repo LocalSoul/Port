@@ -21,6 +21,7 @@ public final class Pipeline {
     steps.put(Phase.EXTRACT, new ExtractStep());
     steps.put(Phase.IR, new IrStep());
     steps.put(Phase.INDEX, new IndexStep());
+    steps.put(Phase.LINT, new LintStep());
     steps.put(Phase.GEN, new GenStep());
     steps.put(Phase.BUILD, new BuildStep());
   }
@@ -64,7 +65,30 @@ public final class Pipeline {
       executed.add(phase.spelling());
       phases.put(phase.spelling(), data);
     }
-    return CommandResult.ok(command, result(executed, phases), diagnostics);
+    JsonObject data = result(executed, phases);
+    ExitCode lintFailure = lintFailure(data, options, context);
+    if (lintFailure != null) {
+      return CommandResult.failed(command, data, diagnostics, lintFailure);
+    }
+    return CommandResult.ok(command, data, diagnostics);
+  }
+
+  /**
+   * Lint blockiert die Kette nicht (Nutzerentscheidung M6): Exit 9 nur, wenn {@code lint} die
+   * Startphase war und Fehler fand, oder mit {@code --strict} bei Fehlern oder Warnungen.
+   */
+  private static ExitCode lintFailure(
+      JsonObject data, PipelineOptions options, CommandContext context) {
+    if (!(data.get(Phase.LINT.spelling()) instanceof JsonObject lint)) {
+      return null;
+    }
+    long errors = ((JsonValue.JsonNumber) lint.get("errors")).value();
+    long warnings = ((JsonValue.JsonNumber) lint.get("warnings")).value();
+    boolean explicit = options.from() == Phase.LINT;
+    if ((explicit && errors > 0) || (context.strict() && errors + warnings > 0)) {
+      return ExitCode.LINT;
+    }
+    return null;
   }
 
   private static JsonObject result(List<String> executed, JsonObject.Builder phases) {

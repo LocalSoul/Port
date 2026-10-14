@@ -44,8 +44,8 @@
 3. Markierung in `games/demo/manual`.
 
 **Abnahme**
-- [ ] Golden-JSON von `port lint` auf einem Fixture-Projekt.
-- [ ] Exit 9 (`port lint`, `--strict`), Kette ohne `--strict` Exit 0, Konfiguration über `port.toml`, `--rule`/`--class`.
+- [x] Golden-JSON von `port lint` auf einem Fixture-Projekt.
+- [x] Exit 9 (`port lint`, `--strict`), Kette ohne `--strict` Exit 0, Konfiguration über `port.toml`, `--rule`/`--class`.
 
 ## M6.4 Abschluss
 - [ ] Doku `docs/modules/lint.md`, `docs/cli-contract.md`, `docs/ir-spec.md` (Abschnitt 9), `docs/modules/port-cli.md` aktualisiert.
