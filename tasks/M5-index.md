@@ -45,8 +45,8 @@
 - [x] `irChanged` zählt nach einer IR-Änderung die geänderten Symbole.
 
 ## M5.4 Abschluss
-- [ ] Doku `docs/modules/index.md`, `docs/cli-contract.md`, `docs/modules/port-cli.md` aktualisiert.
-- [ ] `PROGRESS.md` zeigt den Stand und die Lücken.
+- [x] Doku `docs/modules/index.md`, `docs/cli-contract.md`, `docs/modules/port-cli.md` aktualisiert.
+- [x] `PROGRESS.md` zeigt den Stand und die Lücken.
 
 ## Nicht-Ziele
 Effektive IR mit Fixes (M7a), Lint (M6), `--context`/`--budget` und `port schema` (M6a), Suche im Java- oder C#-Text.

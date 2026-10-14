@@ -115,3 +115,6 @@ Das ganze Modul nutzt nur das JDK, keine Reflection und schreibt nie auf `System
 
 ## Nicht-Ziele
 - Keine Übersetzung nach Java, kein Index, keine Lint-Regeln PT/SM/SH/MN (die kommen später in eigenen Modulen).
+
+## Referenzen und Deklarationen (ab M5)
+Paket `refs`: `References.collect(IrFile)` (alle Typ- und Member-Referenzen mit umgebendem Symbol, Position und sichtbaren Typparametern; vorher paketintern im Validator) und `Declarations.collect(IrFile)` (Typen und Mitglieder mit Symbol-ID, Art, Name, deklarierendem Typ, Position). Genutzt von Validator und `index`.

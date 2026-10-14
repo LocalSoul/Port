@@ -4,10 +4,10 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 
 ## Aktueller Stand
 
-- Phase: **M4a abgeschlossen** und nach `main` gemergt (alle Abnahmekriterien in `tasks/M4a-launcher.md` erfüllt; `scripts/build-dotnet.sh` und `./mvnw -q verify` grün). Spiele und Engines sind eigene Repos (Submodule), `port catalog` und `port launch` stellen Profile zusammen, `port launch run demo-unity` startet das Testspiel in eigener JVM.
+- Phase: **M5 abgeschlossen** auf Branch `task/M5-index` (alle Abnahmekriterien in `tasks/M5-index.md` erfüllt; `./mvnw -q verify` grün). Index über die IR (`.port/index.db`, SQLite) mit `port index` und den Suchbefehlen `find`, `refs`, `callers`, `callees`, `uses`, `show`, `outline`; `status` liefert `irChanged`. Merge nach `main` steht aus (Nutzer entscheidet).
 - M0 bis M4a, ADR-019, ADR-025 und ADR-026 sind auf `main` (lokal, kein Remote).
-- Nächste Aufgabe laut Roadmap: M5 (Index und Suchbefehle).
-- Letzte Session: 2026-10-14, M0.2 bis M4a.5, ADR-019, ADR-024, ADR-025, ADR-026
+- Nächste Aufgabe laut Roadmap: M6 (Linter mit Kernregeln und Adapter-Metadaten).
+- Letzte Session: 2026-10-14, M0.2 bis M5.4, ADR-019, ADR-024, ADR-025, ADR-026
 
 ## Erledigt
 
@@ -130,6 +130,22 @@ Alle erscheinen als `raw` + `:manual` bzw. als gemeldeter, übersprungener Typ, 
   - M4a.4: Starter im Adapter hätte Regel 1 gebrochen; Nutzerentscheidung: Modul `launcher/launcher-boot` plus Schnittstelle `EngineBinding` (engine-api), `UnityBinding` im Adapter. `port launch run` mit Build-Hash und Plattformprüfung.
   - M4a.5: Doku (`projects.md`, `launcher.md`, `cli-contract.md`, `port-cli.md`, `engine-api.md`, `setup.md`), ADR-020 Stand nach M4a.
 
+- M5 Index und Suchbefehle (Plan mit Nutzer abgestimmt):
+  - M5.0: Aufgabe `tasks/M5-index.md`; Nutzerentscheidungen: SQLite (xerial sqlite-jdbc 3.53.4.0, slf4j-api dort nur optional, Enforcer unverändert), `irChanged` = Änderungen des letzten Indexlaufs.
+  - M5.1: `ir.refs` mit `References` (vorher paketintern im Validator) und `Declarations`.
+  - M5.2: Modul `index` (inkrementell je Datei-Hash, Transaktion mit Rollback, Änderungen je Symbol, FTS5-Trigramm-Suche, Abfragen).
+  - M5.3: Phase `index`, `port index [--rebuild]`, Suchbefehle mit Paginierung, `status` mit `irChanged`, Textausgabe für Listen.
+  - M5.4: Doku `docs/modules/index.md`, `cli-contract.md`, `port-cli.md`, `ir.md`.
+
+## M5: Lücken und Beobachtungen
+
+- **Native Bibliothek:** sqlite-jdbc lädt eine native Bibliothek; unter Java 25 braucht die JVM `--enable-native-access=ALL-UNNAMED` (Surefire von `index` und `port-cli` setzt es), sonst Warnung auf stderr. Für ein späteres Native Image (M10) ist das zu bedenken.
+- **`irChanged`:** Nach dem ersten Indexlauf zählen alle Symbole als neu. Ein Lauf ohne Dateiänderung lässt die gespeicherten Änderungen stehen; jeder Suchbefehl aktualisiert den Index vorher.
+- **Änderung eines Members** zählt auch als Änderung seines Typs (der Hash des Typs umfasst die ganze Deklaration).
+- **Spalten:** Der Ausschnitt einer S-Expression rechnet Spalten in UTF-16-Zeichen, `SourceSpan` in Codepoints; nur bei Zeichen außerhalb der BMP vor dem Symbol in derselben Zeile relevant.
+- **`show --java`** nennt nur die Datei, nicht die Stelle; `--src` fehlt, weil die C#-Quelle nicht aufbewahrt wird.
+- **Doppelte Symbol-IDs** (IR004) stehen mehrfach im Index; `symbol(id)` nimmt den ersten Treffer nach Dateiname.
+
 ## M4a: Lücken und Beobachtungen
 
 - **Klonen:** Lokale Submodul-URLs verlangt Git ausdrücklich: `git -c protocol.file.allow=always clone --recurse-submodules`. Bei einem späteren Remote braucht jedes Projekt ein eigenes Repo an derselben relativen Stelle (ADR-026).
@@ -211,5 +227,5 @@ Alle erscheinen als `raw` + `:manual` bzw. als gemeldeter, übersprungener Typ, 
 
 - Vor dem Start die Checkliste in `docs/setup.md` prüfen.
 - Layout und Projektarten: `docs/projects.md` lesen (Spiele in `games/`, Engines in `engines/`, ADR-020 PROPOSED).
-- M5 (Index und Suchbefehle) mit dem Nutzer planen. Vor dem Generator-/Golden-Test `scripts/build-dotnet.sh` laufen lassen.
+- Branch `task/M5-index` nach `main` mergen (Nutzer entscheidet, Fast-Forward per `git push . task/M5-index:main`), dann M6 mit dem Nutzer planen. Vor dem Generator-/Golden-Test `scripts/build-dotnet.sh` laufen lassen.
 - Ressourcenpfad der Mappings: für die Toolchain über `engines/<e>/port.toml` gelöst (Dateien); Auslieferung als Jar (eindeutige Ressourcenpfade) ist offen, sobald es ein Paket von `port` gibt.
