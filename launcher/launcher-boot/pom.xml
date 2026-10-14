@@ -27,6 +27,11 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>io.github.localsoul</groupId>
+      <artifactId>render-swing</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>
@@ -52,13 +57,14 @@
             <configuration>
               <rules>
                 <bannedDependencies>
-                  <message>launcher-boot kennt nur engine-api und engine-core; Adapter und Spiel kommen erst zur Laufzeit auf den Klassenpfad (AGENTS.md, Regel 12).</message>
+                  <message>launcher-boot kennt nur engine-api, engine-core und Render-Backends (render-*); Adapter und Spiel kommen erst zur Laufzeit auf den Klassenpfad (AGENTS.md, Regel 12).</message>
                   <excludes>
                     <exclude>io.github.localsoul:*</exclude>
                   </excludes>
                   <includes>
                     <include>io.github.localsoul:engine-api</include>
                     <include>io.github.localsoul:engine-core</include>
+                    <include>io.github.localsoul:render-swing</include>
                   </includes>
                 </bannedDependencies>
               </rules>

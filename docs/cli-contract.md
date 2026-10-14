@@ -86,7 +86,7 @@ Details und Formate: `docs/agent-tooling.md`, `docs/ai-fix-phase.md`.
 | `port launch list` | vorhandene Profile |
 | `port launch new <profil> --game <g> --engine <e> [--set <art>=<provider>]` | Profil anlegen |
 | `port launch check <profil>` | Kompatibilität prüfen (Adapter, API-Version, Provider, Pflichtpaare) |
-| `port launch run <profil> [--build]` | bauen falls nötig, in eigener JVM starten, Exit-Code des Spiels durchreichen |
+| `port launch run <profil> [--build] [--headless] [-- boot-args...]` | bauen falls nötig, in eigener JVM starten, Exit-Code des Spiels durchreichen |
 
 Ausgabe immer als Ergebnisobjekt (`--json`). Fehlerhafte Kombinationen liefern Diagnosen und Exit-Code 2. Details: `docs/projects.md`, `docs/modules/launcher.md`.
 
@@ -94,7 +94,7 @@ Stand M4a:
 - `catalog list` nimmt `--kind`, `--limit n` (0 = alle) und `--cursor c` (Wert aus `data.next`); defekte Unterprojekte erscheinen als `warn PORT-CATALOG`, der Katalog bricht nicht ab. Wurzel ist das Monorepo des Projektordners, sonst `PORT_HOME`.
 - `launch new` nimmt Namen aus dem Katalog; `--set` wird bis M12 nur mit `PORT-LATER` gemeldet.
 - `launch check` prüft Spiel und Engine im Katalog, Adapter-Name, `provides.api` in `requires.api`, die Engine-API der Plattform in `core-api` und die Core-Implementierung; jeder Fehlschlag ist ein `error PORT-PROFILE` mit dem nächsten Befehl im `hint`, dann Exit 2.
-- `launch run` baut das Spiel nur bei geändertem Hash (oder `--build`), prüft Engine und Plattform (Exit 8), startet `launcher-boot` in eigener JVM. Die Ausgabe des Spiels geht auf stdout, mit `--json` auf stderr. Exit-Code ist der des Spiels (Codes außerhalb dieser Tabelle werden 1).
+- `launch run` baut das Spiel nur bei geändertem Hash (oder `--build`), prüft Engine und Plattform (Exit 8), startet `launcher-boot` in eigener JVM. Die Ausgabe des Spiels geht auf stdout, mit `--json` auf stderr. Exit-Code ist der des Spiels (Codes außerhalb dieser Tabelle werden 1). Ein Profil mit `headless = false` startet mit Fenster in Echtzeit (`--render window --realtime`), `--headless` unterdrückt das. Argumente nach `--` hängt `launch run` an die des Profils an (Optionen von `launcher-boot`: `--frames`, `--seed`, `--render null|offscreen|window`, `--size BxH`, `--realtime`, `--press`/`--release Frame:Taste`, `--axis Name=Wert`, `--screenshot Frame:Datei`; siehe `docs/modules/launcher.md`).
 
 ### Konformität (ab M11a, ADR-022)
 | Befehl | Zweck |

@@ -21,6 +21,7 @@ final class LaunchCommands {
 
   static PositionalParamSpec profileName() {
     return PositionalParamSpec.builder()
+        .index("0")
         .paramLabel("<profil>")
         .arity("1")
         .type(String.class)
@@ -117,7 +118,7 @@ final class LaunchCommands {
     }
   }
 
-  /** {@code port launch run <profil> [--build]}. */
+  /** {@code port launch run <profil> [--build] [--headless] [-- boot-args...]}. */
   static final class RunCommand implements PortCommand {
 
     @Override
@@ -137,13 +138,32 @@ final class LaunchCommands {
               .type(boolean.class)
               .description("Spiel neu bauen, auch wenn es aktuell ist")
               .build());
+      spec.addOption(
+          OptionSpec.builder("--headless")
+              .arity("0")
+              .type(boolean.class)
+              .description("ohne Fenster starten, auch wenn das Profil headless = false hat")
+              .build());
+      spec.addPositional(
+          PositionalParamSpec.builder()
+              .index("1..*")
+              .arity("0..*")
+              .paramLabel("<boot-args>")
+              .type(String[].class)
+              .description("nach --: weitere Argumente für launcher-boot (z. B. --seed 7)")
+              .build());
       return spec;
     }
 
     @Override
     public CommandResult run(ParseResult args, CommandContext context) throws PortException {
+      String[] bootArgs = args.matchedPositionalValue(1, new String[0]);
       return LaunchService.run(
-          context, args.matchedPositionalValue(0, ""), args.hasMatchedOption("--build"));
+          context,
+          args.matchedPositionalValue(0, ""),
+          args.hasMatchedOption("--build"),
+          args.hasMatchedOption("--headless"),
+          List.of(bootArgs));
     }
   }
 }

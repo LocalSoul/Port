@@ -171,12 +171,19 @@ public final class LaunchService {
    * @param context globale Einstellungen
    * @param name Profilname
    * @param forceBuild {@code --build}
+   * @param headless {@code --headless}: ohne Fenster, auch bei {@code headless = false} im Profil
+   * @param bootArgs Argumente nach {@code --}, an {@code launcher-boot} angehängt
    * @return {@code profile}, {@code built}, {@code gameExitCode}; Exit-Code des Spiels als Ergebnis
    *     (Codes außerhalb des Vertrags werden 1)
    * @throws PortException Exit 2 bei unpassendem Profil, Exit 8 bei ungebauter Plattform, Exit des
    *     Baus bei Baufehlern
    */
-  public static CommandResult run(CommandContext context, String name, boolean forceBuild)
+  public static CommandResult run(
+      CommandContext context,
+      String name,
+      boolean forceBuild,
+      boolean headless,
+      List<String> bootArgs)
       throws PortException {
     CommandResult check = check(context, name);
     if (check.failure() != null) {
@@ -207,7 +214,8 @@ public final class LaunchService {
     PortGameBuilder builder = new PortGameBuilder(context);
     LaunchPlan plan;
     try {
-      plan = Launcher.prepare(catalog, profile, classNames, forceBuild, builder);
+      plan =
+          Launcher.prepare(catalog, profile, classNames, forceBuild, headless, bootArgs, builder);
     } catch (LauncherException e) {
       diagnostics.addAll(builder.diagnostics());
       diagnostics.add(Diagnostic.error(e.id(), e.getMessage(), e.location(), e.hint()));

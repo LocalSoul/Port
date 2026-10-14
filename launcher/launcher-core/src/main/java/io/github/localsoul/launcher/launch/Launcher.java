@@ -37,6 +37,9 @@ public final class Launcher {
    * @param profile geprüftes Profil
    * @param classNames voll qualifizierte Spielklassen aus {@code [run] spawn}
    * @param forceBuild {@code --build}
+   * @param headless {@code --headless}: ohne Fenster, auch wenn das Profil {@code headless = false}
+   *     hat
+   * @param extraArgs weitere Argumente für {@code launcher-boot} (nach denen des Profils)
    * @param builder baut das Spiel
    * @return Plan
    * @throws LauncherException Exit 8 bei ungebauter Plattform, Exit des Baus bei Baufehlern
@@ -46,6 +49,8 @@ public final class Launcher {
       Profile profile,
       List<String> classNames,
       boolean forceBuild,
+      boolean headless,
+      List<String> extraArgs,
       GameBuilder builder)
       throws LauncherException {
     Path root = catalog.root();
@@ -73,7 +78,8 @@ public final class Launcher {
           LauncherException.GENERAL, "PORT-IO", e.getMessage(), profile.game(), null);
     }
     classpath.add(0, gameDir.resolve(BuildState.CLASSES));
-    return new LaunchPlan(command(classpath, engine, profile, classNames), built);
+    return new LaunchPlan(
+        command(classpath, engine, profile, classNames, headless, extraArgs), built);
   }
 
   private static EngineManifest engine(Catalog catalog, Profile profile) throws LauncherException {
@@ -91,8 +97,17 @@ public final class Launcher {
         "port launch check " + profile.name());
   }
 
+  /**
+   * Kommandozeile der Spiel-JVM. Ein Profil mit {@code headless = false} startet mit Fenster in
+   * Echtzeit ({@code --render window --realtime}), außer {@code headless} ist gesetzt.
+   */
   private static List<String> command(
-      List<Path> classpath, EngineManifest engine, Profile profile, List<String> classNames) {
+      List<Path> classpath,
+      EngineManifest engine,
+      Profile profile,
+      List<String> classNames,
+      boolean headless,
+      List<String> extraArgs) {
     StringBuilder path = new StringBuilder();
     for (Path entry : classpath) {
       path.append(path.isEmpty() ? "" : File.pathSeparator).append(entry);
@@ -106,7 +121,13 @@ public final class Launcher {
     command.add(engine.adapter());
     command.add("--frames");
     command.add(Long.toString(profile.frames()));
+    if (!profile.headless() && !headless) {
+      command.add("--render");
+      command.add("window");
+      command.add("--realtime");
+    }
     command.addAll(profile.args());
+    command.addAll(extraArgs);
     command.add("--");
     command.addAll(classNames);
     return command;

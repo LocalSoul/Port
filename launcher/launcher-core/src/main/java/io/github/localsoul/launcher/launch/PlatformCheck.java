@@ -18,7 +18,8 @@ public final class PlatformCheck {
 
   /** Plattform-Module, die zur Laufzeit gebraucht werden, relativ zur Wurzel. */
   public static final List<String> PLATFORM_MODULES =
-      List.of("engine-api", "engine-core", "runtime-system", "launcher/launcher-boot");
+      List.of(
+          "engine-api", "engine-core", "render-swing", "runtime-system", "launcher/launcher-boot");
 
   private PlatformCheck() {}
 

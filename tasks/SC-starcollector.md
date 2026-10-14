@@ -26,7 +26,7 @@
 - [x] Modul `render-swing` (nur engine-api, JDK): Fenster und Offscreen; Offscreen-Tests.
 
 ## S5 Start
-- [ ] `launcher-boot`: `--render`, `--realtime`, `--seed`, `--screenshot`; Profil `starcollector-unity` im Fenster.
+- [x] `launcher-boot`: `--render`, `--realtime`, `--seed`, `--screenshot`; Profil `starcollector-unity` im Fenster.
 
 ## S6 End-to-End
 - [ ] Headless-Test über die echte Pipeline (Offscreen, fester Seed, Eingabeskript): Sterne, Einsammeln, Zeitablauf, Neustart, Screenshot-Prüfung.

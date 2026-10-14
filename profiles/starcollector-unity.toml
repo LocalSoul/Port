@@ -7,7 +7,7 @@ adapter = "engines/unity"
 core = "engine-core"
 
 [run]
-headless = true
-frames = 60
+headless = false
+frames = 0
 spawn = ["StarCollectorGame"]
 args = []
