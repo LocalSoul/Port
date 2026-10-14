@@ -16,6 +16,7 @@
     <module>ir</module>
     <module>engine-api</module>
     <module>engine-core</module>
+    <module>render-swing</module>
     <module>runtime-system</module>
     <module>index</module>
     <module>lint</module>

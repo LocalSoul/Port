@@ -23,7 +23,7 @@
 - [x] `SpriteRenderSystem`, `KeyboardInput`, Frame mit variabler Dauer, Beenden-Anforderung; Tests mit aufzeichnendem Backend.
 
 ## S4 Backend Swing
-- [ ] Modul `render-swing` (nur engine-api, JDK): Fenster und Offscreen; Offscreen-Tests.
+- [x] Modul `render-swing` (nur engine-api, JDK): Fenster und Offscreen; Offscreen-Tests.
 
 ## S5 Start
 - [ ] `launcher-boot`: `--render`, `--realtime`, `--seed`, `--screenshot`; Profil `starcollector-unity` im Fenster.
