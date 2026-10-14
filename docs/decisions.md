@@ -101,9 +101,10 @@ IL2CPP-Spiele sind vorerst nicht im Scope (kaum sauber dekompilierbar).
 **Vorgehen für Agents:** In M3 erst einfache Methoden ohne Coroutines, Coroutines nicht umsetzen, bis entschieden ist.
 
 ## ADR-009: struct-Semantik im Java-Backend
-**Status:** OPEN
-**Optionen:** (a) implizit wie in C#, der Generator fügt Kopien ein, (b) ein Pass fügt explizite `(copy ...)`-Knoten in die IR ein, der Generator setzt sie 1:1 um.
-**Hinweis:** Lint SM001 existiert unabhängig davon.
+**Status:** ACCEPTED für Structs von Engine-APIs (vom Nutzer entschieden, 2026-10-14); für eigene Structs eines Spiels weiter OPEN.
+**Optionen:** (a) implizit wie in C#, der Generator fügt Kopien ein, (b) ein Pass fügt explizite `(copy ...)`-Knoten in die IR ein, der Generator setzt sie 1:1 um, (c) unveränderliche Werttypen, Mutationen werden zu Neuzuweisungen.
+**Entscheidung (Engine-Structs wie `UnityEngine.Vector3`, `Color`, `Rect`):** (c). Der Adapter bildet sie als unveränderliche Records ab (Wertgleichheit, kein Aliasing, daher keine Kopien nötig). Der Generator schreibt Mutationen an einem zuweisbaren Ziel (Local, Parameter, Feld, Array-Element) in Neuzuweisungen um: `v.z = 0` → `v = v.withZ(0f)`, `c.a *= x` → `c = c.withA(c.a() * x)`, `v.x++` → `v = v.withX(v.x() + 1)`; mutierende Methoden (Mapping-Form `mutator`) werden zu `v = v.normalized()`. Struct-Typen tragen im Mapping die Form `struct`; Arrays solcher Typen und `default(T)` erhalten den Standardwert `T.DEFAULT`.
+**Hinweis:** Lint SM001 bleibt für eigene Structs. Für sie fehlt noch eine Entscheidung (Records wie oben oder Kopien).
 
 ## ADR-010: Neutrales Asset-/Szenenformat
 **Status:** OPEN
@@ -124,8 +125,9 @@ IL2CPP-Spiele sind vorerst nicht im Scope (kaum sauber dekompilierbar).
 **Hinweis:** Bis zur Entscheidung nur 2D-neutrale Grundlagen im Core (Transform, Szene, Input). Physik und 3D-Rendering warten.
 
 ## ADR-014: Rendering-Backend des Cores
-**Status:** OPEN
-**Hinweis:** Bis zur Entscheidung nur eine Null-Rendering-Implementierung (headless) hinter einem Interface. Kein Fenster-/Grafikcode.
+**Status:** ACCEPTED (vom Nutzer entschieden, 2026-10-14): modular.
+**Entscheidung:** `engine-api` definiert eine neutrale Schnittstelle `RenderBackend` (Frame beginnen, Bild mit Transformation zeichnen, Rechteck, Text, Frame zeigen, Größe, Fenster geschlossen) sowie neutrale Komponenten für 2D-Sprites, Texturen, Kamera und UI-Befehle. Der Renderer im Core setzt die Welt in Zeichenbefehle für das Backend um; Backends sind austauschbar, ohne Core, Adapter oder Spiel zu ändern. Erstes Backend: Swing/Java2D (Modul `render-swing`, nur JDK) mit Fenster- und Offscreen-Modus; Tests nutzen den Offscreen-Modus. Weitere Backends (z. B. LWJGL/OpenGL) später als zusätzliche Module.
+**Folgen:** Tastatur und Fenster-Ereignisse kommen vom Backend über den Event-Bus; ein Eingabe-Provider macht daraus `InputState` (Regel 10: Subsysteme rufen sich nicht direkt auf).
 
 ## ADR-015: Subsystem-Provider und Mischbarkeit
 **Status:** PROPOSED
