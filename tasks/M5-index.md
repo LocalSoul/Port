@@ -41,8 +41,8 @@
 3. `port status` mit `irChanged` aus dem Index.
 
 **Abnahme**
-- [ ] Golden-JSON für `find` und `outline`, Paginierung, Exit-Codes.
-- [ ] `irChanged` zählt nach einer IR-Änderung die geänderten Symbole.
+- [x] Golden-JSON für `find` und `outline`, Paginierung, Exit-Codes.
+- [x] `irChanged` zählt nach einer IR-Änderung die geänderten Symbole.
 
 ## M5.4 Abschluss
 - [ ] Doku `docs/modules/index.md`, `docs/cli-contract.md`, `docs/modules/port-cli.md` aktualisiert.

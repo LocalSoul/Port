@@ -70,7 +70,7 @@ class PipelineEndToEndTest {
     assertTrue(
         run.out()
             .contains(
-                "\"phases\": [\n      \"extract\",\n      \"ir\",\n      \"gen\",\n      \"build\"\n    ]"),
+                "\"phases\": [\n      \"extract\",\n      \"ir\",\n      \"index\",\n      \"gen\",\n      \"build\"\n    ]"),
         run.out());
     assertTrue(Files.isRegularFile(project.resolve("gen/game/demo/MoverBase.java")));
     assertTrue(Files.isRegularFile(project.resolve(".port/classes/game/demo/Mover.class")));

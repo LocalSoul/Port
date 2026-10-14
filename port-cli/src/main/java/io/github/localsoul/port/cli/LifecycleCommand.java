@@ -56,6 +56,14 @@ final class LifecycleCommand implements PortCommand {
             .description(
                 "Adapter-Ordner für gen/build (Standard: engines/<adapter>/adapter-<adapter>)")
             .build());
+    if (phase == Phase.INDEX) {
+      spec.addOption(
+          OptionSpec.builder("--rebuild")
+              .arity("0")
+              .type(boolean.class)
+              .description("Index verwerfen und neu aufbauen")
+              .build());
+    }
     if (phase == Phase.GEN) {
       spec.addOption(
           OptionSpec.builder("--class")
@@ -80,14 +88,19 @@ final class LifecycleCommand implements PortCommand {
                 DiagnosticIds.ARGS,
                 "unbekannte Phase '" + fromText + "'",
                 null,
-                "extract, ir, gen oder build"));
+                "extract, ir, index, gen oder build"));
       }
     }
     String adapter = args.matchedOptionValue("--adapter", null);
     Path adapterPath = adapter == null ? null : context.workingDir().resolve(adapter).normalize();
     String classFilter = phase == Phase.GEN ? args.matchedOptionValue("--class", null) : null;
     PipelineOptions options =
-        new PipelineOptions(from, args.hasMatchedOption("--only"), adapterPath, classFilter);
+        new PipelineOptions(
+            from,
+            args.hasMatchedOption("--only"),
+            adapterPath,
+            classFilter,
+            phase == Phase.INDEX && args.hasMatchedOption("--rebuild"));
     return new Pipeline().run(name(), options, context);
   }
 }

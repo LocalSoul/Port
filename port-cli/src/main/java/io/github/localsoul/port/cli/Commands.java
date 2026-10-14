@@ -15,12 +15,14 @@ final class Commands {
             new InitCommand(),
             new LifecycleCommand(Phase.EXTRACT, "Eingabe prüfen (Existenz, SHA-256)."),
             new LifecycleCommand(Phase.IR, "IR mit dem Frontend erzeugen (ir/)."),
+            new LifecycleCommand(Phase.INDEX, "Index über ir/ aktualisieren (.port/index.db)."),
             new LifecycleCommand(Phase.GEN, "Java aus der IR erzeugen (gen/)."),
             new LifecycleCommand(Phase.BUILD, "gen/ und manual/ kompilieren (.port/classes)."),
             new StatusCommand(),
             new CatalogListCommand(),
             new CatalogShowCommand()));
     commands.addAll(LaunchCommands.all());
+    commands.addAll(SearchCommands.all());
     return commands;
   }
 }

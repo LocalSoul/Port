@@ -36,7 +36,14 @@ public final class TextRenderer {
       return;
     }
     for (JsonObject.Member member : result.data().members()) {
-      out.println(member.name() + ": " + text(member.value()));
+      if (member.value() instanceof JsonValue.JsonArray array && !array.items().isEmpty()) {
+        out.println(member.name() + ":");
+        for (JsonValue item : array.items()) {
+          out.println("  " + text(item));
+        }
+      } else {
+        out.println(member.name() + ": " + text(member.value()));
+      }
     }
     out.println(
         "port "
@@ -64,14 +71,26 @@ public final class TextRenderer {
     return text.toString();
   }
 
+  /** Objekt einzeilig: Werte durch zwei Leerzeichen getrennt (Listen-Einträge). */
+  private static String line(JsonObject object) {
+    StringBuilder out = new StringBuilder();
+    for (JsonObject.Member member : object.members()) {
+      if (!out.isEmpty()) {
+        out.append("  ");
+      }
+      out.append(text(member.value()));
+    }
+    return out.toString();
+  }
+
   private static String text(JsonValue value) {
     return switch (value) {
       case JsonValue.JsonString s -> s.value();
       case JsonValue.JsonNumber n -> Long.toString(n.value());
       case JsonValue.JsonBool b -> Boolean.toString(b.value());
       case JsonValue.JsonNull n -> "-";
-      case JsonValue.JsonArray a -> a.items().size() + " Einträge";
-      case JsonObject o -> o.members().size() + " Felder";
+      case JsonValue.JsonArray a -> a.items().isEmpty() ? "-" : a.items().size() + " Einträge";
+      case JsonObject o -> line(o);
     };
   }
 }

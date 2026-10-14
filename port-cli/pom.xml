@@ -37,6 +37,11 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>io.github.localsoul</groupId>
+      <artifactId>index</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>info.picocli</groupId>
       <artifactId>picocli</artifactId>
     </dependency>
@@ -67,6 +72,14 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!-- sqlite-jdbc lädt eine native Bibliothek (Java 25 warnt sonst auf stderr). -->
+          <argLine>--enable-native-access=ALL-UNNAMED</argLine>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
         <executions>
           <execution>
@@ -86,6 +99,7 @@
                     <include>io.github.localsoul:generator-java</include>
                     <include>io.github.localsoul:frontend-unity</include>
                     <include>io.github.localsoul:launcher-core</include>
+                    <include>io.github.localsoul:index</include>
                     <!-- nur Metadaten (EngineApiVersion), über launcher-core -->
                     <include>io.github.localsoul:engine-api</include>
                   </includes>

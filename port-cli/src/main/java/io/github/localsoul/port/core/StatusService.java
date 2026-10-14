@@ -1,5 +1,7 @@
 package io.github.localsoul.port.core;
 
+import io.github.localsoul.port.index.IndexException;
+import io.github.localsoul.port.index.IrIndex;
 import io.github.localsoul.port.ir.IrSyntaxException;
 import io.github.localsoul.port.ir.ast.IrFile;
 import io.github.localsoul.port.ir.sexpr.SExpr;
@@ -18,7 +20,7 @@ import java.util.Set;
 /**
  * {@code port status}: {@code phase} (zuletzt abgeschlossene Phase), {@code classes} (Typen in
  * {@code ir/}), {@code manualOpen} (Handarbeitsstellen ohne {@code manual/}-Datei), {@code
- * irChanged} (braucht den Index, in M4 immer 0 mit Hinweis).
+ * irChanged} (Symbole, die sich beim letzten Indexlauf mit Änderungen geändert haben).
  */
 public final class StatusService {
 
@@ -50,16 +52,29 @@ public final class StatusService {
                 file.fileName()));
       }
     }
-    diagnostics.add(
-        Diagnostic.info(DiagnosticIds.LATER, "irChanged braucht den Index (M5), hier immer 0"));
+    int irChanged = irChanged(project, diagnostics);
     JsonObject data =
         JsonObject.builder()
             .put("phase", ProjectState.phase(project.dir()))
             .put("classes", classes)
             .put("manualOpen", manualOpen)
-            .put("irChanged", 0)
+            .put("irChanged", irChanged)
             .build();
     return CommandResult.ok("status", data, diagnostics);
+  }
+
+  /** Änderungen je Symbol des letzten Indexlaufs, der etwas geändert hat (ohne neuen Lauf). */
+  private static int irChanged(Project project, List<Diagnostic> diagnostics) throws PortException {
+    if (!Files.isRegularFile(project.resolve(IrIndex.FILE))) {
+      diagnostics.add(
+          Diagnostic.info(DiagnosticIds.INDEX, "noch kein Index, irChanged = 0 (port index)"));
+      return 0;
+    }
+    try (IrIndex index = IrIndex.open(project.dir(), false)) {
+      return index.changes().size();
+    } catch (IndexException e) {
+      throw IndexErrors.toPort(e);
+    }
   }
 
   private static boolean coversAll(IrFile file, Set<String> covered) {

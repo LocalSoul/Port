@@ -1,14 +1,16 @@
 package io.github.localsoul.port.core;
 
 /**
- * Phasen der Pipeline in Ausführungsreihenfolge ({@code docs/cli-contract.md}, Lifecycle). Index
- * und Lint folgen in M5/M6.
+ * Phasen der Pipeline in Ausführungsreihenfolge ({@code docs/cli-contract.md}, Lifecycle). Lint
+ * folgt in M6.
  */
 public enum Phase {
   /** Eingabe prüfen. */
   EXTRACT("extract"),
   /** IR erzeugen. */
   IR("ir"),
+  /** Index aktualisieren ({@code .port/index.db}). */
+  INDEX("index"),
   /** Java erzeugen. */
   GEN("gen"),
   /** Java kompilieren. */

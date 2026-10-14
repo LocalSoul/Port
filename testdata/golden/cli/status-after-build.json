@@ -7,17 +7,9 @@
     "phase": "build",
     "classes": 9,
     "manualOpen": 2,
-    "irChanged": 0
+    "irChanged": 50
   },
   "diagnostics": [
-    {
-      "id": "PORT-LATER",
-      "severity": "info",
-      "symbol": null,
-      "message": "irChanged braucht den Index (M5), hier immer 0",
-      "location": null,
-      "hint": null
-    },
     {
       "id": "PORT-MANUAL",
       "severity": "warn",

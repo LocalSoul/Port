@@ -59,19 +59,10 @@ public final class CatalogService {
     if (kind != null && !KINDS.contains(kind)) {
       throw args("unbekannte Art '" + kind + "'", "--kind game, engine oder provider");
     }
-    if (limit < 0) {
-      throw args("--limit muss >= 0 sein", null);
-    }
-    int start = position(cursor);
     Catalog catalog = scan(context);
-    List<CatalogEntry> all = catalog.list(kind);
-    if (start > all.size()) {
-      throw args("--cursor hinter dem Ende der Liste", "ohne --cursor neu beginnen");
-    }
-    int end = limit == 0 ? all.size() : java.lang.Math.min(all.size(), start + limit);
+    Page<CatalogEntry> page = Page.of(catalog.list(kind), limit, cursor);
     List<JsonValue> items = new ArrayList<>();
-    for (int i = start; i < end; i++) {
-      CatalogEntry entry = all.get(i);
+    for (CatalogEntry entry : page.items()) {
       items.add(
           JsonObject.builder()
               .put("name", entry.name())
@@ -82,8 +73,8 @@ public final class CatalogService {
     JsonObject data =
         JsonObject.builder()
             .put("items", new JsonValue.JsonArray(items))
-            .put("total", all.size())
-            .put("next", end < all.size() ? Integer.toString(end) : null)
+            .put("total", page.total())
+            .put("next", page.next())
             .build();
     return CommandResult.ok("catalog list", data, problems(catalog));
   }
@@ -179,21 +170,6 @@ public final class CatalogService {
               problem.hint()));
     }
     return diagnostics;
-  }
-
-  private static int position(String cursor) throws PortException {
-    if (cursor == null) {
-      return 0;
-    }
-    try {
-      int position = Integer.parseInt(cursor);
-      if (position < 0) {
-        throw args("ungültiger --cursor '" + cursor + "'", null);
-      }
-      return position;
-    } catch (NumberFormatException e) {
-      throw args("ungültiger --cursor '" + cursor + "'", "Wert aus data.next verwenden");
-    }
   }
 
   private static PortException args(String message, String hint) {

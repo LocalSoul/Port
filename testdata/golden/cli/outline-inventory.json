@@ -1,0 +1,54 @@
+{
+  "schema": "port/1",
+  "command": "outline",
+  "ok": true,
+  "exitCode": 0,
+  "data": {
+    "type": "Inventory",
+    "kind": "class",
+    "location": "ir/Inventory.ir:3:1",
+    "members": [
+      {
+        "symbol": "Inventory::counter",
+        "kind": "field",
+        "location": "ir/Inventory.ir:4:3"
+      },
+      {
+        "symbol": "Inventory::items",
+        "kind": "field",
+        "location": "ir/Inventory.ir:5:3"
+      },
+      {
+        "symbol": "Inventory::label",
+        "kind": "field",
+        "location": "ir/Inventory.ir:7:3"
+      },
+      {
+        "symbol": "Inventory::Count#",
+        "kind": "method",
+        "location": "ir/Inventory.ir:8:3"
+      },
+      {
+        "symbol": "Inventory::Fill#i32",
+        "kind": "method",
+        "location": "ir/Inventory.ir:11:3"
+      },
+      {
+        "symbol": "Inventory::Name#",
+        "kind": "method",
+        "location": "ir/Inventory.ir:25:3"
+      },
+      {
+        "symbol": "Inventory::SetCounter#System.Func<i32>",
+        "kind": "method",
+        "location": "ir/Inventory.ir:28:3"
+      },
+      {
+        "symbol": "Inventory::Total#",
+        "kind": "method",
+        "location": "ir/Inventory.ir:31:3"
+      }
+    ]
+  },
+  "diagnostics": []
+}

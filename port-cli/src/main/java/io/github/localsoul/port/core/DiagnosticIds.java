@@ -36,6 +36,12 @@ public final class DiagnosticIds {
   /** IR-Datei ungültig. */
   public static final String IR = "PORT-IR";
 
+  /** Index nicht nutzbar. */
+  public static final String INDEX = "PORT-INDEX";
+
+  /** Symbol nicht im Index. */
+  public static final String SYMBOL = "PORT-SYMBOL";
+
   /** Generator konnte ein Member nicht erzeugen. */
   public static final String TODO = "PORT-TODO";
 
