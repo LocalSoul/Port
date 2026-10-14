@@ -29,9 +29,9 @@
 2. Abfragen `find`, `refs`, `callers`, `callees`, `uses`, `outline`, `show`, alle deterministisch sortiert.
 
 **Abnahme**
-- [ ] Zweiter Lauf ohne Änderung liest keine Datei neu; geänderte Datei wird allein neu gelesen; entfernte Datei verschwindet.
-- [ ] Änderungen je Symbol (neu, geändert, entfernt) stimmen.
-- [ ] Abfragen liefern die erwarteten Listen an den Fixtures.
+- [x] Zweiter Lauf ohne Änderung liest keine Datei neu; geänderte Datei wird allein neu gelesen; entfernte Datei verschwindet.
+- [x] Änderungen je Symbol (neu, geändert, entfernt) stimmen.
+- [x] Abfragen liefern die erwarteten Listen an den Fixtures.
 
 ## M5.3 CLI
 

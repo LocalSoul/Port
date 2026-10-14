@@ -17,6 +17,7 @@
     <module>engine-api</module>
     <module>engine-core</module>
     <module>runtime-system</module>
+    <module>index</module>
     <module>frontend-unity/java</module>
     <module>engines/unity/adapter-unity</module>
     <module>generator-java</module>
