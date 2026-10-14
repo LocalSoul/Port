@@ -4,8 +4,8 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 
 ## Aktueller Stand
 
-- Phase: **M6 abgeschlossen** auf Branch `task/M6-lint` (alle Abnahmekriterien in `tasks/M6-lint.md` erfüllt; `./mvnw -q verify` grün). `port lint` prüft IR001–IR005, PT001–PT003, SM001, SH001/SH002, MN001–MN004, konfigurierbar über `[lint]`; Phase `lint` in der Kette meldet, blockiert nicht. Merge nach `main` steht aus (Nutzer entscheidet).
-- M0 bis M5, ADR-019, ADR-025 und ADR-026 sind auf `main` (lokal, kein Remote); ADR-027 auf dem M6-Branch.
+- Phase: **M6 abgeschlossen** und nach `main` gemergt (alle Abnahmekriterien in `tasks/M6-lint.md` erfüllt; `./mvnw -q verify` grün). `port lint` prüft IR001–IR005, PT001–PT003, SM001, SH001/SH002, MN001–MN004, konfigurierbar über `[lint]`; Phase `lint` in der Kette meldet, blockiert nicht.
+- M0 bis M6, ADR-019, ADR-025, ADR-026 und ADR-027 sind auf `main` (lokal, kein Remote).
 - Nächste Aufgabe laut Roadmap: M6a (Agent-first Tooling, ADR-018).
 - Letzte Session: 2026-10-14, M0.2 bis M6.4, ADR-019, ADR-024 bis ADR-027
 
@@ -243,5 +243,5 @@ Alle erscheinen als `raw` + `:manual` bzw. als gemeldeter, übersprungener Typ, 
 
 - Vor dem Start die Checkliste in `docs/setup.md` prüfen.
 - Layout und Projektarten: `docs/projects.md` lesen (Spiele in `games/`, Engines in `engines/`, ADR-020 PROPOSED).
-- Branch `task/M6-lint` nach `main` mergen (Nutzer entscheidet, Fast-Forward per `git push . task/M6-lint:main`), dann M6a mit dem Nutzer planen. Vor dem Generator-/Golden-Test `scripts/build-dotnet.sh` laufen lassen.
+- Laufende Aufgabe (Nutzerwunsch, vor M6a): StarCollector End-to-End bis zum spielbaren Klon, Branch `task/starcollector-e2e`, Aufgabe `tasks/SC-starcollector.md`. Vor dem Generator-/Golden-Test `scripts/build-dotnet.sh` laufen lassen.
 - Ressourcenpfad der Mappings: für die Toolchain über `engines/<e>/port.toml` gelöst (Dateien); Auslieferung als Jar (eindeutige Ressourcenpfade) ist offen, sobald es ein Paket von `port` gibt.
