@@ -19,8 +19,9 @@ Das zentrale, headless Kommandozeilenwerkzeug `port`. Orchestriert Pipeline, Ind
 - M4a: Manifeste, Katalog, Profile und Start kommen aus `launcher-core`; Befehlsgruppen (`catalog list`) entstehen aus Befehlsnamen mit Leerzeichen; `init` legt per Programm `git` ein eigenes Repo an und trägt es im Monorepo als Submodul ein (ADR-026).
 - Git über das Programm `git` (ADR-026); JGit bräuchte slf4j-api, das der Enforcer verbietet.
 - `status`: `manualOpen` zählt `raw`-/`manual`-Knoten bzw. Knoten mit `:manual` in `ir/` (über den S-Expression-Leser), Typen mit Klasse in `manual/` gelten als erledigt.
-- Start von Hand: Klassenpfad aus `port-cli`, `ir`, `generator-java`, `frontend-unity`, `launcher-core`, `engine-api`, `index`, picocli, tomlj, antlr4-runtime, sqlite-jdbc; JVM-Option `--enable-native-access=ALL-UNNAMED`. Ein ausführbares Paket kommt später (M10 Native Image).
+- Start von Hand: Klassenpfad aus `port-cli`, `ir`, `generator-java`, `frontend-unity`, `launcher-core`, `engine-api`, `index`, picocli, tomlj, antlr4-runtime, sqlite-jdbc; JVM-Option `--enable-native-access=ALL-UNNAMED`. Seit SC gibt es `port.jar` im Hauptverzeichnis (alle Abhängigkeiten, `Enable-Native-Access` im Manifest, nicht im Git; Erzeugung in `docs/setup.md`). Ein Maven-Schritt dafür und später ein Native Image (M10) fehlen noch.
 - M5: Phase `index`, Suchbefehle in `SearchService` (`core`), Paginierung über `Page`; die Textausgabe zeigt Listen eine Zeile je Eintrag.
+- SC: `launch run` mit `--headless` und Argumenten nach `--` für `launcher-boot` (`docs/modules/launcher.md`); `StarCollectorRunTest` spielt StarCollector Ende zu Ende.
 - M6: Phase `lint` (`LintStep`: IR, Markierungen, Abdeckung aus `mapping.tsv` und `adapter-metadata.json`), Exit 9 setzt die `Pipeline` am Ende aus `data.lint`.
 
 ## Aufbau (Pakete)

@@ -26,7 +26,7 @@ AGENTS.md  CLAUDE.md  PROGRESS.md  README.md
 docs/  tasks/
 
 # Plattform (gemeinsam für alle Projekte)
-ir/  engine-api/  engine-core/  runtime-system/
+ir/  engine-api/  engine-core/  render-swing/  runtime-system/
 frontend-unity/  generator-java/
 port-cli/  launcher/  integration-tests/
 
@@ -127,8 +127,8 @@ render = "render-unity-like"
 input  = "input-godot-like"      # Provider darf aus einer anderen Engine-Recomp stammen
 
 [run]
-headless = false
-frames   = 60                    # M4a: Anzahl der Frames (Übergang bis zum Szenenformat, ADR-010)
+headless = false                 # SC: false = Fenster in Echtzeit (--render window --realtime)
+frames   = 60                    # M4a: Anzahl der Frames (Übergang bis zum Szenenformat, ADR-010); mit Fenster 0 = bis zum Beenden
 spawn    = ["Mover"]             # M4a: IR-Typen, die beim Start je ein Objekt bekommen
 args     = ["--axis", "Horizontal=1"]   # an launcher-boot (z. B. Achsenwerte ab Frame 0)
 ```
@@ -157,7 +157,7 @@ Befehle (Vertrag in `docs/cli-contract.md`):
 Ablauf von `launch run`:
 1. Profil lesen und prüfen (`check`).
 2. Fehlende oder veraltete Teile bauen (Spiel: `port build`, `--build` erzwingt das). Engine und Plattform werden in M4a nur geprüft (Exit 8 mit `./mvnw -q install`), nicht gebaut.
-3. Klassenpfad aus Spiel-Artefakt, Adapter, gewählten Providern, `runtime-system`, `engine-core` und `launcher-boot` zusammensetzen. Der Core findet Provider per `ServiceLoader` (ADR-015), `launcher-boot` den Adapter über `EngineBinding` (engine-api).
+3. Klassenpfad aus Spiel-Artefakt, Adapter, gewählten Providern, `runtime-system`, `engine-core`, Render-Backend (`render-swing`) und `launcher-boot` zusammensetzen. Der Core findet Provider per `ServiceLoader` (ADR-015), `launcher-boot` den Adapter über `EngineBinding` (engine-api).
 4. Neue JVM starten, Ausgabe durchreichen, Exit-Code des Spiels zurückgeben.
 
 Der Launcher kennt weder Spiellogik noch Engine-Interna. Er liest nur Manifeste, Metadaten und Profile.

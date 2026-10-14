@@ -72,7 +72,9 @@ Handarbeit greift an vier Stellen ein: in der IR (`:manual`), in `manual/` (Over
 | `frontend-godot` | später: GDScript/C# → IR | `ir` |
 | `generator-java` | IR → Java | `ir` |
 | `port-cli` | zentrales Werkzeug | `ir`, `generator-java`, `frontend-*`, `launcher-core`; Adapter nur über Metadaten-Dateien |
+| `render-swing` | Render-Backend mit Swing/Java2D: Fenster und Offscreen (ADR-014, SC) | `engine-api` |
 | `launcher-core` | Katalog, Profile, Kompatibilitätsprüfung, Start | `engine-api` (nur Metadatentypen) |
+| `launcher-boot` | Startklasse der Spiel-JVM: Core, Render-Backend, Adapter über `EngineBinding`, Spielklassen | `engine-api`, `engine-core`, `render-swing` |
 | `launcher-ui` | ab M12a: Oberfläche | `launcher-core` |
 | `integration-tests` | End-to-End-Tests | alles (nur Test-Scope) |
 | `engines/*/providers/*` | ab M12: austauschbare Subsystem-Provider | `engine-api` |

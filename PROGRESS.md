@@ -154,6 +154,7 @@ Alle erscheinen als `raw` + `:manual` bzw. als gemeldeter, übersprungener Typ, 
 - S4: Modul `render-swing` (Fenster, Offscreen).
 - S5: `launcher-boot` mit `--render`, `--size`, `--realtime`, `--seed`, `--press`/`--release`, `--screenshot`; `port launch run --headless [-- args]`; Profil `starcollector-unity` startet im Fenster.
 - S6: `StarCollectorRunTest` (port-cli) spielt Ende zu Ende mit Offscreen-Bildern. Vergleich mit dem Original-Build unter Xvfb: Formen, Farben, HUD, Ende-Fenster und Spawn-Takt stimmen.
+- `port.jar` (2026-10-14, Nutzerwunsch): ausführbares CLI mit allen Abhängigkeiten im Hauptverzeichnis, von Hand gebaut, in `.gitignore`; Aufruf und Erzeugung in `docs/setup.md`. Geprüft: `--help`, `lint`, `launch run starcollector-unity --headless`, Aufruf aus anderem Arbeitsverzeichnis.
 - S7: Doku `docs/modules/` (generator-java, engine-api, engine-core, adapter-unity, launcher, neu render-swing), `docs/cli-contract.md`.
 
 ## SC: Lücken und Beobachtungen
@@ -164,6 +165,8 @@ Alle erscheinen als `raw` + `:manual` bzw. als gemeldeter, übersprungener Typ, 
 - UI von `OnGUI` erscheint einen Frame später, Tasten wirken einen Frame nach dem Abholen (Event-Bus k → k+1). Bei 60 fps nicht spürbar.
 - `GUIStyle`-Standardgröße 13 px und Schrift `SansSerif` statt Unitys Arial; Abstände leicht anders.
 - Fenster nur kurz automatisch geprüft (öffnet, läuft 120 Frames); Spielgefühl im Fenster prüft der Nutzer.
+- `port.jar` hat keinen Maven-Schritt (Vorschlag: maven-shade-plugin in `port-cli`, gepinnt, Ausgabe nach `target/`); veraltet nach jeder Codeänderung. `launch run` braucht weiter die gebauten Module des Repos, die Jar ist nicht eigenständig weitergebbar.
+- AGENTS.md (schreibgeschützt), Vorschlag für „Wichtige Befehle“: `java -jar port.jar launch run starcollector-unity   # Spiel im Fenster` und im Layout `render-swing/  Render-Backend Swing (Fenster, Offscreen)`.
 - Attribute wie `SerializeField` zählen im Lint als API-Verwendung (aus SC S2 übernommen).
 - Die Unity-Instanzmethode `GameObject.addComponent(instanz)` heißt jetzt `attachScript` (Mehrdeutigkeit mit `addComponent(Supplier)`).
 

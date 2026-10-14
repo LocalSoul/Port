@@ -63,6 +63,19 @@ Golden Files werden nur bewusst aktualisiert (`-Dgolden.update=true`), siehe `do
 ./mvnw -q spotless:apply    # Formatierung
 ```
 
+## Werkzeug `port` und Spiele starten
+
+`port.jar` im Hauptverzeichnis ist das CLI mit allen Abhängigkeiten (nicht im Git, `.gitignore`). Es wird bisher von Hand aus `port-cli/target/classes` und den Laufzeit-Abhängigkeiten zusammengesetzt (`./mvnw -q install -DskipTests`, dann `./mvnw -q -pl port-cli dependency:copy-dependencies -DincludeScope=runtime`, alles entpacken, Manifest mit `Main-Class: io.github.localsoul.port.cli.Main` und `Enable-Native-Access: ALL-UNNAMED`). Nach Codeänderungen neu erzeugen; ein Maven-Schritt dafür fehlt noch (`PROGRESS.md`).
+
+```
+java -jar port.jar --help
+java -jar port.jar -C games/starcollector lint
+java -jar port.jar launch run starcollector-unity                 # Fenster: Pfeile/WASD, R, ESC
+java -jar port.jar launch run starcollector-unity --headless -- --render offscreen --frames 120 --screenshot 120:bild.png
+```
+
+`launch run` startet das Spiel in einer eigenen JVM mit den gebauten Klassen des Repos (`target/classes` von Engine, Adapter, `render-swing`, `launcher-boot`); vorher `./mvnw -q install` (sonst Exit 8). Das Fenster braucht ein Display.
+
 ## Mit dem Agent arbeiten
 
 Erster Prompt:

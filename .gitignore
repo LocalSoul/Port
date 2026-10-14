@@ -12,6 +12,7 @@ gen/
 target/
 bin/
 obj/
+/port.jar
 
 # IDE
 .idea/

@@ -23,7 +23,7 @@ Dieses Kit enthält alles, was ein AI-Coding-Agent braucht, um das Projekt zu ba
 | `docs/ai-fix-phase.md` | KI-Fix-Phase nach `ir` | ab M7a |
 | `docs/modules/*.md` | je Modul: Zweck, API, Tests, Nicht-Ziele | beim jeweiligen Modul |
 | `docs/roadmap.md` | Meilensteine mit Abnahme | Planung |
-| `docs/setup.md` | Voraussetzungen, Startchecklist, Testdaten | vor dem Start |
+| `docs/setup.md` | Voraussetzungen, Startchecklist, Testdaten, `port.jar` und Spiele starten | vor dem Start |
 
 ## Startchecklist
 
