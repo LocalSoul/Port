@@ -15,15 +15,17 @@ Keine zu anderen Projektmodulen (Maven Enforcer). Nur JDK, keine Reflection, kei
 
 | Paket | Typen |
 |---|---|
-| `engine.api` | `Engine` (Fassade: `world`, `register`, `step`, `frameCount`, `shutdown`), `EngineException` (Basis aller Fehler, ungeprüft) |
+| `engine.api` | `Engine` (Fassade: `world`, `register`, `step`, `frameCount`, `shutdown`, seit SC `requestQuit`/`quitRequested`), `EngineException` (Basis aller Fehler, ungeprüft) |
 | `engine.api.math` | `Vec2`, `Vec3`, `Quat` (Records), `Mat4` (finale Klasse, spaltenweise, Spaltenvektoren), `MathConstants` |
 | `engine.api.world` | `World`, `Entity` (Index untere 32 Bit, Generation obere 32 Bit), `ComponentStore<T>`, `EntityView`, Exceptions `StaleEntityException`, `MissingComponentException`, `DuplicateComponentException`, `UnregisteredComponentException`, `HierarchyException`, `ReservedComponentException` |
 | `engine.api.component` | Schemas v1: `Transform`, `WorldTransform`, `Parent`, `Children`, `Renderable`, `InputState`; `Schemas` (Namen/Versionen als `ComponentType`, `CORE_OWNED`) |
 | `engine.api.schedule` | `Phase` (`EARLY`, `FIXED`, `UPDATE`, `LATE`), `Time` (Delta, Fixed-Delta, Frame ab 0), `PhaseCallback`, `FrameContext` (Phase, Zeit, Welt, Input, Event-Bus) |
 | `engine.api.input` | `Input` (`axis`, `isHeld`, `wasPressed`, `wasReleased`) |
-| `engine.api.render` | `Renderer extends Subsystem` (`framesRendered`) |
+| `engine.api.render` | `Renderer extends Subsystem` (`framesRendered`); `RenderBackend` (SC, ADR-014): `width`, `height`, `begin(hintergrund)`, `drawTexture(Texture, Affine2D, tint)`, `fillRect`, `drawText`, `present`, `pollKeys`, `closed`, `close`; `Affine2D` (Pixelraum, y nach unten) |
+| `engine.api.component` (SC) | 2D: `Texture` (Breite, Höhe, ARGB von oben links, `smooth`), `Sprite` (Textur-Entity, Pivot, Pixel je Einheit, `order`, Tint, sichtbar), `Camera2D` (orthografische Halbhöhe, Hintergrund), `Viewport` (Ausgabegröße, vom Renderer geschrieben), `UiCanvas` (Liste aus `Text` und `Box` in Bildschirmpixeln, je Frame neu) |
+| `engine.api.input` (SC) | `KeyEvent` (`input.key`@1: neutraler Tastenname, gedrückt/losgelassen; Namen `A`–`Z`, `0`–`9`, `LEFT`, `RIGHT`, `UP`, `DOWN`, `SPACE`, `ENTER`, `ESCAPE`, `TAB`, `BACKSPACE`, `SHIFT`, `CONTROL`, `ALT`) |
 | `engine.api` (M4a) | `EngineApiVersion.VERSION` (geprüft gegen `[engine.provides] core-api`) |
-| `engine.api.boot` (M4a) | `EngineBinding` (`adapter`, `install(Engine)`, `spawn(name, script)`): ein Adapter meldet sich per `ServiceLoader` bei `launcher-boot` an; so setzt der Launcher Core und Adapter zusammen, ohne dass einer den anderen kennt. `spawn` ist Übergang bis zum Szenenformat (ADR-010). |
+| `engine.api.boot` (M4a) | `EngineBinding` (`adapter`, `configure(Map)` für Starteinstellungen wie `seed` (SC), `install(Engine)`, `spawn(name, script)`): ein Adapter meldet sich per `ServiceLoader` bei `launcher-boot` an; so setzt der Launcher Core und Adapter zusammen, ohne dass einer den anderen kennt. `spawn` ist Übergang bis zum Szenenformat (ADR-010). |
 | `engine.api.subsystem` | `Subsystem` (`info`, `init`, `run`, `shutdown`), `SubsystemInfo`, `ComponentType`, `EventType`, `Event`, `EventBus`, `SubsystemConfigurationException` |
 
 ## Welt (ADR-016, ACCEPTED)
@@ -51,7 +53,7 @@ public interface World {
 ```
 
 - **Strukturänderungen** (`destroy`, `add`, `remove`, `setParent`) während einer Phase wirken **am Ende dieser Phase**, außerhalb eines Frames sofort. Vorbedingungen werden beim Aufruf gegen den erwarteten Zustand geprüft (aktueller Zustand plus anstehende Befehle). Befehle für bis dahin zerstörte Entities entfallen.
-- `create` und `set` wirken immer sofort. Eine neu erzeugte Entity bekommt Komponenten aus derselben Phase erst am Phasenende.
+- `create` und `set` wirken immer sofort. Eine neu erzeugte Entity bekommt Komponenten aus derselben Phase erst am Phasenende. `set` auf eine in derselben Phase per `add` ausstehende Komponente ersetzt den ausstehenden Wert (SC: der Adapter legt Objekte an und setzt gleich danach Werte, wie in Unity).
 - Pro Entity höchstens eine Komponente je Typ, der Typ ist die exakte Klasse. `toString()` der Komponenten muss deterministisch sein (für `dump`).
 - **Vom Core verwaltet:** `Parent`, `Children` (nur über `setParent`), `WorldTransform` (zu Beginn von `LATE` berechnet). Direkte Schreibzugriffe werfen `ReservedComponentException`.
 - Alle Methoden mit Entity-Parameter werfen `StaleEntityException`, wenn die Entity nicht lebt. Die Meldung unterscheidet „existiert nicht", „zerstört" und „veraltet".
@@ -73,5 +75,5 @@ public interface World {
 - Keine Verhaltenstests der Engine, die gehören in `engine-core`.
 
 ## Nicht-Ziele
-- Keine Rendering-, Physik- oder Audio-Implementierung.
+- Keine Rendering-, Physik- oder Audio-Implementierung (Backends wie `render-swing` implementieren nur `RenderBackend`).
 - Keine Unity-/Godot-Begriffe (`GameObject`, `Node`).

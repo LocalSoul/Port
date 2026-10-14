@@ -14,7 +14,7 @@ launcher/
 
 ## Abhängigkeiten
 - `launcher-core`: nur JDK, eine TOML-Bibliothek, `engine-api` (nur für die Metadatentypen `SubsystemInfo`). Kein `engine-core`, kein Adapter, kein Spielcode im Klassenpfad des Launchers.
-- `launcher-boot`: `engine-api` und `engine-core`; Adapter und Spiel kommen erst zur Laufzeit auf den Klassenpfad (Enforcer, ArchUnit). Einzige Reflection der Plattform: Laden der Spielklassen aus `[run] spawn` per Namen.
+- `launcher-boot`: `engine-api`, `engine-core` und Render-Backends (`render-swing`, ADR-014); Adapter und Spiel kommen erst zur Laufzeit auf den Klassenpfad (Enforcer, ArchUnit). Einzige Reflection der Plattform: Laden der Spielklassen aus `[run] spawn` per Namen.
 - Gestartet wird immer in einer **eigenen JVM**, damit Spiel und Engine den Launcher nicht beeinflussen.
 
 ## Aufgaben
@@ -30,10 +30,18 @@ launcher/
 - `BootMain`: `CoreEngine` mit `ScriptedInput` (`--axis Name=Wert` ab Frame 0), Adapter per `ServiceLoader<EngineBinding>`, je Spielklasse ein Objekt, N Frames, Welt-Dump auf stdout. Exit 0, 1 (Fehler im Spiel, z. B. `PORT-TODO`), 2 (Argumente, kein Adapter), 3 (Klasse fehlt).
 - Provider (ADR-015) werden nur aufgelistet; Auswahl und Prüfung kommen mit M12.
 
+## Stand StarCollector (SC)
+- `BootMain`-Optionen: `--render null|offscreen|window` (Standard `null`; `offscreen` zeichnet ohne Bildschirm in ein Bild, `window` öffnet ein Swing-Fenster), `--size BxH` (Standard 960x600), `--realtime` (Frames mit gemessener Dauer, höchstens 1/3 s, Ziel `--frame-delta`; endet bei `Application.Quit`, geschlossenem Fenster oder `--frames`, `0` = unbegrenzt), `--seed n` (an `EngineBinding.configure`), `--press`/`--release Frame:Taste` (Tastenskript ohne Fenster), `--screenshot Frame:Datei` (PNG nach dem Frame, nur `offscreen`). Mit Fenster liest `KeyboardInput` die Tastatur, sonst `ScriptedInput` das Skript. Ohne `--realtime` laufen höchstens `--frames` Frames mit fester Dauer und enden früher bei `Application.Quit`; die Ausgabe ist `frames: n` und (außer mit `--realtime`) der Welt-Dump. Exit 1 auch, wenn die Ausgabe nicht verfügbar ist (Fenster ohne Display) oder ein Bild nicht geschrieben werden kann.
+- `launcher-core`: Profil mit `headless = false` startet mit `--render window --realtime` (vor den `args` des Profils); `render-swing` gehört zu den Plattformmodulen.
+- `port launch run <profil> [--headless] [-- boot-args...]`: `--headless` unterdrückt das Fenster, Argumente nach `--` kommen nach denen des Profils (spätere Optionen gewinnen).
+- Profil `starcollector-unity`: Fenster, keine Frame-Grenze.
+
 ## Tests
 - Katalog gegen ein synthetisches Mini-Repo (`@TempDir`) mit einem Spiel und zwei Engines.
 - Kompatibilitätsfälle: passend, falsche API-Version, doppelter Provider, fehlender Provider, Konfliktpaar.
 - Prozessstart gegen ein triviales Test-Spiel (Exit-Code und Ausgabe werden durchgereicht).
+- `BootMainTest`: Tastenskript, Seed, vorzeitiges Ende, Offscreen-Bilder, Echtzeit mit Frame-Grenze, Argumentfehler.
+- `StarCollectorRunTest` (port-cli): StarCollector Ende zu Ende über `launch run` mit Offscreen-Bildern.
 - Golden Files für `--json`-Ausgaben.
 
 ## Nicht-Ziele

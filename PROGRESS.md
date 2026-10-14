@@ -4,10 +4,11 @@ Wird von Agents am Ende jeder Session aktualisiert. Kurz und konkret halten.
 
 ## Aktueller Stand
 
-- Phase: **M6 abgeschlossen** und nach `main` gemergt (alle Abnahmekriterien in `tasks/M6-lint.md` erfüllt; `./mvnw -q verify` grün). `port lint` prüft IR001–IR005, PT001–PT003, SM001, SH001/SH002, MN001–MN004, konfigurierbar über `[lint]`; Phase `lint` in der Kette meldet, blockiert nicht.
+- Phase: **StarCollector End-to-End (SC) umgesetzt**, Branch `task/starcollector-e2e`, wartet auf Abnahme durch den Nutzer (Handtest im Fenster) und Merge nach Rückfrage. `./mvnw -q verify` grün.
+- StarCollector läuft über die ganze Pipeline (IR → Java → Build → `launcher-boot`): Fenster mit Sprites, HUD, Tastatur, Zeitablauf, Neustart (R), Beenden (ESC). `port -C games/starcollector lint` meldet keine SH001 mehr.
 - M0 bis M6, ADR-019, ADR-025, ADR-026 und ADR-027 sind auf `main` (lokal, kein Remote).
-- Nächste Aufgabe laut Roadmap: M6a (Agent-first Tooling, ADR-018).
-- Letzte Session: 2026-10-14, M0.2 bis M6.4, ADR-019, ADR-024 bis ADR-027
+- Danach laut Roadmap: M6a (Agent-first Tooling, ADR-018).
+- Letzte Session: 2026-10-14, M0.2 bis M6.4, ADR-019, ADR-024 bis ADR-027, SC S0–S7
 
 ## Erledigt
 
@@ -144,6 +145,28 @@ Alle erscheinen als `raw` + `:manual` bzw. als gemeldeter, übersprungener Typ, 
   - M6.3: Phase `lint`, `port lint [--rule] [--class] [--fix-hint]`, Exit 9 nach Nutzerentscheidung; Markierung in `games/demo`.
   - M6.4: Doku `docs/modules/lint.md`, `cli-contract.md`, `ir-spec.md` (Abschnitt 9), `port-cli.md`, `ir.md`.
 
+## SC StarCollector End-to-End (2026-10-14)
+
+- S0: Aufgabe `tasks/SC-starcollector.md`; ADR-009 (Engine-Structs als unveränderliche Records) und ADR-014 (modulares `RenderBackend`, erstes Backend Swing) vom Nutzer entschieden.
+- S1 Generator: Mapping-Formen `struct`, `setter`, `static-setter`, `constant`, `factory`, `mutator`; Struct-Mutationen als Neuzuweisung, Struct-Arrays und `default(T)` mit `T.DEFAULT`.
+- S2 Adapter (Repo `engines/unity`): alle von StarCollector genutzten Unity-APIs (Liste in `docs/modules/adapter-unity.md`, Abschnitt SC), `UnityApiTest`. Core: `World.set` ersetzt ein ausstehendes `add` derselben Phase; `EngineBinding.configure` für `seed`.
+- S3 Engine: neutrale Komponenten `Texture`, `Sprite`, `Camera2D`, `Viewport`, `UiCanvas`, `KeyEvent`; `SpriteRenderSystem`, `KeyboardInput`, `stepFrame`, `requestQuit`.
+- S4: Modul `render-swing` (Fenster, Offscreen).
+- S5: `launcher-boot` mit `--render`, `--size`, `--realtime`, `--seed`, `--press`/`--release`, `--screenshot`; `port launch run --headless [-- args]`; Profil `starcollector-unity` startet im Fenster.
+- S6: `StarCollectorRunTest` (port-cli) spielt Ende zu Ende mit Offscreen-Bildern. Vergleich mit dem Original-Build unter Xvfb: Formen, Farben, HUD, Ende-Fenster und Spawn-Takt stimmen.
+- S7: Doku `docs/modules/` (generator-java, engine-api, engine-core, adapter-unity, launcher, neu render-swing), `docs/cli-contract.md`.
+
+## SC: Lücken und Beobachtungen
+
+- **Hintergrund weicht ab:** Original `#0D0F19` aus der Szene-Kamera, der Port nutzt Unitys Standard `#314D79`, weil Szenen nicht importiert werden (ADR-010 OPEN, M8). Möglicher Zwischenschritt: Kamera-Einstellungen über `EngineBinding.configure`/Profil – nicht umgesetzt, Entscheidung beim Nutzer.
+- `Random` liefert eine andere Folge als Unity (eigener Generator mit festem Startwert). Für dieses Spiel unerheblich, für Wiederholungen gegen Unity-Aufnahmen nicht.
+- Eltern-Transformen im Adapter nicht unterstützt (Transform hält Werte lokal = Welt).
+- UI von `OnGUI` erscheint einen Frame später, Tasten wirken einen Frame nach dem Abholen (Event-Bus k → k+1). Bei 60 fps nicht spürbar.
+- `GUIStyle`-Standardgröße 13 px und Schrift `SansSerif` statt Unitys Arial; Abstände leicht anders.
+- Fenster nur kurz automatisch geprüft (öffnet, läuft 120 Frames); Spielgefühl im Fenster prüft der Nutzer.
+- Attribute wie `SerializeField` zählen im Lint als API-Verwendung (aus SC S2 übernommen).
+- Die Unity-Instanzmethode `GameObject.addComponent(instanz)` heißt jetzt `attachScript` (Mehrdeutigkeit mit `addComponent(Supplier)`).
+
 ## M6: Lücken und Beobachtungen
 
 - **Adapter-Arbeitsliste:** `port -C games/starcollector lint` meldet 126 × SH001 (je verwendendem Member und fehlender Unity-API), `games/demo` 4 × SH001 (`Input.GetKey`, `Debug.Log`, `Mathf.Clamp`, Attribut `SerializeField`) und 1 × SH002 (`Input.GetAxis`, Stub). Attribute zählen als API-Verwendung.
@@ -243,5 +266,5 @@ Alle erscheinen als `raw` + `:manual` bzw. als gemeldeter, übersprungener Typ, 
 
 - Vor dem Start die Checkliste in `docs/setup.md` prüfen.
 - Layout und Projektarten: `docs/projects.md` lesen (Spiele in `games/`, Engines in `engines/`, ADR-020 PROPOSED).
-- Laufende Aufgabe (Nutzerwunsch, vor M6a): StarCollector End-to-End bis zum spielbaren Klon, Branch `task/starcollector-e2e`, Aufgabe `tasks/SC-starcollector.md`. Vor dem Generator-/Golden-Test `scripts/build-dotnet.sh` laufen lassen.
+- StarCollector (SC) ist umgesetzt auf `task/starcollector-e2e`; offen sind der Handtest durch den Nutzer (`port launch run starcollector-unity`) und der Merge nach `main`. Vor dem Generator-/Golden-Test `scripts/build-dotnet.sh` laufen lassen.
 - Ressourcenpfad der Mappings: für die Toolchain über `engines/<e>/port.toml` gelöst (Dateien); Auslieferung als Jar (eindeutige Ressourcenpfade) ist offen, sobald es ein Paket von `port` gibt.

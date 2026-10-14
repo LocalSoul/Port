@@ -16,9 +16,21 @@ Bildet die benötigte Teilmenge der UnityEngine-API (Namespace `UnityEngine`) au
 - Modul `engines/unity/adapter-unity` (Maven-Modul `adapter-unity`), Paket `io.github.localsoul.adapter.unity`. Abhängig nur von `engine-api`, `engine-core` nur im Test-Scope (Enforcer, ArchUnit).
 - Typen: `UnityObject` (für `UnityEngine.Object`, um nicht mit `java.lang.Object` zu kollidieren), `Component`, `Behaviour`, `MonoBehaviour`, `GameObject`, `Transform` (`position()`, `translate(Vector3)`), `Vector3` (Record mit `mul`, `add`, `sub`, `equals` mit Unitys Toleranz), `Time` (`deltaTime()`, `fixedDeltaTime()`), `Input` (`getAxis`, Status `stub`: Rohwert ohne Glättung).
 - `UnityRuntime.install(engine)` registriert die Lifecycle-Callbacks und hält die aktive Engine und den Kontext des laufenden Phasenschritts statisch (die Unity-API ist statisch). Der Kontext gilt bis zum Ende des `LATE`-Callbacks des Adapters; außerhalb liefern `Time`/`Input` 0.
-- `GameObject`: Entity mit Core-`Transform` und der adapter-eigenen Komponente `ScriptHost` (Skripte, ADR-016). `addComponent(instanz)` statt `AddComponent<T>()` (generischer Weg folgt mit dem Mapping in M3a).
+- `GameObject`: Entity mit Core-`Transform` und der adapter-eigenen Komponente `ScriptHost` (Skripte, ADR-016). `attachScript(instanz)` hängt ein vorhandenes Skript an (Start, Tests); `AddComponent<T>()` läuft seit SC über `addComponent(T::new)` (Mapping-Form `factory`).
 - `Transform.translate` (`Space.Self`) ist korrekt für Objekte ohne rotiertes oder skaliertes Elternobjekt.
 - Koordinaten (ADR-007): Spiegelung der Z-Achse, nur im Adapter, mit `0f - z` (kein `-0.0`).
+
+## Stand StarCollector (SC)
+Ausbau für das Spiel StarCollector (`tasks/SC-starcollector.md`); alles schreibt nur neutrale Komponenten (`Texture`, `Sprite`, `Camera2D`, `UiCanvas`) und liest `InputState`.
+- **Structs (ADR-009):** `Vector2`, `Vector3`, `Color`, `Rect` sind unveränderliche Records mit `DEFAULT` und `withX(...)`; Mapping-Form `struct`. `Vector2.Normalize()` ist `mutator`, `op_Implicit` Vector2 → Vector3.
+- **Mathe und Zeit:** `Mathf` (`Sqrt`, `Sin`, `Cos`, `Clamp`, `Clamp01`, `Lerp`, `CeilToInt`, über `StrictMath`), `Random.Range` (float inklusiv, int exklusiv; `SplittableRandom` mit festem Startwert, Standard 0, per `EngineBinding.configure` `seed`; die Folge entspricht nicht Unitys), `Time.time` (Summe der Frame-Dauern vor dem Frame).
+- **Eingabe:** `KeyCode` (Enum mit neutralem Tastennamen), `Input.GetKey/GetKeyDown/GetKeyUp`, `GetAxisRaw`; ohne gesetzten Achsenwert liefern `Horizontal`/`Vertical` die Unity-Standardbelegung (Pfeiltasten, WASD). `GetAxis` bleibt `stub` (ohne Glättung).
+- **Objekte:** `Object.name`, `==`/`!=` und `if (obj)` mit Unitys „fake null“ (zerstörte Objekte gelten als `null`), `Destroy` am Frame-Ende (nach `OnGUI`). Zerstörte Skripte laufen nicht mehr.
+- **Transform:** hält Position, Rotation und Skalierung selbst (im Core-Raum) und schreibt sie per `world.set`, damit Änderungen wie in Unity sofort lesbar sind; `position`/`localScale` setzen, `Rotate(x, y, z)` (Euler in Unitys Reihenfolge z, x, y). Eltern-Transformen werden nicht unterstützt.
+- **Grafik:** `Texture2D` (`SetPixels` mit Zeile 0 unten, `Apply` → Core-`Texture`, `filterMode` Point → nicht geglättet), `Sprite.Create` (ganze Textur), `SpriteRenderer` (`sprite`, `color`, `sortingOrder`) → Core-`Sprite`.
+- **Kamera:** Da die Szene nicht importiert wird (ADR-010 OPEN), legt `install` eine Kamera nach Unity-2D-Standard an (orthografische Größe 5, bei z = −10 in Unity, Hintergrund `#314D79`). Abweichung bei StarCollector: Die Szene des Originals hat den Hintergrund `#0D0F19`.
+- **IMGUI:** Nachricht `OnGUI` (nach `LateUpdate`), `GUI.Label`, `GUI.Box`, `GUI.skin.label`, `GUIStyle` (Kopie, `fontSize` (0 = 13), `fontStyle`, `alignment`, `normal.textColor`), `GUIContent.none`, `Screen.width/height` (aus `Viewport`). Ergebnis ist die `UiCanvas` des Frames, sichtbar einen Frame später (Renderer läuft vor den `LATE`-Callbacks).
+- `Application.Quit()` → `Engine.requestQuit()`.
 
 ## Namensabbildung (Konvention für den Generator)
 - Typen behalten ihren Namen (`UnityEngine.Transform` → `io.github.localsoul.adapter.unity.Transform`), Ausnahme `UnityEngine.Object` → `UnityObject`.
@@ -64,7 +76,8 @@ Der Adapter bestimmt die **API-Semantik**, die das Spiel erwartet. Subsystem-Pro
 ## Tests
 - Lifecycle-Reihenfolge gegen eine Referenzabfolge.
 - Koordinatenkonvertierung (Translate in Unity-Koordinaten ergibt erwartete Core-Position).
-- Mapping-/Metadaten-Konsistenz.
+- Mapping-/Metadaten-Konsistenz (alle Formen, Konstanten als Feld).
+- StarCollector-APIs (`UnityApiTest`): Structs, Tasten und Achsen, Destroy und fake null, Texturen und Sprites, `OnGUI` → `UiCanvas`, `Random` mit Startwert.
 - Alles headless gegen `engine-core` als Test-Abhängigkeit (nur im `test`-Scope).
 
 ## Nicht-Ziele
