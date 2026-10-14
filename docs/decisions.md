@@ -293,3 +293,16 @@ IL2CPP-Spiele sind vorerst nicht im Scope (kaum sauber dekompilierbar).
 4. Bestehende Projekte werden umgestellt: `engines/unity` (mit `adapter-unity`), `games/demo`, `games/starcollector`. Die Geschichte von `adapter-unity` bleibt im Monorepo erhalten, sie wird nicht umgeschrieben.
 **Folgen:** Klonen mit `git clone --recurse-submodules` (lokal funktionieren die relativen URLs, weil sie gegen den Ursprung des Monorepos aufgelöst werden). Bei einem späteren Remote braucht jedes Projekt ein eigenes Repo an derselben relativen Stelle. Der Root-Build braucht das Submodul `engines/unity`. Änderungen in einem Projekt werden in dessen Repo committet, danach im Monorepo der neue Submodul-Stand. CLI-Vertrag (`init`), `docs/projects.md` und ADR-020 (Punkt Submodule) sind angepasst.
 
+## ADR-027: Markierung von Overrides in `manual/`
+**Status:** ACCEPTED (vom Nutzer entschieden, 2026-10-14)
+**Kontext:** Handarbeit liegt als Java in `manual/` (Unterklasse von `FooBase`, M3). Für die Lint-Regeln MN001–MN004 und später `ir --update` (M7) muss erkennbar sein, welche IR-Stelle eine Handarbeit ersetzt und auf welchem Stand der IR sie beruht.
+**Entscheidung:** Über jeder Methode in `manual/*.java`, die eine IR-Stelle ersetzt, steht ein Kommentar
+
+```java
+// port:override Inventory::Fill#i32 ir=3f2a9c1b4d5e
+```
+
+mit der stabilen Symbol-ID und dem Hash der IR-S-Expression des Symbols beim Anlegen (SHA-256 hex, mindestens die ersten 12 Zeichen; `port show <symbol>` zeigt ihn als `irHash`). Regeln: MN001 Symbol fehlt in der IR (error), MN002 Hash weicht ab (error), MN003 `raw`/`:manual`-Stelle ohne Markierung (warn), MN004 Markierung auf ein Symbol ohne `raw`/`:manual` (info).
+**Alternativen:** Java-Annotation aus `runtime-system` (verworfen: Abhängigkeit für `manual/`, Lint müsste Java lesen); nur Klassenebene (verworfen: MN002 nicht prüfbar).
+**Folgen:** Kein Codeeinfluss auf das Kompilieren. `port` kann die Markierung später selbst schreiben (M7/M7a). Der Hash ändert sich bei jeder Änderung der S-Expression, auch bei rein formalen; die IR ist kanonisch gedruckt, daher selten.
+
